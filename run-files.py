@@ -4,7 +4,16 @@ import argparse
 
 # TODO 
 # extension to lowercase
-# extensio jpeg to jpg
+# extension jpeg to jpg
+
+def remove_log_files():
+    directorio = "logs"
+
+    for file in os.listdir(directorio):
+        if file.endswith(".log"):
+            filename = os.path.join(directorio, file)
+            os.remove(filename)
+            print(f"Removed file: {filename}")
 
 def check_file_names(root_dir):
     extensions = "jpg|JPG|jpeg|png|bmp|HEIC|mp4|avi|AVI|mov|MOV|mpg|m4v|webm|3gp|wmv|mkv|wav|m4a"
@@ -147,6 +156,8 @@ def main():
     parser = argparse.ArgumentParser(description="Check all files recursively to find those that do not match the desired name structure")
     parser.add_argument("--directory", required=True, help="Directory path to check")
     args = parser.parse_args()
+
+    remove_log_files()
 
     root_directory = args.directory
     check_file_names(root_directory)
