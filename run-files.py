@@ -20,11 +20,11 @@ def check_file_names(root_dir):
     valid_filename_pattern = re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) [0-2][0-9]\.[0-5][0-9]\.[0-5][0-9]( .+)?\.('+extensions+')$')
     invalid_filename_patterns = [
         # filename does not start with a year, i.e.: descenso.jpg or 13.jpg
-        re.compile(r'^(?![0-9]{4}).*\.('+extensions+')$'),
+        re.compile(r'^(?![0-9]{4}).*\.(?:'+extensions+')$'),
         # 2004-11-01 (14-50-36).jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) \([0-2][0-9]-[0-5][0-9]-[0-5][0-9]\)\.('+extensions+')$'),
+        re.compile(r'^(?P<year>[0-9]{4})-(?P<month>0[1-9]|1[0-2])-(?P<day>[0-2][0-9]|3[01]) \((?P<hour>[0-2][0-9])-(?P<minutes>[0-5][0-9])-(?P<seconds>[0-5][0-9])\)\.(?P<extension>'+extensions+')$'),
         # 2016-02-28 11.22.592.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) [0-2][0-9]\.[0-5][0-9]\.[0-5][0-9][0-9]\.('+extensions+')$'),
+        re.compile(r'^(?P<year>[0-9]{4})-(?P<month>0[1-9]|1[0-2])-(?P<day>[0-2][0-9]|3[01]) (?P<hour>[0-2][0-9])\.(?P<minutes>[0-5][0-9])\.(?P<seconds>[0-5][0-9])(?P<version>[0-9])\.(?P<extension>'+extensions+')$'),
         # 2018-08-14 11.25.12a.jpg
         re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) [0-2][0-9]\.[0-5][0-9]\.[0-5][0-9][a-z]\.('+extensions+')$'),
         # 2018-01-30 10.43.22b DIA DE LA PAZ.jpg
@@ -117,12 +117,24 @@ def check_file_names(root_dir):
 
     for folder_name, subfolders, filenames in os.walk(root_dir):
         for filename in filenames:
-            if filename != ".DS_Store" and filename != ".localized" and not valid_filename_pattern.match(filename):
+            if "En proceso" not in folder_name and filename != ".DS_Store" and filename != ".localized" and not valid_filename_pattern.match(filename):
                 matched = False
                 for index, invalid_filename_pattern in enumerate(invalid_filename_patterns):
-                    if invalid_filename_pattern.match(filename):
-                        invalid_files[index].append(os.path.join(folder_name, filename))
+                    pattern_match = invalid_filename_pattern.match(filename)
+                    if pattern_match:
+                        new_filename = ''
+                        matched_groups = pattern_match.groupdict()
+                        if 'year' in matched_groups and 'month' in matched_groups and 'day' in matched_groups  and 'hour' in matched_groups and 'minutes' in matched_groups and 'seconds' in matched_groups and 'extension' in matched_groups:
+                            version = ""
+                            if 'version' in matched_groups:
+                                version = " "+matched_groups['version']
+                            new_filename = "{}-{}-{} {}.{}.{}{}.{}".format(matched_groups['year'], matched_groups['month'], matched_groups['day'], matched_groups['hour'], matched_groups['minutes'], matched_groups['seconds'], version, matched_groups['extension'])
                         matched = True
+
+                        if not new_filename == '':
+                            invalid_files[index].append(os.path.join(folder_name, filename) + " -> " + new_filename)
+                        else:
+                            invalid_files[index].append(os.path.join(folder_name, filename))
                         break
 
                 if not matched:
