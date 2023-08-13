@@ -5,6 +5,7 @@ import argparse
 # TODO 
 # extension to lowercase
 # extension jpeg to jpg
+# rename ny by ñ
 
 def remove_log_files():
     directorio = "logs"
@@ -16,132 +17,109 @@ def remove_log_files():
             print(f"Removed file: {filename}")
 
 def check_file_names(root_dir):
-    extensions = "jpg|JPG|jpeg|png|bmp|HEIC|mp4|avi|AVI|mov|MOV|mpg|m4v|webm|3gp|wmv|mkv|wav|m4a"
-    valid_filename_pattern = re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) [0-2][0-9]\.[0-5][0-9]\.[0-5][0-9]( .+)?\.('+extensions+')$')
+    extensions = "jpg|JPG|jpeg|png|gif|bmp|HEIC|mp4|avi|AVI|mov|MOV|mpg|m4v|webm|3gp|wmv|mkv|wav|m4a"
+    extension_regex = '\.(?P<extension>'+extensions+')'
+    yyyymmdd = "(?P<year>[0-9]{4})(?P<month>0[1-9]|1[0-2])(?P<day>[0-2][0-9]|3[01])"
+    yyyymmdd_hyphens = "(?P<year>[0-9]{4})-(?P<month>0[1-9]|1[0-2])-(?P<day>[0-2][0-9]|3[01])"
+    hhmmss = "(?P<hour>[0-2][0-9])(?P<minutes>[0-5][0-9])(?P<seconds>[0-5][0-9])"
+    hhmmss_hyphens = "(?P<hour>[0-2][0-9])-(?P<minutes>[0-5][0-9])-(?P<seconds>[0-5][0-9])"
+    hhmmss_dots = "(?P<hour>[0-2][0-9])\.(?P<minutes>[0-5][0-9])\.(?P<seconds>[0-5][0-9])"
+    valid_filename_pattern = re.compile(r'^'+yyyymmdd_hyphens+' '+hhmmss_dots+'( .+)?'+extension_regex+'$')
     invalid_filename_patterns = [
-        # filename does not start with a year, i.e.: descenso.jpg or 13.jpg
+        # 00 -> 2794 --> filename does not start with a year, i.e.: descenso.jpg or 13.jpg
         re.compile(r'^(?![0-9]{4}).*\.(?:'+extensions+')$'),
-        # 2004-11-01 (14-50-36).jpg
-        re.compile(r'^(?P<year>[0-9]{4})-(?P<month>0[1-9]|1[0-2])-(?P<day>[0-2][0-9]|3[01]) \((?P<hour>[0-2][0-9])-(?P<minutes>[0-5][0-9])-(?P<seconds>[0-5][0-9])\)\.(?P<extension>'+extensions+')$'),
-        # 2016-02-28 11.22.592.jpg
-        re.compile(r'^(?P<year>[0-9]{4})-(?P<month>0[1-9]|1[0-2])-(?P<day>[0-2][0-9]|3[01]) (?P<hour>[0-2][0-9])\.(?P<minutes>[0-5][0-9])\.(?P<seconds>[0-5][0-9])(?P<version>[0-9])\.(?P<extension>'+extensions+')$'),
-        # 2018-08-14 11.25.12a.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) [0-2][0-9]\.[0-5][0-9]\.[0-5][0-9][a-z]\.('+extensions+')$'),
-        # 2018-01-30 10.43.22b DIA DE LA PAZ.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) [0-2][0-9]\.[0-5][0-9]\.[0-5][0-9][a-z] .+\.('+extensions+')$'),
-        # 2003-02-23 (10-15-04) Los delicuentes- Angel.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) \([0-2][0-9]-[0-5][0-9]-[0-5][0-9]\)( [a-zA-Z0-9-_ \(\)]+)?\.('+extensions+')$'),
-        # 20140618_191857.jpg
-        re.compile(r'^[0-9]{4}(0[1-9]|1[0-2])([0-2][0-9]|3[01])_[0-2][0-9][0-5][0-9][0-5][0-9]\.('+extensions+')$'),
-        # 2004-07-03_19-27-48.avi
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01])_[0-2][0-9]-[0-5][0-9]-[0-5][0-9]\.('+extensions+')$'),
-        # 2012-02-18_11.55.16.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01])_[0-2][0-9]\.[0-5][0-9]\.[0-5][0-9]\.('+extensions+')$'),
-        # 2012-02-18_11.55.20-1.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01])_[0-2][0-9]\.[0-5][0-9]\.[0-5][0-9]-\d{1}\.('+extensions+')$'),
-        # 2011-12-15-19-41-54.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01])-[0-2][0-9]-[0-5][0-9]-[0-5][0-9]\.('+extensions+')$'),
-        # 2011-12-16-01-11-18_x264.avi
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01])-[0-2][0-9]-[0-5][0-9]-[0-5][0-9]_.+\.('+extensions+')$'),
-        # 2010-11-21-01-50-06-716.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01])-[0-2][0-9]-[0-5][0-9]-[0-5][0-9]-\d{3}\.('+extensions+')$'),
-        # 2004-03-20_11-02-00l.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01])_[0-2][0-9]-[0-5][0-9]-[0-5][0-9].*\.('+extensions+')$'),
-        # 2004-05-15 (15-37-14l).jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) \([0-2][0-9]-[0-5][0-9]-[0-5][0-9].*\)\.('+extensions+')$'),
-        # 2003-07-01 (11.08.47).jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) \([0-2][0-9]\.[0-5][0-9]\.[0-5][0-9].*\)\.('+extensions+')$'),
-        # 2003-07-09 07-34-04.avi
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) [0-2][0-9]-[0-5][0-9]-[0-5][0-9]\.('+extensions+')$'),
-        # 2003-07-06 14-26-32 - Mas desierto.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) [0-2][0-9]-[0-5][0-9]-[0-5][0-9] .+\.('+extensions+')$'),
-        # 2014-07-26 14-10-54a.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) [0-2][0-9]-[0-5][0-9]-[0-5][0-9][a-z]\.('+extensions+')$'),
-        # 2003-07-06 13-32-49AB.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) [0-2][0-9]-[0-5][0-9]-[0-5][0-9][A-Z]{1,2}\.('+extensions+')$'),
-        # 2017-05-07 17.00.00_36.jpeg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) [0-2][0-9]\.[0-5][0-9]\.[0-5][0-9]_.+\.('+extensions+')$'),
-        # 2017-05-15 11.21.05-4.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) [0-2][0-9]\.[0-5][0-9]\.[0-5][0-9]-.+\.('+extensions+')$'),
-        # 2008-07-27_(09-36-26).jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01])_\([0-2][0-9]-[0-5][0-9]-[0-5][0-9]\)\.('+extensions+')$'),
-        # 2008-07-29_(08-12-41)_pablo.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01])_\([0-2][0-9]-[0-5][0-9]-[0-5][0-9]\)_.+\.('+extensions+')$'),
-        # 2007-04-06 (18-33-00)-Voltereta en la arena-c.avi
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) \([0-2][0-9]-[0-5][0-9]-[0-5][0-9]\)-.+\.('+extensions+')$'),
-        # 2004-03-20 (02-26-08) angel_Alberto bailando¿.avi
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) \([0-2][0-9]-[0-5][0-9]-[0-5][0-9]\) .+\.('+extensions+')$'),
-        # 2004-08-02 Mari Ca lucia luciaate.mpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) [a-zA-Z\(].+\.('+extensions+')$'),
-        # 2003-01-01_Nochevieja_18.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01])_[a-zA-Z\(].+\.('+extensions+')$'),
-        # 1967-04-10.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01])\.('+extensions+')$'),
-        # 2004-12-18 26.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) \d{2}\.('+extensions+')$'),
-        # 2012-07-29 c.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) [a-z]\.('+extensions+')$'),
-        # 2020-31-12 Regalo cuadro Elena con color.png
-        re.compile(r'^[0-9]{4}-([0-2][0-9]|3[01])-(0[1-9]|1[0-2]) Regalo.+\.('+extensions+')$'),
-        # 2014-04-05_09.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01])_\d{2,3}\.('+extensions+')$'),
-        # 2005-12-23 04 fatima.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) \d{2} [a-zA-Z].*\.('+extensions+')$'),
-        # 2022-01-04 - sin retocar 29 Jimena.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01]) - [a-zA-Z].*\.('+extensions+')$'),
-        # 1996-08 34_Guernika Pais Vasco.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2]) .+\.('+extensions+')$'),
-        # 1970-Oct.jpg
-        re.compile(r'^[0-9]{4}-Oct\.('+extensions+')$'),
-        # 1970-Oct-1.jpg
-        re.compile(r'^[0-9]{4}-Oct-\d{1}\.('+extensions+')$'),
-        # 1970-11.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])\.('+extensions+')$'),
-        # 1980-14.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[3-9])\.('+extensions+')$'),
-        # 1999-06_Ultimo dia de instituto_09.jpg
-        re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])_.+.('+extensions+')$'),
-        # 2004 Dubrovnik-2.jpg
-        re.compile(r'^(19[0-9]{2}|20[0-9]{2}) [a-zA-Z\(].+\.('+extensions+')$'),
-        # 2003-1.jpg
-        re.compile(r'^(19[0-9]{2}|20[0-9]{2})-\d{1}\.('+extensions+')$'),
-        # 1997 01.jpg
-        re.compile(r'^(19[0-9]{2}|20[0-9]{2}) \d{2}\.('+extensions+')$'),
-        # 1981.jpg
-        re.compile(r'^(19[0-9]{2}|20[0-9]{2})\.('+extensions+')$'),
-        # Not recognized extensions
-        re.compile(r'^.+\.(tif|gif|xml|psd|mov_gs1|mov_gs2|mov_gs3|mov_gs4|txt|mcf|asf|xptv|eps|svg|pdf|ai|vob|VOB|IFO|BUP|7z|thm|mp3|url|rss|wlmp|tmp|nmea|itm|gpx|xcf|db|aup|localized)$'),
+        # 01 -> 479###0 --> 2016-02-28 11.22.592.jpg
+        re.compile(r'^'+yyyymmdd_hyphens+'[ _-]'+hhmmss_dots+'(?P<extra_info>[0-9a-zA-Z ]*)'+extension_regex+'$'),
+        # 02 -> 15167 --> 2003-02-23 (10-15-04) Los delicuentes- Angel.jpg
+        re.compile(r'^'+yyyymmdd_hyphens+'[ _-]\('+hhmmss_hyphens+'\)[ _-]?(?P<extra_info>[a-zA-Z0-9\(\)]*)?'+extension_regex+'$'),
+        # 03 -> 13356 --> 2004-07-03_19-27-48.avi
+        re.compile(r'^'+yyyymmdd_hyphens+'[ _-]'+hhmmss_hyphens+extension_regex+'$'),
+        # 04 -> 1350 --> 2012-02-18_11.55.20-1.jpg
+        re.compile(r'^'+yyyymmdd_hyphens+'[ _-]'+hhmmss_dots+'[ _-](?P<extra_info>\d{1})'+extension_regex+'$'),
+        # 05 -> 2428 --> 2011-12-16-01-11-18_x264.avi
+        re.compile(r'^'+yyyymmdd_hyphens+'[ _-]'+hhmmss_hyphens+'[ _-](?P<extra_info>.+)'+extension_regex+'$'),
+        # 06 -> 472 --> 2004-03-20_11-02-00l.jpg
+        re.compile(r'^'+yyyymmdd_hyphens+'[ _-]'+hhmmss_hyphens+'(?P<extra_info>.+)'+extension_regex+'$'),
+        # 07 -> 58 --> 2004-05-15 (15-37-14l).jpg
+        re.compile(r'^'+yyyymmdd_hyphens+' \('+hhmmss_hyphens+'(?P<extra_info>.+)\)'+extension_regex+'$'),
+        # 08 -> 78 --> 2003-07-01 (11.08.47).jpg
+        re.compile(r'^'+yyyymmdd_hyphens+'[ _-]\('+hhmmss_dots+'(?P<extra_info>.*)\)'+extension_regex+'$'),
+        # 09 -> 439 --> 2017-05-07 17.00.00_36.jpeg
+        re.compile(r'^'+yyyymmdd_hyphens+'[ _-]'+hhmmss_dots+'[ _-](?P<extra_info>.+)'+extension_regex+'$'),
+        # 10 -> 578 --> 2007-04-06 (18-33-00)-Voltereta en la arena-c.avi
+        re.compile(r'^'+yyyymmdd_hyphens+'[ _-]\('+hhmmss_hyphens+'\)[ _-](?P<extra_info>.+)'+extension_regex+'$'),
+        # 11 -> 783 --> 2004-08-02 Mari Ca lucia luciaate.mpg
+        re.compile(r'^'+yyyymmdd_hyphens+'[ _-](?P<extra_info>[a-zA-Z\(].+)'+extension_regex+'$'),
+        # 12 -> 186 --> 2004-12-18 26.jpg
+        re.compile(r'^'+yyyymmdd_hyphens+'[ _-](?P<extra_info>\d{2,3}|[a-z])'+extension_regex+'$'),
+        # 13 -> 108 --> 2005-12-23 04 fatima.jpg
+        re.compile(r'^'+yyyymmdd_hyphens+' (?P<extra_info>(\d{2}|-) [a-zA-Z].*)'+extension_regex+'$'),
+        # 14 -> 143 --> 1996-08 34_Guernika Pais Vasco.jpg
+        re.compile(r'^(?P<year>19[0-9]{2}|20[0-9]{2})[ _-](?P<month>0[1-9]|1[0-2])[ _-](?P<extra_info>.*)'+extension_regex+'$'),
+        # 15 -> 508 --> 2004 Dubrovnik-2.jpg
+        re.compile(r'^(?P<year>19[0-9]{2}|20[0-9]{2})[ _-](?P<extra_info>[ ,0-9a-zA-Z\(\)-_]+)'+extension_regex+'$'),
+        # 16 -> 112 --> Not recognized extensions
+        re.compile(r'^.+\.(tif|xml|psd|mov_gs1|mov_gs2|mov_gs3|mov_gs4|txt|mcf|asf|xptv|eps|svg|pdf|ai|vob|VOB|IFO|BUP|7z|thm|mp3|url|rss|wlmp|tmp|nmea|itm|gpx|xcf|db|aup|localized)$'),
     ]
     invalid_files_rest_of_cases = []
     invalid_files = [[] for _ in range(len(invalid_filename_patterns))]
 
     for folder_name, subfolders, filenames in os.walk(root_dir):
         for filename in filenames:
-            if "En proceso" not in folder_name and filename != ".DS_Store" and filename != ".localized" and not valid_filename_pattern.match(filename):
-                matched = False
-                for index, invalid_filename_pattern in enumerate(invalid_filename_patterns):
-                    pattern_match = invalid_filename_pattern.match(filename)
-                    if pattern_match:
-                        new_filename = ''
-                        matched_groups = pattern_match.groupdict()
-                        if 'year' in matched_groups and 'month' in matched_groups and 'day' in matched_groups  and 'hour' in matched_groups and 'minutes' in matched_groups and 'seconds' in matched_groups and 'extension' in matched_groups:
-                            version = ""
-                            if 'version' in matched_groups:
-                                version = " "+matched_groups['version']
-                            new_filename = "{}-{}-{} {}.{}.{}{}.{}".format(matched_groups['year'], matched_groups['month'], matched_groups['day'], matched_groups['hour'], matched_groups['minutes'], matched_groups['seconds'], version, matched_groups['extension'])
-                        matched = True
+            if "En proceso" in folder_name or "Album Jimena primer año" in folder_name or "Album Carmela primer año" in folder_name or "Fotos de gente" in folder_name or "Fotos Alicia" in folder_name or "Fotos antiguas" in folder_name or "Castigos de juegos" in folder_name or "Varios" in folder_name or "Yo de peque" in folder_name or filename == ".DS_Store" or filename == ".localized" or valid_filename_pattern.match(filename):
+                continue
 
-                        if not new_filename == '':
-                            invalid_files[index].append(os.path.join(folder_name, filename) + " -> " + new_filename)
-                        else:
-                            invalid_files[index].append(os.path.join(folder_name, filename))
-                        break
+            matched = False
+            for index, invalid_filename_pattern in enumerate(invalid_filename_patterns):
+                pattern_match = invalid_filename_pattern.match(filename)
+                if not pattern_match:
+                    continue
 
-                if not matched:
-                    logged_filename = os.path.join(folder_name, filename)
-                    invalid_files_rest_of_cases.append(logged_filename)
-                    #print(f"Invalid filename: {filename} path: {logged_filename.replace(root_dir, '')}")
-                    print(f"Invalid filename: {filename}")
+                matched = True
+                matched_groups = pattern_match.groupdict()
+                new_filename = ''
+                extra_info = ""
+                if 'year' in matched_groups and 'month' in matched_groups and 'day' in matched_groups and 'hour' in matched_groups and 'minutes' in matched_groups and 'seconds' in matched_groups and 'extension' in matched_groups:
+                    if 'extra_info' in matched_groups:
+                        extra_info = " "+matched_groups['extra_info']
+                    new_filename = "{}-{}-{} {}.{}.{}{}.{}".format(matched_groups['year'], matched_groups['month'], matched_groups['day'], matched_groups['hour'], matched_groups['minutes'], matched_groups['seconds'], extra_info, matched_groups['extension'])
+                    new_filename = new_filename.replace(" ."+matched_groups['extension'], "."+matched_groups['extension'])
+
+                if 'year' in matched_groups and 'month' in matched_groups and 'day' in matched_groups and 'extension' in matched_groups:
+                    if 'extra_info' in matched_groups:
+                        extra_info = " "+matched_groups['extra_info']
+                    new_filename = "{}-{}-{} 00.00.00{}.{}".format(matched_groups['year'], matched_groups['month'], matched_groups['day'], extra_info, matched_groups['extension'])
+                    new_filename = new_filename.replace(" ."+matched_groups['extension'], "."+matched_groups['extension'])
+
+                if 'year' in matched_groups and 'month' in matched_groups and 'extension' in matched_groups:
+                    if 'extra_info' in matched_groups:
+                        extra_info = " "+matched_groups['extra_info']
+                    new_filename = "{}-{}-01 00.00.00{}.{}".format(matched_groups['year'], matched_groups['month'], extra_info, matched_groups['extension'])
+                    new_filename = new_filename.replace(" ."+matched_groups['extension'], "."+matched_groups['extension'])
+
+                if 'year' in matched_groups and 'extension' in matched_groups:
+                    if 'extra_info' in matched_groups:
+                        extra_info = " "+matched_groups['extra_info']
+                    new_filename = "{}-01-01 00.00.00{}.{}".format(matched_groups['year'], extra_info, matched_groups['extension'])
+                    new_filename = new_filename.replace(" ."+matched_groups['extension'], "."+matched_groups['extension'])
+
+                new_filename = new_filename.replace(" -", " ").replace(" _", " ").replace("..", ".").replace(" .", ".").replace("  ", " ")
+                if index in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]:
+                    print(filename+" -> "+new_filename)
+                    os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
+
+                if new_filename == '':
+                    invalid_files[index].append(os.path.join(folder_name, filename))
+                else:
+                    invalid_files[index].append(filename + " -> " + new_filename)
+                    # invalid_files[index].append(os.path.join(folder_name, filename) + " -> " + new_filename)
+                break
+
+            if not matched:
+                logged_filename = os.path.join(folder_name, filename)
+                invalid_files_rest_of_cases.append(logged_filename)
+                #print(f"Invalid filename: {filename} path: {logged_filename.replace(root_dir, '')}")
+                print(f"Invalid filename: {filename}")
 
 
     for index, invalid_file_case in enumerate(invalid_files):
