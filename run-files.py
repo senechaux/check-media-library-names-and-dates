@@ -3,9 +3,13 @@ import re
 import argparse
 
 # TODO 
+# estimate date for "Fotos antiguas" and "Yo de peque"
+# convert videos to mp4
+# DONE
+# rename ny by ñ
+# rename folders like 2001-02-03 (4-5) to 2001-02-03 (04-05)
 # extension to lowercase
 # extension jpeg to jpg
-# rename ny by ñ
 
 def remove_log_files():
     directorio = "logs"
@@ -28,7 +32,7 @@ def check_file_names(root_dir):
     invalid_filename_patterns = [
         # 00 -> 2794 --> filename does not start with a year, i.e.: descenso.jpg or 13.jpg
         re.compile(r'^(?![0-9]{4}).*\.(?:'+extensions+')$'),
-        # 01 -> 479###0 --> 2016-02-28 11.22.592.jpg
+        # 01 -> 479 --> 2016-02-28 11.22.592.jpg
         re.compile(r'^'+yyyymmdd_hyphens+'[ _-]'+hhmmss_dots+'(?P<extra_info>[0-9a-zA-Z ]*)'+extension_regex+'$'),
         # 02 -> 15167 --> 2003-02-23 (10-15-04) Los delicuentes- Angel.jpg
         re.compile(r'^'+yyyymmdd_hyphens+'[ _-]\('+hhmmss_hyphens+'\)[ _-]?(?P<extra_info>[a-zA-Z0-9\(\)]*)?'+extension_regex+'$'),
@@ -65,8 +69,34 @@ def check_file_names(root_dir):
     invalid_files = [[] for _ in range(len(invalid_filename_patterns))]
 
     for folder_name, subfolders, filenames in os.walk(root_dir):
+        ignored_folder_names = re.compile(r'^.*(En proceso|Album Jimena primer año|Album Carmela primer año|Fotos de gente|Fotos Alicia|Camera Uploads|Capturas de pantalla|Foto dibujo caricatura Carmela|Castigos de juegos).*$')
+        if ignored_folder_names.match(folder_name):
+            continue
+
+        # folder_yyyymmdd = ""
+        # folder_pattern = re.compile(r'.*\/\d{4}\/'+yyyymmdd_hyphens+'.*')
+        # folder_pattern_match = folder_pattern.match(folder_name)
+        # if folder_pattern_match:
+        #     matched_groups = folder_pattern_match.groupdict()
+        #     folder_yyyymmdd = "{}-{}-{}".format(matched_groups['year'], matched_groups['month'], matched_groups['day'])
+        #     # print(folder_name)
+        #     # print(matched_groups)
+        # else:
+        #     # print(f"Folder not matched {folder_name}")
+        #     folder_pattern = re.compile(r'.*\/L\/\(L\) '+yyyymmdd_hyphens+'.*')
+        #     folder_pattern_match = folder_pattern.match(folder_name)
+        #     if folder_pattern_match:
+        #         matched_groups = folder_pattern_match.groupdict()
+        #         folder_yyyymmdd = "{}-{}-{}".format(matched_groups['year'], matched_groups['month'], matched_groups['day'])
+        #     else:
+        #         folder_pattern = re.compile(r'.*\/L\/\(L\) (?P<year>[0-9]{4})-(?P<month>0[1-9]|1[0-2]).*')
+        #         folder_pattern_match = folder_pattern.match(folder_name)
+        #         if folder_pattern_match:
+        #             matched_groups = folder_pattern_match.groupdict()
+        #             folder_yyyymmdd = "{}-{}-01".format(matched_groups['year'], matched_groups['month'])
+
         for filename in filenames:
-            if "En proceso" in folder_name or "Album Jimena primer año" in folder_name or "Album Carmela primer año" in folder_name or "Fotos de gente" in folder_name or "Fotos Alicia" in folder_name or "Fotos antiguas" in folder_name or "Castigos de juegos" in folder_name or "Varios" in folder_name or "Yo de peque" in folder_name or filename == ".DS_Store" or filename == ".localized" or valid_filename_pattern.match(filename):
+            if filename == ".DS_Store" or filename == ".localized" or valid_filename_pattern.match(filename):
                 continue
 
             matched = False
@@ -84,35 +114,34 @@ def check_file_names(root_dir):
                         extra_info = " "+matched_groups['extra_info']
                     new_filename = "{}-{}-{} {}.{}.{}{}.{}".format(matched_groups['year'], matched_groups['month'], matched_groups['day'], matched_groups['hour'], matched_groups['minutes'], matched_groups['seconds'], extra_info, matched_groups['extension'])
                     new_filename = new_filename.replace(" ."+matched_groups['extension'], "."+matched_groups['extension'])
-
-                if 'year' in matched_groups and 'month' in matched_groups and 'day' in matched_groups and 'extension' in matched_groups:
+                elif 'year' in matched_groups and 'month' in matched_groups and 'day' in matched_groups and 'extension' in matched_groups:
                     if 'extra_info' in matched_groups:
                         extra_info = " "+matched_groups['extra_info']
                     new_filename = "{}-{}-{} 00.00.00{}.{}".format(matched_groups['year'], matched_groups['month'], matched_groups['day'], extra_info, matched_groups['extension'])
                     new_filename = new_filename.replace(" ."+matched_groups['extension'], "."+matched_groups['extension'])
-
-                if 'year' in matched_groups and 'month' in matched_groups and 'extension' in matched_groups:
+                elif 'year' in matched_groups and 'month' in matched_groups and 'extension' in matched_groups:
                     if 'extra_info' in matched_groups:
                         extra_info = " "+matched_groups['extra_info']
                     new_filename = "{}-{}-01 00.00.00{}.{}".format(matched_groups['year'], matched_groups['month'], extra_info, matched_groups['extension'])
                     new_filename = new_filename.replace(" ."+matched_groups['extension'], "."+matched_groups['extension'])
-
-                if 'year' in matched_groups and 'extension' in matched_groups:
+                elif 'year' in matched_groups and 'extension' in matched_groups:
                     if 'extra_info' in matched_groups:
                         extra_info = " "+matched_groups['extra_info']
                     new_filename = "{}-01-01 00.00.00{}.{}".format(matched_groups['year'], extra_info, matched_groups['extension'])
                     new_filename = new_filename.replace(" ."+matched_groups['extension'], "."+matched_groups['extension'])
+                # elif not folder_yyyymmdd == "":
+                #     new_filename = folder_yyyymmdd + " 00.00.00 " + filename
 
                 new_filename = new_filename.replace(" -", " ").replace(" _", " ").replace("..", ".").replace(" .", ".").replace("  ", " ")
-                if index in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]:
-                    print(filename+" -> "+new_filename)
-                    os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
 
                 if new_filename == '':
                     invalid_files[index].append(os.path.join(folder_name, filename))
                 else:
-                    invalid_files[index].append(filename + " -> " + new_filename)
-                    # invalid_files[index].append(os.path.join(folder_name, filename) + " -> " + new_filename)
+                    # invalid_files[index].append(filename + " -> " + new_filename)
+                    invalid_files[index].append(os.path.join(folder_name, filename) + " -> " + new_filename)
+                    if index in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]:
+                        print(filename+" -> "+new_filename)
+                        # os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
                 break
 
             if not matched:
@@ -127,6 +156,7 @@ def check_file_names(root_dir):
             log_filename = f"invalid_case_0{index}.log"
         else:
             log_filename = f"invalid_case_{index}.log"
+        if len(invalid_file_case) == 0: continue
         with open(f"logs/{log_filename}", "w") as f:
             for filename in invalid_file_case:
                 filename_logged = filename.replace(root_dir, "")
@@ -142,6 +172,44 @@ def check_file_names(root_dir):
 
     print(f"Count of rest of files: {len(invalid_files_rest_of_cases)}")
 
+def rename_uppercase_extensions(root_dir):
+    uppercase_extension_pattern = re.compile(r'^(?P<name>.+)\.(?P<extension>[A-Z]+)$')
+
+    counter = 0
+    for folder_name, subfolders, filenames in os.walk(root_dir):
+        for filename in filenames:
+            if filename == ".DS_Store" or filename == ".localized":
+                continue
+        
+            uppercase_extension_pattern_match = uppercase_extension_pattern.match(filename)
+            if uppercase_extension_pattern_match:
+                counter += 1
+                matched_groups = uppercase_extension_pattern_match.groupdict()
+                new_filename = matched_groups['name'] + "." + matched_groups['extension'].lower()
+                print(filename + " -> " + new_filename)
+                # os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
+    
+    print("Count of uppercase extensions: {}".format(counter))
+
+def rename_jpeg_extensions(root_dir):
+    uppercase_extension_pattern = re.compile(r'^(?P<name>.+)\.(?P<extension>jpeg)$')
+
+    counter = 0
+    for folder_name, subfolders, filenames in os.walk(root_dir):
+        for filename in filenames:
+            if filename == ".DS_Store" or filename == ".localized":
+                continue
+        
+            uppercase_extension_pattern_match = uppercase_extension_pattern.match(filename)
+            if uppercase_extension_pattern_match:
+                counter += 1
+                matched_groups = uppercase_extension_pattern_match.groupdict()
+                new_filename = matched_groups['name'] + ".jpg"
+                print(filename + " -> " + new_filename)
+                # os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
+    
+    print("Count of jpeg extensions: {}".format(counter))
+
 def main():
     parser = argparse.ArgumentParser(description="Check all files recursively to find those that do not match the desired name structure")
     parser.add_argument("--directory", required=True, help="Directory path to check")
@@ -151,6 +219,8 @@ def main():
 
     root_directory = args.directory
     check_file_names(root_directory)
+    # rename_uppercase_extensions(root_directory)
+    # rename_jpeg_extensions(root_directory)
 
 if __name__ == "__main__":
     main()
