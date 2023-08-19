@@ -210,6 +210,25 @@ def rename_jpeg_extensions(root_dir):
     
     print("Count of jpeg extensions: {}".format(counter))
 
+def rename_special_chars(root_dir):
+    special_chars_pattern = re.compile(r'^.+--.+\.(?P<extension>.+)$')
+
+    counter = 0
+    for folder_name, subfolders, filenames in os.walk(root_dir):
+        for filename in filenames:
+            if filename == ".DS_Store" or filename == ".localized":
+                continue
+        
+            special_chars_pattern_match = special_chars_pattern.match(filename)
+            if special_chars_pattern_match:
+                counter += 1
+                matched_groups = special_chars_pattern_match.groupdict()
+                new_filename = ""
+                print(filename + " -> " + new_filename)
+                # os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
+    
+    print("Count of uppercase extensions: {}".format(counter))
+
 def main():
     parser = argparse.ArgumentParser(description="Check all files recursively to find those that do not match the desired name structure")
     parser.add_argument("--directory", required=True, help="Directory path to check")
@@ -221,6 +240,7 @@ def main():
     check_file_names(root_directory)
     # rename_uppercase_extensions(root_directory)
     # rename_jpeg_extensions(root_directory)
+    # rename_special_chars(root_directory)
 
 if __name__ == "__main__":
     main()
