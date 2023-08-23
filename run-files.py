@@ -5,12 +5,12 @@ import subprocess
 
 # TODO 
 # estimate date for "Fotos antiguas" and "Yo de peque"
-# convert videos to mp4
 # DONE
 # rename ny by ñ
 # rename folders like 2001-02-03 (4-5) to 2001-02-03 (04-05)
 # extension to lowercase
 # extension jpeg to jpg
+# convert videos to mp4
 
 def remove_log_files():
     directorio = "logs"
@@ -260,6 +260,8 @@ def find_videos(root_dir):
                 if matched_groups['video_extension'] not in counter_videos_per_extension:
                     counter_videos_per_extension[matched_groups['video_extension']] = 0
                 counter_videos_per_extension[matched_groups['video_extension']] += 1
+                if matched_groups['video_extension'] == '3gp':
+                    print(filename)
             elif images_pattern_match:
                 image_counter += 1
                 matched_groups = images_pattern_match.groupdict()
@@ -306,8 +308,6 @@ def compress_videos(root_dir):
                 full_filename = os.path.join(folder_name, filename)
                 full_new_filename = os.path.join(folder_name, new_filename)
                 if os.path.exists(full_new_filename):
-                    continue
-                if filename in ['2009-03-02 17.08.44.avi', '2005-01-05 03.09.20.avi', '2017-08-12 19.45.03.mov', '2021-08-20 19.34.51.mov', '2018-12-01 18.21.33.mov', '2018-09-28 18.34.43.mov', '2018-09-06 13.49.57.mov']:
                     continue
 
                 if matched_groups['video_extension'] in ['mov']: # todo  # done 3gp wmv webm mpg mkv m4v avi
@@ -374,7 +374,7 @@ def main():
     # rename_jpeg_extensions(root_directory)
     # rename_special_chars(root_directory)
     find_videos(root_directory)
-    compress_videos(root_directory)
+    # compress_videos(root_directory)
 
 if __name__ == "__main__":
     main()
