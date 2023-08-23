@@ -1,6 +1,7 @@
 import os
 import re
 import argparse
+import subprocess
 
 # TODO 
 # estimate date for "Fotos antiguas" and "Yo de peque"
@@ -166,7 +167,7 @@ def check_file_names(root_dir):
         for filename in invalid_files_rest_of_cases:
             filename_logged = filename.replace(root_dir, "")
             f.write(f"{filename_logged}\n")
-    
+
     for index, invalid_file_case in enumerate(invalid_files):
         print(f"Count of case {index} files: {len(invalid_file_case)}")
 
@@ -188,7 +189,7 @@ def rename_uppercase_extensions(root_dir):
                 new_filename = matched_groups['name'] + "." + matched_groups['extension'].lower()
                 print(filename + " -> " + new_filename)
                 # os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
-    
+
     print("Count of uppercase extensions: {}".format(counter))
 
 def rename_jpeg_extensions(root_dir):
@@ -199,7 +200,7 @@ def rename_jpeg_extensions(root_dir):
         for filename in filenames:
             if filename == ".DS_Store" or filename == ".localized":
                 continue
-        
+
             uppercase_extension_pattern_match = uppercase_extension_pattern.match(filename)
             if uppercase_extension_pattern_match:
                 counter += 1
@@ -207,7 +208,7 @@ def rename_jpeg_extensions(root_dir):
                 new_filename = matched_groups['name'] + ".jpg"
                 print(filename + " -> " + new_filename)
                 # os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
-    
+
     print("Count of jpeg extensions: {}".format(counter))
 
 def rename_special_chars(root_dir):
@@ -218,7 +219,7 @@ def rename_special_chars(root_dir):
         for filename in filenames:
             if filename == ".DS_Store" or filename == ".localized":
                 continue
-        
+
             special_chars_pattern_match = special_chars_pattern.match(filename)
             if special_chars_pattern_match:
                 counter += 1
@@ -226,8 +227,139 @@ def rename_special_chars(root_dir):
                 new_filename = ""
                 print(filename + " -> " + new_filename)
                 # os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
-    
+
     print("Count of uppercase extensions: {}".format(counter))
+
+def find_videos(root_dir):
+    videos_pattern = re.compile(r'^.+\.(?P<video_extension>mp4|avi|mov|mpg|m4v|webm|3gp|wmv|mkv)$')
+    images_pattern = re.compile(r'^.+\.(?P<image_extension>jpg|jpeg|png|gif|bmp)$')
+    any_file_pattern = re.compile(r'^.+\.(?P<extension>.+)$')
+
+    video_extensions = set()
+    image_extensions = set()
+    any_file_extensions = set()
+    counter_videos_per_extension = {}
+    counter_images_per_extension = {}
+    counter_any_files_per_extension = {}
+
+    video_counter = 0
+    image_counter = 0
+    any_file_counter = 0
+    for folder_name, subfolders, filenames in os.walk(root_dir):
+        for filename in filenames:
+            if filename == ".DS_Store" or filename == ".localized":
+                continue
+
+            videos_pattern_match = videos_pattern.match(filename)
+            images_pattern_match = images_pattern.match(filename)
+            any_file_pattern_match = any_file_pattern.match(filename)
+            if videos_pattern_match:
+                video_counter += 1
+                matched_groups = videos_pattern_match.groupdict()
+                video_extensions.add(matched_groups['video_extension'])
+                if matched_groups['video_extension'] not in counter_videos_per_extension:
+                    counter_videos_per_extension[matched_groups['video_extension']] = 0
+                counter_videos_per_extension[matched_groups['video_extension']] += 1
+            elif images_pattern_match:
+                image_counter += 1
+                matched_groups = images_pattern_match.groupdict()
+                image_extensions.add(matched_groups['image_extension'])
+                if matched_groups['image_extension'] not in counter_images_per_extension:
+                    counter_images_per_extension[matched_groups['image_extension']] = 0
+                counter_images_per_extension[matched_groups['image_extension']] += 1
+            elif any_file_pattern_match:
+                any_file_counter += 1
+                matched_groups = any_file_pattern_match.groupdict()
+                any_file_extensions.add(matched_groups['extension'])
+                if matched_groups['extension'] not in counter_any_files_per_extension:
+                    counter_any_files_per_extension[matched_groups['extension']] = 0
+                counter_any_files_per_extension[matched_groups['extension']] += 1
+
+    print("Count of videos: {}".format(video_counter))
+    print("Count of images: {}".format(image_counter))
+    print("Count of other files: {}".format(any_file_counter))
+    print("Video extensions: ")
+    print(video_extensions)
+    print("Image extensions: ")
+    print(image_extensions)
+    print("Other files extensions: ")
+    print(any_file_extensions)
+    print("Count of videos per extension: ")
+    print(counter_videos_per_extension)
+    print("Count of images per extension: ")
+    print(counter_images_per_extension)
+    print("Count of rest of files per extension: ")
+    print(counter_any_files_per_extension)
+
+def compress_videos(root_dir):
+    videos_pattern = re.compile(r'^.+\.(?P<video_extension>mp4|avi|mov|mpg|m4v|webm|3gp|wmv|mkv)$')
+    for folder_name, subfolders, filenames in os.walk(root_dir):
+        for filename in filenames:
+            if filename == ".DS_Store" or filename == ".localized":
+                continue
+
+
+            videos_pattern_match = videos_pattern.match(filename)
+            if videos_pattern_match:
+                matched_groups = videos_pattern_match.groupdict()
+                new_filename = filename.replace("."+matched_groups['video_extension'], ".mp4")
+                full_filename = os.path.join(folder_name, filename)
+                full_new_filename = os.path.join(folder_name, new_filename)
+                if os.path.exists(full_new_filename):
+                    continue
+                if filename in ['2009-03-02 17.08.44.avi', '2005-01-05 03.09.20.avi', '2017-08-12 19.45.03.mov', '2021-08-20 19.34.51.mov', '2018-12-01 18.21.33.mov', '2018-09-28 18.34.43.mov', '2018-09-06 13.49.57.mov']:
+                    continue
+
+                if matched_groups['video_extension'] in ['mov']: # todo  # done 3gp wmv webm mpg mkv m4v avi
+                    file_size = os.path.getsize(full_filename) / 1048576                    
+                    print(full_filename)
+                    mediainfo_command = 'mediainfo --Inform="Video;%Width% %Height%" "'+full_filename+'"'
+                    result = subprocess.run(mediainfo_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                    width = 0
+                    height = 0
+                    if result.returncode == 0:
+                        output = result.stdout.replace("\n", "")
+                        width_and_height = output.split(' ')
+                        width = width_and_height[0]
+                        height = width_and_height[1]
+                        print(width+"x"+height)
+                    else:
+                        error = result.stderr
+                        print("Error executing mediainfo_command:")
+                        print(error)
+
+                    handbrake_command = '/Applications/HandBrakeCLI --input "{}" --output "{}" --width {} --height {} --preset="Fast 720p30"'.format(
+                        full_filename,
+                        full_new_filename,
+                        width,
+                        height
+                    )
+                    print(handbrake_command)
+                    print(f"Size of original video {filename}: {file_size:.2f} MB")
+                    try:
+                        with subprocess.Popen(handbrake_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) as process:
+                            for line in process.stdout:
+                                print(filename + ' '  + line, end='')
+                    except subprocess.CalledProcessError as e:
+                        with open('compression_errors.txt', 'a') as file:
+                            file.write(handbrake_command)
+                    else:
+                        if not os.path.exists(full_new_filename):
+                            with open('compression_errors_new_file_not_found.txt', 'a') as file:
+                                file.write(handbrake_command+"\n")
+                        else:
+                            new_file_size = os.path.getsize(full_new_filename) / 1048576
+                            print(f"Size of original video {filename}: {file_size:.2f} MB")
+                            print(f"Size of new video {new_filename}: {new_file_size:.2f} MB")
+                            if new_file_size < file_size*0.5 or new_file_size > file_size*1.5:
+                                print("ERROR: new file is too big or too small "+new_filename)
+                                with open('too_different_sizes.txt', 'a') as file:
+                                    file.write(f"Size of original video {full_filename}: {file_size:.2f} MB\n")
+                                    file.write(f"Size of new video {full_new_filename}: {new_file_size:.2f} MB\n")
+                            else:
+                                with open('deleted_videos.txt', 'a') as file:
+                                    file.write(f"{full_filename}\n")
+                                os.remove(full_filename)
 
 def main():
     parser = argparse.ArgumentParser(description="Check all files recursively to find those that do not match the desired name structure")
@@ -237,10 +369,12 @@ def main():
     remove_log_files()
 
     root_directory = args.directory
-    check_file_names(root_directory)
+    # check_file_names(root_directory)
     # rename_uppercase_extensions(root_directory)
     # rename_jpeg_extensions(root_directory)
     # rename_special_chars(root_directory)
+    find_videos(root_directory)
+    compress_videos(root_directory)
 
 if __name__ == "__main__":
     main()
