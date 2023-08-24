@@ -2,9 +2,13 @@ import os
 import re
 import argparse
 import subprocess
+from PIL import Image
+from PIL.ExifTags import TAGS
+from datetime import datetime
 
 # TODO 
 # estimate date for "Fotos antiguas" and "Yo de peque"
+# change EXIF data based on filename
 # DONE
 # rename ny by ñ
 # rename folders like 2001-02-03 (4-5) to 2001-02-03 (04-05)
@@ -361,6 +365,61 @@ def compress_videos(root_dir):
                                     file.write(f"{full_filename}\n")
                                 os.remove(full_filename)
 
+def check_exif_datetime(root_dir):
+    extensions = "jpg|png|gif|bmp"
+    extension_regex = '\.(?P<extension>'+extensions+')'
+    yyyymmdd_hyphens = "(?P<year>[0-9]{4})-(?P<month>0[1-9]|1[0-2])-(?P<day>[0-2][0-9]|3[01])"
+    hhmmss_dots = "(?P<hour>[0-2][0-9])\.(?P<minutes>[0-5][0-9])\.(?P<seconds>[0-5][0-9])"
+    valid_filename_pattern = re.compile(r'^'+yyyymmdd_hyphens+' '+hhmmss_dots+'( .+)?'+extension_regex+'$')
+    valid_filename_pattern = re.compile(r'^'+yyyymmdd_hyphens+' '+hhmmss_dots+'( .+)?'+extension_regex+'$')
+    videos_pattern = re.compile(r'^.+\.(?P<video_extension>mp4|avi|mov|mpg|m4v|webm|3gp|wmv|mkv)$')
+    not_valid_files_extention = re.compile(r'^.+\.(eps|ai|mp3|itm|txt|aup|m4a|7z|xml|wav|nmea|pdf|tif|gpx|mcf|svg)$')
+    other_images_extention = re.compile(r'^.+\.(bmp|png|gif)$')
+    images_counter = 0
+    for folder_name, subfolders, filenames in os.walk(root_dir):
+        ignored_folder_names = re.compile(r'^.*(En proceso|Album Jimena primer año|Album Carmela primer año|Fotos de gente|Fotos Alicia|Camera Uploads|Capturas de pantalla|Foto dibujo caricatura Carmela|Castigos de juegos).*$')
+        if ignored_folder_names.match(folder_name):
+            continue
+        for filename in filenames:
+            if filename == ".DS_Store" or filename == ".localized" or videos_pattern.match(filename) or not_valid_files_extention.match(filename) or other_images_extention.match(filename):
+                continue
+
+            full_filename = os.path.join(folder_name, filename)
+            pattern_match = valid_filename_pattern.match(filename)
+            if not pattern_match:
+                with open('logs/exif_not_pattern_match.log', 'a') as file:
+                    file.write('Not pattern_match: ' + full_filename + "\n")
+                continue
+
+            images_counter += 1
+            print(images_counter)
+            matched_groups = pattern_match.groupdict()
+
+            datetime_from_filename = "{}:{}:{} {}:{}:{}".format(matched_groups['year'], matched_groups['month'], matched_groups['day'], matched_groups['hour'], matched_groups['minutes'], matched_groups['seconds'])
+            try:
+                date_time_original = ''
+                date_time_digitized = ''
+                image = Image.open(os.path.join(folder_name, filename))
+                exif_data = image._getexif()
+                for tag, value in exif_data.items():
+                    tag_name = TAGS.get(tag, tag)
+                    if tag_name in ['DateTimeOriginal']:
+                        date_time_original = value
+                    if tag_name in ['DateTimeDigitized']:
+                        date_time_digitized = value
+                if datetime_from_filename != date_time_original or datetime_from_filename != date_time_digitized:
+                    with open('logs/exif_date_different_name_date.log', 'a') as file:
+                        file.write('file: ' + filename + "\n")
+                        file.write('datetime_from_file : '+datetime_from_filename + "\n")
+                        file.write('date_time_original : '+date_time_original + "\n")
+                        file.write('date_time_digitized: '+date_time_digitized + "\n")
+
+            except Exception as e:
+                with open('logs/exif_getting_error.log', 'a') as file:
+                    file.write("Error on file: " + full_filename.replace(root_dir, '') + " - " + str(e) + "\n")
+
+                # print("Error "+filename+":", e)
+
 def main():
     parser = argparse.ArgumentParser(description="Check all files recursively to find those that do not match the desired name structure")
     parser.add_argument("--directory", required=True, help="Directory path to check")
@@ -375,6 +434,7 @@ def main():
     # rename_special_chars(root_directory)
     find_videos(root_directory)
     # compress_videos(root_directory)
+    check_exif_datetime(root_directory)
 
 if __name__ == "__main__":
     main()
