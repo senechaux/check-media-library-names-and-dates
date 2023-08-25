@@ -2,19 +2,21 @@ import os
 import re
 import argparse
 import subprocess
+import math
 from PIL import Image
 from PIL.ExifTags import TAGS
 from datetime import datetime
 
 # TODO 
 # estimate date for "Fotos antiguas" and "Yo de peque"
-# change EXIF data based on filename
+# change EXIF data based on filename for videos
 # DONE
 # rename ny by ñ
 # rename folders like 2001-02-03 (4-5) to 2001-02-03 (04-05)
 # extension to lowercase
 # extension jpeg to jpg
 # convert videos to mp4
+# change EXIF data based on filename for images
 
 def remove_log_files():
     directorio = "logs"
@@ -366,6 +368,22 @@ def compress_videos(root_dir):
                                 os.remove(full_filename)
 
 def check_exif_datetime(root_dir):
+    # datetime_from_filename = "2014:01:01 01:02:16"
+    # date_time_original = "2014:01:01 01:02:16"
+    # format_string = "%Y:%m:%d %H:%M:%S"
+    # date_object_from_filename = datetime.strptime(datetime_from_filename, format_string)
+    # date_object_from_exif = datetime.strptime(date_time_original, format_string)
+    # time_difference = date_object_from_filename - date_object_from_exif
+    # difference_in_minutes = math.floor(abs(time_difference.total_seconds() / 60))
+    # difference_in_hours = math.floor(abs(time_difference.total_seconds() / 3600))
+    # print("date_object_from_filename")
+    # print(date_object_from_filename)
+    # print("date_object_from_exif")
+    # print(date_object_from_exif)
+    # print("difference_in_minutes: " + str(difference_in_minutes))
+    # print("difference_in_hours: " + str(difference_in_hours))
+    # return
+
     extensions = "jpg|png|gif|bmp"
     extension_regex = '\.(?P<extension>'+extensions+')'
     yyyymmdd_hyphens = "(?P<year>[0-9]{4})-(?P<month>0[1-9]|1[0-2])-(?P<day>[0-2][0-9]|3[01])"
@@ -377,7 +395,7 @@ def check_exif_datetime(root_dir):
     other_images_extention = re.compile(r'^.+\.(bmp|png|gif)$')
     images_counter = 0
     for folder_name, subfolders, filenames in os.walk(root_dir):
-        ignored_folder_names = re.compile(r'^.*(En proceso|Album Jimena primer año|Album Carmela primer año|Fotos de gente|Fotos Alicia|Camera Uploads|Capturas de pantalla|Foto dibujo caricatura Carmela|Castigos de juegos).*$')
+        ignored_folder_names = re.compile(r'^.*(En proceso|Album Jimena primer año|Album Carmela primer año|Fotos de gente|Fotos Alicia|Camera Uploads|Capturas de pantalla|Foto dibujo caricatura Carmela|Castigos de juegos|2005-01-05 Fiesta de pijamas).*$')
         if ignored_folder_names.match(folder_name):
             continue
         for filename in filenames:
@@ -387,8 +405,6 @@ def check_exif_datetime(root_dir):
             full_filename = os.path.join(folder_name, filename)
             pattern_match = valid_filename_pattern.match(filename)
             if not pattern_match:
-                with open('logs/exif_not_pattern_match.log', 'a') as file:
-                    file.write('Not pattern_match: ' + full_filename + "\n")
                 continue
 
             images_counter += 1
@@ -399,26 +415,105 @@ def check_exif_datetime(root_dir):
             try:
                 date_time_original = ''
                 date_time_digitized = ''
+                datetime_original_tag = None
+                datetime_digitized_tag = None
                 image = Image.open(os.path.join(folder_name, filename))
                 exif_data = image._getexif()
                 for tag, value in exif_data.items():
                     tag_name = TAGS.get(tag, tag)
-                    if tag_name in ['DateTimeOriginal']:
+                    if tag_name == 'DateTimeOriginal':
+                        datetime_original_tag = tag
                         date_time_original = value
-                    if tag_name in ['DateTimeDigitized']:
+                    if tag_name == 'DateTimeDigitized':
+                        datetime_digitized_tag = tag
                         date_time_digitized = value
-                if datetime_from_filename != date_time_original or datetime_from_filename != date_time_digitized:
-                    with open('logs/exif_date_different_name_date.log', 'a') as file:
-                        file.write('file: ' + filename + "\n")
-                        file.write('datetime_from_file : '+datetime_from_filename + "\n")
-                        file.write('date_time_original : '+date_time_original + "\n")
-                        file.write('date_time_digitized: '+date_time_digitized + "\n")
+                if datetime_from_filename != date_time_original: # or datetime_from_filename != date_time_digitized:
+                    format_string = "%Y:%m:%d %H:%M:%S"
+                    date_object_from_filename = datetime.strptime(datetime_from_filename, format_string)
+                    date_object_from_exif = datetime.strptime(date_time_original, format_string)
+                    time_difference = date_object_from_filename - date_object_from_exif
+                    difference_in_hours = math.floor(abs(time_difference.total_seconds() / 3600))
 
+                    if difference_in_hours < 1: # 1 hour
+                        if ' 00:00:00' in datetime_from_filename:
+                            with open('logs/exif_date_different_name_date_01_less_than_one_hour_000000.log', 'a') as file:
+                                file.write('file: ' + filename + "\n")
+                                file.write('datetime_from_file : '+datetime_from_filename + "\n")
+                                file.write('date_time_original : '+date_time_original + "\n")
+                                file.write('date_time_digitized: '+date_time_digitized + "\n")
+                        else:
+                            new_filename = "diff_less_1_hour " + filename
+                            # os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
+                            with open('logs/exif_date_different_name_date_01_less_than_one_hour.log', 'a') as file:
+                                file.write('file: ' + new_filename + "\n")
+                                file.write('datetime_from_file : '+datetime_from_filename + "\n")
+                                file.write('date_time_original : '+date_time_original + "\n")
+                                file.write('date_time_digitized: '+date_time_digitized + "\n")
+                    elif difference_in_hours < 24: # 1 day
+                        if ' 00:00:00' in datetime_from_filename:
+                            new_filename = "diff_less_1_day " + filename
+                            # os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
+                            with open('logs/exif_date_different_name_date_02_less_than_one_day_000000.log', 'a') as file:
+                                file.write('file: ' + new_filename + "\n")
+                                file.write('datetime_from_file : '+datetime_from_filename + "\n")
+                                file.write('date_time_original : '+date_time_original + "\n")
+                                file.write('date_time_digitized: '+date_time_digitized + "\n")
+                        else:
+                            new_filename = "diff_less_1_day " + filename
+                            # os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
+                            with open('logs/exif_date_different_name_date_02_less_than_one_day.log', 'a') as file:
+                                file.write('file: ' + new_filename + "\n")
+                                file.write('datetime_from_file : '+datetime_from_filename + "\n")
+                                file.write('date_time_original : '+date_time_original + "\n")
+                                file.write('date_time_digitized: '+date_time_digitized + "\n")
+                    elif difference_in_hours < (24 * 30): # 1 month
+                        if ' 00:00:00' in datetime_from_filename:
+                            new_filename = "diff_less_1_month " + filename
+                            # os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
+                            with open('logs/exif_date_different_name_date_03_less_than_one_month_000000.log', 'a') as file:
+                                file.write('file: ' + new_filename + "\n")
+                                file.write('datetime_from_file : '+datetime_from_filename + "\n")
+                                file.write('date_time_original : '+date_time_original + "\n")
+                                file.write('date_time_digitized: '+date_time_digitized + "\n")
+                        else:
+                            new_filename = "diff_less_1_month " + filename
+                            # os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
+                            with open('logs/exif_date_different_name_date_03_less_than_one_month.log', 'a') as file:
+                                file.write('file: ' + new_filename + "\n")
+                                file.write('datetime_from_file : '+datetime_from_filename + "\n")
+                                file.write('date_time_original : '+date_time_original + "\n")
+                                file.write('date_time_digitized: '+date_time_digitized + "\n")
+                    elif difference_in_hours < (24 * 30 * 12): # 1 year
+                        if ' 00:00:00' in datetime_from_filename:
+                            new_filename = "diff_less_1_year " + filename
+                            # os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
+                            with open('logs/exif_date_different_name_date_04_less_than_one_year_000000.log', 'a') as file:
+                                file.write('file: ' + new_filename + "\n")
+                                file.write('datetime_from_file : '+datetime_from_filename + "\n")
+                                file.write('date_time_original : '+date_time_original + "\n")
+                                file.write('date_time_digitized: '+date_time_digitized + "\n")
+                        else:
+                            new_filename = "diff_less_1_year " + filename
+                            # os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
+                            with open('logs/exif_date_different_name_date_04_less_than_one_year.log', 'a') as file:
+                                file.write('file: ' + new_filename + "\n")
+                                file.write('datetime_from_file : '+datetime_from_filename + "\n")
+                                file.write('date_time_original : '+date_time_original + "\n")
+                                file.write('date_time_digitized: '+date_time_digitized + "\n")
+                    else:
+                        new_filename = "diff_more_1_year " + filename
+                        # os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
+                        with open('logs/exif_date_different_name_date_05_more_than_one_year.log', 'a') as file:
+                            file.write('file: ' + new_filename + "\n")
+                            file.write('datetime_from_file : '+datetime_from_filename + "\n")
+                            file.write('date_time_original : '+date_time_original + "\n")
+                            file.write('date_time_digitized: '+date_time_digitized + "\n")
             except Exception as e:
+                new_filename = "exif_getting_error " + filename
+                os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
                 with open('logs/exif_getting_error.log', 'a') as file:
+                    file.write('file: ' + new_filename + "\n")
                     file.write("Error on file: " + full_filename.replace(root_dir, '') + " - " + str(e) + "\n")
-
-                # print("Error "+filename+":", e)
 
 def main():
     parser = argparse.ArgumentParser(description="Check all files recursively to find those that do not match the desired name structure")
