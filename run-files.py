@@ -10,7 +10,6 @@ from datetime import datetime
 
 # TODO 
 # estimate date for "Fotos antiguas" and "Yo de peque"
-# change EXIF data based on filename for videos
 # DONE
 # rename ny by ñ
 # rename folders like 2001-02-03 (4-5) to 2001-02-03 (04-05)
@@ -18,6 +17,7 @@ from datetime import datetime
 # extension jpeg to jpg
 # convert videos to mp4
 # change EXIF data based on filename for images
+# change EXIF data based on filename for videos
 
 def remove_log_files():
     directorio = "logs"
@@ -288,29 +288,33 @@ def find_videos(root_dir):
                     counter_any_files_per_extension[matched_groups['extension']] = 0
                 counter_any_files_per_extension[matched_groups['extension']] += 1
 
-    print("Count of videos: {}".format(video_counter))
-    print("Count of mp4 videos: {}".format(counter_videos_per_extension['mp4']))
-    print("Count of images: {}".format(image_counter))
-    print("Count of other files: {}".format(any_file_counter))
-    print("Video extensions: ")
-    print(video_extensions)
-    print("Image extensions: ")
-    print(image_extensions)
-    print("Other files extensions: ")
-    print(any_file_extensions)
-    print("Count of videos per extension: ")
-    print(counter_videos_per_extension)
-    print("Count of videos per year: ")
-    print(dict(sorted(counter_videos_per_year.items(), key=lambda item: item[0])))
-    percentage_videos_per_year = counter_videos_per_year
-    for key in percentage_videos_per_year:
-        percentage_videos_per_year[key] = str(round(percentage_videos_per_year[key] * 100 / counter_videos_per_extension['mp4']))+"%"
-    print("Percentage of videos per year: ")
-    print(dict(sorted(percentage_videos_per_year.items(), key=lambda item: item[0])))
-    print("Count of images per extension: ")
-    print(counter_images_per_extension)
-    print("Count of rest of files per extension: ")
-    print(counter_any_files_per_extension)
+    with open('logs/video_counts.log', 'a') as file:
+        file.write(filename + "\n")
+        file.write("Count of videos: {}".format(video_counter) + "\n")
+        file.write("Count of mp4 videos: {}".format(counter_videos_per_extension['mp4']) + "\n")
+        file.write("Count of images: {}".format(image_counter) + "\n")
+        file.write("Count of other files: {}".format(any_file_counter) + "\n")
+        file.write("Video extensions: " + "\n")
+        file.write(str(video_extensions) + "\n")
+        file.write("Image extensions: " + "\n")
+        file.write(str(image_extensions) + "\n")
+        file.write("Other files extensions: " + "\n")
+        file.write(str(any_file_extensions) + "\n")
+        file.write("Count of videos per extension: " + "\n")
+        file.write(str(counter_videos_per_extension) + "\n")
+        file.write("Count of videos per year: " + "\n")
+        file.write(str(dict(sorted(counter_videos_per_year.items(), key=lambda item: item[0]))) + "\n")
+        percentage_videos_per_year = counter_videos_per_year
+        for key in percentage_videos_per_year:
+            percentage_videos_per_year[key] = str(round(percentage_videos_per_year[key] * 100 / counter_videos_per_extension['mp4']))+"%"
+        file.write("Percentage of videos per year: " + "\n")
+        file.write(str(dict(sorted(percentage_videos_per_year.items(), key=lambda item: item[0]))) + "\n")
+        file.write("Count of images per extension: " + "\n")
+        file.write(str(counter_images_per_extension) + "\n")
+        file.write("Count of rest of files per extension: " + "\n")
+        file.write(str(counter_any_files_per_extension) + "\n")
+
+    
 
 def log_filenames(root_dir):
     videos_pattern = re.compile(r'^(?P<year>[0-9]{4})-.+\.(?P<video_extension>mp4|avi|mov|mpg|m4v|webm|3gp|wmv|mkv)$')
@@ -677,10 +681,10 @@ def main():
     # rename_uppercase_extensions(root_directory)
     # rename_jpeg_extensions(root_directory)
     # rename_special_chars(root_directory)
-    # find_videos(root_directory)
+    find_videos(root_directory)
     # compress_videos(root_directory)
-    # check_exif_datetime_images(root_directory)
-    # check_exif_datetime_videos(root_directory)
+    check_exif_datetime_images(root_directory)
+    check_exif_datetime_videos(root_directory)
     log_filenames(root_directory)
 
 if __name__ == "__main__":
