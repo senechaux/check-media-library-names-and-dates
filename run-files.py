@@ -10,6 +10,10 @@ from datetime import datetime
 
 # TODO 
 # estimate date for "Fotos antiguas" and "Yo de peque"
+# download folders from Google Drive and compare with local ones
+# "2017-01-07 Reyes magos Prosperidad" is empty! check in external disk
+# recover original videos from external disk
+# upload all photos to google photos
 # DONE
 # rename ny by ñ
 # rename folders like 2001-02-03 (4-5) to 2001-02-03 (04-05)
@@ -18,13 +22,17 @@ from datetime import datetime
 # convert videos to mp4
 # change EXIF data based on filename for images
 # change EXIF data based on filename for videos
+# remove all photos from google photos
+# remove all albums from google photos using MacroRecorder
+# encode to reduce size of biggest videos
+#   mediainfo --Inform="Video;bitrate:%BitRate%b/s duration:%Duration%ms" video.mp4
 
 def remove_log_files():
-    directorio = "logs"
+    dir = "logs"
 
-    for file in os.listdir(directorio):
+    for file in os.listdir(dir):
         if file.endswith(".log"):
-            filename = os.path.join(directorio, file)
+            filename = os.path.join(dir, file)
             os.remove(filename)
             print(f"Removed file: {filename}")
 
@@ -314,9 +322,44 @@ def find_videos(root_dir):
         file.write("Count of rest of files per extension: " + "\n")
         file.write(str(counter_any_files_per_extension) + "\n")
 
+def sort_file(input_file_path, output_file_path, reverse=False):
+    with open(input_file_path, 'r') as file:
+        lines = file.readlines()
     
+    lines.sort(reverse=reverse)
+    
+    with open(output_file_path, 'w') as file:
+        for line in lines:
+            file.write(line)
 
-def log_filenames(root_dir):
+def get_numeric_prefix(line):
+    starting_number_pattern = re.compile(r'^(?P<number>\d+(\.\d+)).*$')
+    starting_number_pattern_match = starting_number_pattern.match(line)
+    matched_groups = starting_number_pattern_match.groupdict()
+
+    if starting_number_pattern_match:
+        numeric_part = matched_groups['number']
+        return float(numeric_part)
+    else:
+        return 0
+
+def sort_file_by_numeric_prefix(input_file_path, output_file_path, reverse=False):
+    with open(input_file_path, 'r') as file:
+        lines = file.readlines()
+    
+    sorted_lines = sorted(lines, key=get_numeric_prefix, reverse=reverse)
+    
+    with open(output_file_path, 'w') as file:
+        for line in sorted_lines:
+            file.write(line)
+
+def convert_milliseconds(milliseconds):
+    total_seconds = milliseconds / 1000
+    minutes = total_seconds / 60
+    seconds = total_seconds % 60
+    return minutes, seconds
+
+def log_filenames(root_dir, include_dir=False):
     videos_pattern = re.compile(r'^(?P<year>[0-9]{4})-.+\.(?P<video_extension>mp4|avi|mov|mpg|m4v|webm|3gp|wmv|mkv)$')
     images_pattern = re.compile(r'^.+\.(?P<image_extension>jpg|jpeg|png|gif|bmp)$')
     any_file_pattern = re.compile(r'^.+\.(?P<extension>.+)$')
@@ -336,19 +379,19 @@ def log_filenames(root_dir):
             if videos_pattern_match:
                 video_counter += 1
                 with open('logs/video_names.log', 'a') as file:
-                    file.write(filename + "\n")
+                    file.write((os.path.join(folder_name, filename) if include_dir else filename) + "\n")
             elif images_pattern_match:
                 image_counter += 1
                 with open('logs/image_names.log', 'a') as file:
-                    file.write(filename + "\n")
+                    file.write((os.path.join(folder_name, filename) if include_dir else filename) + "\n")
             elif any_file_pattern_match:
                 any_file_counter += 1
                 with open('logs/any_file_names.log', 'a') as file:
-                    file.write(filename + "\n")
+                    file.write((os.path.join(folder_name, filename) if include_dir else filename) + "\n")
             else:
                 rest_file_counter += 1
                 with open('logs/rest_of_file_names.log', 'a') as file:
-                    file.write(filename + "\n")
+                    file.write((os.path.join(folder_name, filename) if include_dir else filename) + "\n")
 
             print("video_counter: " + str(video_counter))
             print("image_counter: " + str(image_counter))
@@ -356,7 +399,7 @@ def log_filenames(root_dir):
             print("rest_file_counter: " + str(rest_file_counter))
 
 
-def compress_videos(root_dir):
+def compress_non_mp4_videos(root_dir):
     videos_pattern = re.compile(r'^.+\.(?P<video_extension>mp4|avi|mov|mpg|m4v|webm|3gp|wmv|mkv)$')
     for folder_name, subfolders, filenames in os.walk(root_dir):
         for filename in filenames:
@@ -373,7 +416,7 @@ def compress_videos(root_dir):
                 if os.path.exists(full_new_filename):
                     continue
 
-                if matched_groups['video_extension'] in ['mov']: # todo  # done 3gp wmv webm mpg mkv m4v avi
+                if matched_groups['video_extension'] in ['3gp', 'wmv', 'webm', 'mpg', 'mkv', 'm4v', 'avi']:
                     file_size = os.path.getsize(full_filename) / 1048576                    
                     print(full_filename)
                     mediainfo_command = 'mediainfo --Inform="Video;%Width% %Height%" "'+full_filename+'"'
@@ -609,12 +652,12 @@ def check_exif_datetime_videos(root_dir):
             print("\nvideos_counter: " + str(videos_counter))
             print(filename)
 
-            videos_diff_00_hour_because_of_timezone_so_are_equal = []
-            with open('logs_video_analysis_second_pass/videos_diff_00_hour_because_of_timezone_so_are_equal.log', 'r') as file:
-                for line in file:
-                    videos_diff_00_hour_because_of_timezone_so_are_equal.append(line.strip())
-            if full_filename.replace(root_dir, '') in videos_diff_00_hour_because_of_timezone_so_are_equal:
-                continue
+            # videos_diff_00_hour_because_of_timezone_so_are_equal = []
+            # with open('logs_video_analysis_second_pass/videos_diff_00_hour_because_of_timezone_so_are_equal.log', 'r') as file:
+            #     for line in file:
+            #         videos_diff_00_hour_because_of_timezone_so_are_equal.append(line.strip())
+            # if full_filename.replace(root_dir, '') in videos_diff_00_hour_because_of_timezone_so_are_equal:
+            #     continue
             #     new_filename = 'equal_with_different_timezone_to_change ' + filename
             #     print('renaming to ' + new_filename)
             #     os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
@@ -669,23 +712,151 @@ def check_exif_datetime_videos(root_dir):
             else:
                 write_log_exif_datetime_videos("logs/videos_diff_04_more_1_year.log", root_dir, full_filename, tag_date, tag_com_apple_quicktime_creationdate, tag_creation_time, filename_time, difference_in_days, time_difference)
 
+def find_biggest_videos(root_dir):
+    videos_pattern = re.compile(r'^(?P<year>[0-9]{4})-.+\.(?P<video_extension>mp4|avi|mov|mpg|m4v|webm|3gp|wmv|mkv)$')
+
+    video_counter = 0
+    for folder_name, subfolders, filenames in os.walk(root_dir):
+        for filename in filenames:
+            if filename == ".DS_Store" or filename == ".localized":
+                continue
+
+            videos_pattern_match = videos_pattern.match(filename)
+            if not videos_pattern_match:
+                continue
+
+            video_counter += 1
+            full_filename = os.path.join(folder_name, filename)
+            file_size = os.path.getsize(full_filename)
+            file_size_mb = math.floor(file_size / 1000 / 1000)
+            if file_size_mb < 100:
+                continue
+            mediainfo_command = 'mediainfo --Inform="Video;%BitRate% | %Duration% | %Width%x%Height%" "'+full_filename+'"'
+            result = subprocess.run(mediainfo_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            bitrate = 0
+            duration_milliseconds = 0
+            duration_minutes = 0
+            duration_seconds = 0
+            if result.returncode == 0:
+                output = result.stdout.replace("\n", "")
+                output_splitted = output.split(' | ')
+                bitrate = round(int(output_splitted[0]) / 1000000, 2) # b/s to Mb/s
+                bitrate_splitted = str(bitrate).split('.')
+                bitrate = bitrate_splitted[0].rjust(2, "0") + '.' + bitrate_splitted[1].ljust(2, "0")
+                duration_milliseconds = output_splitted[1]
+                duration_minutes, duration_seconds = convert_milliseconds(int(duration_milliseconds))
+                duration_minutes = math.floor(duration_minutes)
+                duration_seconds = math.floor(duration_seconds)
+                width_x_height = output_splitted[2]
+            else:
+                error = result.stderr
+                print("Error executing mediainfo_command:")
+                print(error)
+            file_size_mb_padded = str(file_size_mb).rjust(4, "0")
+            with open('logs/biggest_videos_by_size.log', 'a') as file:
+                file.write(str(file_size_mb_padded) + " MB | " + str(bitrate) + " Mb/s | " + str(duration_minutes) + "m" + str(duration_seconds) + "s | " + width_x_height + " -> " + filename + " " + full_filename + "\n")
+            with open('logs/biggest_videos_by_bitrate.log', 'a') as file:
+                file.write(str(bitrate) + " Mb/s | " + str(file_size_mb_padded) + " MB | " + str(duration_minutes) + "m" + str(duration_seconds) + "s | " + width_x_height + " -> " + filename + " " + full_filename + "\n")
+
+    sort_file('logs/biggest_videos_by_size.log', 'logs/biggest_videos_by_size.log', reverse=True)
+    sort_file('logs/biggest_videos_by_bitrate.log', 'logs/biggest_videos_by_bitrate.log', reverse=True)
+
+def get_all_video_filenames(root_dir):
+    videos_pattern = re.compile(r'^.+\.(?P<video_extension>mp4|avi|mov|mpg|m4v|webm|3gp|wmv|mkv)$')
+    video_filenames = {}
+
+    for folder_name, subfolders, filenames in os.walk(root_dir):
+        for filename in filenames:
+            if not videos_pattern.match(filename):
+                continue
+
+            video_filenames[filename] = os.path.join(folder_name, filename)
+    
+    return video_filenames
+
+def compare_original_video_with_compressed_video(root_dir, source_dir, destiny_dir):
+    original_videos = []
+    compressed_videos = []
+    for folder_name, subfolders, filenames in os.walk(destiny_dir):
+        for filename in filenames:
+            if filename.endswith('.mp4'):
+                original_videos.append(filename)
+    for folder_name, subfolders, filenames in os.walk(destiny_dir):
+        for filename in filenames:
+            if filename.endswith('.mp4'):
+                compressed_videos.append(filename)
+    
+    video_filenames = get_all_video_filenames(root_dir)
+
+    num_original_videos = len(original_videos)
+    num_compressed_videos = len(compressed_videos)
+    if num_original_videos != num_compressed_videos:
+        print(f"Error, there are {num_original_videos} original videos and {num_compressed_videos} compressed videos")
+        with open("logs/compare_original_video_with_compressed_video.log", "a") as f:
+            f.write(f"Error, there are {num_original_videos} original videos and {num_compressed_videos} compressed videos\n")
+
+
+    for original_video in original_videos:
+        if not original_video in compressed_videos:
+            print(f"Error video '{original_video}' not compressed")
+            with open("logs/compare_original_video_with_compressed_video.log", "a") as f:
+                f.write(f"Error video '{original_video}' not compressed\n")
+            continue
+
+        original_full_filename = os.path.join(source_dir, original_video)
+        compressed_full_filename = os.path.join(destiny_dir, original_video)
+        original_video_size = os.path.getsize(original_full_filename) / 1048576
+        compressed_video_size = os.path.getsize(compressed_full_filename) / 1048576
+        percentage_of_original_size = os.path.getsize(compressed_full_filename) * 100 / os.path.getsize(original_full_filename)
+        with open("logs/compare_original_video_with_compressed_video.log", "a") as f:
+            f.write(f"{percentage_of_original_size:.2f}% | Video: '{original_video}' size {original_video_size:.2f} MB => {compressed_video_size:.2f} MB\n")
+        if percentage_of_original_size > 80:
+            with open("logs/compressed_videos_without_gain.log", "a") as f:
+                f.write(f'rm "{compressed_full_filename}"\n')
+        else:
+            print(original_video)
+            destiny_filename = video_filenames[original_video].replace('.mp4', ' reduced_size.mp4')
+            with open("logs/copy_compressed_videos.sh", "a") as f:
+                f.write(f'rm "{video_filenames[original_video]}"\n')
+                f.write(f'cp "{compressed_full_filename}" "{destiny_filename}"\n')
+
+    executable_permission = 0o744
+    try:
+        os.chmod("logs/copy_compressed_videos.sh", executable_permission)
+        print(f"Executable permission added to logs/copy_compressed_videos.sh")
+    except FileNotFoundError:
+        print(f"File not found: logs/copy_compressed_videos.sh")
+    except PermissionError:
+        print(f"Permission denied: logs/copy_compressed_videos.sh")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+    sort_file_by_numeric_prefix("logs/compare_original_video_with_compressed_video.log", "logs/compare_original_video_with_compressed_video.log")
+    print(f'\n\nYou can remove the original videos folder: rm "{source_dir}"\n\n')
+
+
 def main():
     parser = argparse.ArgumentParser(description="Check all files recursively to find those that do not match the desired name structure")
     parser.add_argument("--directory", required=True, help="Directory path to check")
+    parser.add_argument("--source", required=True, help="Directory path to check")
+    parser.add_argument("--destiny", required=True, help="Directory path to check")
     args = parser.parse_args()
 
     remove_log_files()
 
     root_directory = args.directory
+    source_dir = args.source
+    destiny_dir = args.destiny
     # check_file_names(root_directory)
     # rename_uppercase_extensions(root_directory)
     # rename_jpeg_extensions(root_directory)
     # rename_special_chars(root_directory)
-    find_videos(root_directory)
-    # compress_videos(root_directory)
-    check_exif_datetime_images(root_directory)
-    check_exif_datetime_videos(root_directory)
-    log_filenames(root_directory)
+    # find_videos(root_directory)
+    # compress_non_mp4_videos(root_directory)
+    # check_exif_datetime_images(root_directory)
+    # check_exif_datetime_videos(root_directory)
+    # log_filenames(root_directory, include_dir=True)
+    # find_biggest_videos(root_directory)
+    compare_original_video_with_compressed_video(root_directory, source_dir, destiny_dir)
 
 if __name__ == "__main__":
     main()
