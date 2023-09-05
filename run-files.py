@@ -11,7 +11,7 @@ from datetime import datetime
 # TODO 
 # estimate date for "Fotos antiguas" and "Yo de peque"
 # download folders from Google Drive and compare with local ones
-# "2017-01-07 Reyes magos Prosperidad" is empty! check in external disk
+# "2017-01-07 Reyes magos Prosperidad" is empty everywhere! check photos and videos in other folders
 # recover original videos from external disk
 # upload all photos to google photos
 # DONE
@@ -31,7 +31,7 @@ def remove_log_files():
     dir = "logs"
 
     for file in os.listdir(dir):
-        if file.endswith(".log"):
+        if file.endswith(".log") or file.endswith(".sh"):
             filename = os.path.join(dir, file)
             os.remove(filename)
             print(f"Removed file: {filename}")
@@ -417,7 +417,7 @@ def compress_non_mp4_videos(root_dir):
                     continue
 
                 if matched_groups['video_extension'] in ['3gp', 'wmv', 'webm', 'mpg', 'mkv', 'm4v', 'avi']:
-                    file_size = os.path.getsize(full_filename) / 1048576                    
+                    file_size = os.path.getsize(full_filename) / 1048576
                     print(full_filename)
                     mediainfo_command = 'mediainfo --Inform="Video;%Width% %Height%" "'+full_filename+'"'
                     result = subprocess.run(mediainfo_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -833,6 +833,98 @@ def compare_original_video_with_compressed_video(root_dir, source_dir, destiny_d
     sort_file_by_numeric_prefix("logs/compare_original_video_with_compressed_video.log", "logs/compare_original_video_with_compressed_video.log")
     print(f'\n\nYou can remove the original videos folder: rm "{source_dir}"\n\n')
 
+def recover_biggest_videos_from_external_disk(root_dir, external_root_dir, compressed_videos_dir):
+    biggest_videos_dir = compressed_videos_dir.replace('compressed', 'to compress')
+    compressed_videos = []
+    for folder_name, subfolders, filenames in os.walk(compressed_videos_dir):
+        for filename in filenames:
+            if filename.endswith('.mp4'):
+                compressed_videos.append(filename)
+    
+    video_filenames = get_all_video_filenames(root_dir)
+    num_compressed_videos_found_in_root_dir = 0
+    for compressed_video in compressed_videos:
+        compressed_video_with_suffix = compressed_video.replace('.mp4', ' reduced_size.mp4')
+        if compressed_video_with_suffix not in video_filenames:
+            print(f"Error: video {compressed_video} not found in {root_dir}")
+            continue
+        num_compressed_videos_found_in_root_dir += 1
+        compressed_full_filename_in_root_dir = os.path.join(root_dir, video_filenames[compressed_video_with_suffix])
+        # print(compressed_full_filename_in_root_dir)
+        original_video_in_external_root_dir = compressed_full_filename_in_root_dir.replace(root_dir, external_root_dir).replace(' reduced_size.mp4', '.mp4')
+        # print(original_video_in_external_root_dir)
+        with open("logs/copy_biggest_videos_from_external_disk.sh", "a") as f:
+            f.write(f'echo "{original_video_in_external_root_dir}"\n')
+            f.write(f'cp "{original_video_in_external_root_dir}" "{biggest_videos_dir}/"\n')
+
+    executable_permission = 0o744
+    try:
+        os.chmod("logs/copy_biggest_videos_from_external_disk.sh", executable_permission)
+        print(f"Executable permission added to logs/copy_biggest_videos_from_external_disk.sh")
+    except FileNotFoundError:
+        print(f"File not found: logs/copy_biggest_videos_from_external_disk.sh")
+    except PermissionError:
+        print(f"Permission denied: logs/copy_biggest_videos_from_external_disk.sh")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+    print(num_compressed_videos_found_in_root_dir)
+
+def compare_biggest_videos_size_with_external_disk(root_dir, external_root_dir, biggest_videos_dir):
+    biggest_videos = []
+    for folder_name, subfolders, filenames in os.walk(biggest_videos_dir):
+        for filename in filenames:
+            if filename.endswith('.mp4'):
+                biggest_videos.append(filename)
+    
+    video_filenames = get_all_video_filenames(external_root_dir)
+    num_compared_videos = 0
+    for biggest_video in biggest_videos:
+        if biggest_video not in video_filenames:
+            print(f"Error: video {biggest_video} not found in {root_dir}")
+            continue
+        num_compared_videos += 1
+        biggest_full_filename_in_external_root_dir = os.path.join(external_root_dir, video_filenames[biggest_video])
+        biggest_full_filename = os.path.join(biggest_videos_dir, biggest_video)
+        # print(biggest_full_filename_in_external_root_dir)
+        # print(biggest_full_filename)
+        file_size_biggest_video = os.path.getsize(biggest_full_filename) / 1048576
+        file_size_biggest_video_in_external_root_dir = os.path.getsize(biggest_full_filename_in_external_root_dir) / 1048576
+        # print(f"Size of local disk video    {biggest_video}: {file_size_biggest_video:.2f} MB")
+        # print(f"Size of external disk video {biggest_video}: {file_size_biggest_video_in_external_root_dir:.2f} MB")
+        if file_size_biggest_video != file_size_biggest_video_in_external_root_dir:
+            print(f"Video {biggest_video} does not have same size")
+    
+    print(f"Num compared videos: {num_compared_videos}")
+
+def compare_compressed_videos_size_with_root_dir(root_dir, compressed_videos_dir):
+    compressed_videos = []
+    for folder_name, subfolders, filenames in os.walk(compressed_videos_dir):
+        for filename in filenames:
+            if filename.endswith('.mp4'):
+                compressed_videos.append(filename)
+    
+    video_filenames = get_all_video_filenames(root_dir)
+    num_compared_videos = 0
+    for compressed_video in compressed_videos:
+        compressed_video_with_suffix = compressed_video.replace('.mp4', ' reduced_size.mp4')
+        if compressed_video_with_suffix not in video_filenames:
+            print(f"Error: video {compressed_video_with_suffix} not found in {root_dir}")
+            continue
+        num_compared_videos += 1
+        compressed_full_filename_in_root_dir = os.path.join(root_dir, video_filenames[compressed_video_with_suffix])
+        compressed_full_filename = os.path.join(compressed_videos_dir, compressed_video)
+        # print(compressed_full_filename_in_root_dir)
+        # print(compressed_full_filename)
+        file_size_compressed_video = os.path.getsize(compressed_full_filename) / 1048576
+        file_size_compressed_video_in_root_dir = os.path.getsize(compressed_full_filename_in_root_dir) / 1048576
+        # print(f"Size of local disk video    {compressed_video}: {file_size_compressed_video:.2f} MB")
+        # print(f"Size of external disk video {compressed_video}: {file_size_compressed_video_in_root_dir:.2f} MB")
+        if file_size_compressed_video != file_size_compressed_video_in_root_dir:
+            print(f"Video {compressed_video} does not have same size")
+    
+    print(f"Num compared videos: {num_compared_videos}")
+
+
 
 def main():
     parser = argparse.ArgumentParser(description="Check all files recursively to find those that do not match the desired name structure")
@@ -856,7 +948,13 @@ def main():
     # check_exif_datetime_videos(root_directory)
     # log_filenames(root_directory, include_dir=True)
     # find_biggest_videos(root_directory)
-    compare_original_video_with_compressed_video(root_directory, source_dir, destiny_dir)
+    # compare_original_video_with_compressed_video(root_directory, source_dir, destiny_dir)
+    # recover_biggest_videos_from_external_disk(root_directory, source_dir, destiny_dir)
+    # compare_biggest_videos_size_with_external_disk(root_directory, source_dir, destiny_dir)
+    #   time python3 run-files.py --directory ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos --source /Volumes/BACKUP1TB/Fotitos --destiny ~/Downloads/biggest\ videos\ to\ compress
+    #   time python3 run-files.py --directory ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos --source /Volumes/BACKUP1TB/Fotitos --destiny ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos\ videos\ con\ bit\ rate\ muy\ alto
+    # compare_compressed_videos_size_with_root_dir(root_directory, source_dir)
+    #   time python3 run-files.py --directory ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos --source ~/Downloads/biggest\ videos\ compressed --destiny ~
 
 if __name__ == "__main__":
     main()
