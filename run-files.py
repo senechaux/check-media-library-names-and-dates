@@ -10,10 +10,9 @@ from datetime import datetime
 
 # TODO 
 # estimate date for "Fotos antiguas" and "Yo de peque"
-# download folders from Google Drive and compare with local ones
-# "2017-01-07 Reyes magos Prosperidad" is empty everywhere! check photos and videos in other folders
-# recover original videos from external disk
 # upload all photos to google photos
+#   compress videos before uploading
+
 # DONE
 # rename ny by ñ
 # rename folders like 2001-02-03 (4-5) to 2001-02-03 (04-05)
@@ -26,6 +25,11 @@ from datetime import datetime
 # remove all albums from google photos using MacroRecorder
 # encode to reduce size of biggest videos
 #   mediainfo --Inform="Video;bitrate:%BitRate%b/s duration:%Duration%ms" video.mp4
+# download folders from Google Drive and compare with local ones
+# recover original videos from external disk
+# check exif datetimes again
+# check "2010-01-16 Cumpleaños Paloma" in external disk
+# "2017-01-07 Reyes magos Prosperidad" is empty everywhere! check photos and videos in other folders
 
 def remove_log_files():
     dir = "logs"
@@ -942,11 +946,11 @@ def main():
     # rename_uppercase_extensions(root_directory)
     # rename_jpeg_extensions(root_directory)
     # rename_special_chars(root_directory)
-    # find_videos(root_directory)
+    find_videos(root_directory)
     # compress_non_mp4_videos(root_directory)
     # check_exif_datetime_images(root_directory)
     # check_exif_datetime_videos(root_directory)
-    # log_filenames(root_directory, include_dir=True)
+    log_filenames(root_directory, include_dir=True)
     # find_biggest_videos(root_directory)
     # compare_original_video_with_compressed_video(root_directory, source_dir, destiny_dir)
     # recover_biggest_videos_from_external_disk(root_directory, source_dir, destiny_dir)
