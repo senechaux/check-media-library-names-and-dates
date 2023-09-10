@@ -249,18 +249,27 @@ def rename_special_chars(root_dir):
 
     print("Count of uppercase extensions: {}".format(counter))
 
-def find_videos(root_dir):
+def find_and_count_files(root_dir):
     videos_pattern = re.compile(r'^(?P<year>[0-9]{4})-.+\.(?P<video_extension>mp4|avi|mov|mpg|m4v|webm|3gp|wmv|mkv)$')
-    images_pattern = re.compile(r'^.+\.(?P<image_extension>jpg|jpeg|png|gif|bmp)$')
+    images_pattern = re.compile(r'^(?P<year>[0-9]{4})-.+\.(?P<image_extension>jpg|jpeg|png|gif|bmp)$')
     any_file_pattern = re.compile(r'^.+\.(?P<extension>.+)$')
 
     video_extensions = set()
     image_extensions = set()
     any_file_extensions = set()
-    counter_videos_per_extension = {}
+
     counter_images_per_extension = {}
-    counter_any_files_per_extension = {}
+    counter_images_per_year = {}
+    meter_images_per_extension = {}
+    meter_images_per_year = {}
+
+    counter_videos_per_extension = {}
     counter_videos_per_year = {}
+    meter_videos_per_extension = {}
+    meter_videos_per_year = {}
+
+    counter_any_files_per_extension = {}
+    meter_any_files_per_extension = {}
 
     video_counter = 0
     image_counter = 0
@@ -277,28 +286,45 @@ def find_videos(root_dir):
                 video_counter += 1
                 matched_groups = videos_pattern_match.groupdict()
                 video_extensions.add(matched_groups['video_extension'])
+
                 if matched_groups['video_extension'] not in counter_videos_per_extension:
                     counter_videos_per_extension[matched_groups['video_extension']] = 0
+                    meter_videos_per_extension[matched_groups['video_extension']] = 0
                 counter_videos_per_extension[matched_groups['video_extension']] += 1
+                meter_videos_per_extension[matched_groups['video_extension']] += os.path.getsize(os.path.join(folder_name, filename))
+
                 if matched_groups['year'] not in counter_videos_per_year:
                     counter_videos_per_year[matched_groups['year']] = 0
+                    meter_videos_per_year[matched_groups['year']] = 0
                 counter_videos_per_year[matched_groups['year']] += 1
-                # if matched_groups['video_extension'] == '3gp':
-                #     print(filename)
+                meter_videos_per_year[matched_groups['year']] += os.path.getsize(os.path.join(folder_name, filename))
+
             elif images_pattern_match:
                 image_counter += 1
                 matched_groups = images_pattern_match.groupdict()
                 image_extensions.add(matched_groups['image_extension'])
+
                 if matched_groups['image_extension'] not in counter_images_per_extension:
                     counter_images_per_extension[matched_groups['image_extension']] = 0
+                    meter_images_per_extension[matched_groups['image_extension']] = 0
                 counter_images_per_extension[matched_groups['image_extension']] += 1
+                meter_images_per_extension[matched_groups['image_extension']] += os.path.getsize(os.path.join(folder_name, filename))
+
+                if matched_groups['year'] not in counter_images_per_year:
+                    counter_images_per_year[matched_groups['year']] = 0
+                    meter_images_per_year[matched_groups['year']] = 0
+                counter_images_per_year[matched_groups['year']] += 1
+                meter_images_per_year[matched_groups['year']] += os.path.getsize(os.path.join(folder_name, filename))
+
             elif any_file_pattern_match:
                 any_file_counter += 1
                 matched_groups = any_file_pattern_match.groupdict()
                 any_file_extensions.add(matched_groups['extension'])
                 if matched_groups['extension'] not in counter_any_files_per_extension:
                     counter_any_files_per_extension[matched_groups['extension']] = 0
+                    meter_any_files_per_extension[matched_groups['extension']] = 0
                 counter_any_files_per_extension[matched_groups['extension']] += 1
+                meter_any_files_per_extension[matched_groups['extension']] += os.path.getsize(os.path.join(folder_name, filename))
 
     with open('logs/video_counts.log', 'a') as file:
         file.write(filename + "\n")
@@ -321,10 +347,51 @@ def find_videos(root_dir):
             percentage_videos_per_year[key] = str(round(percentage_videos_per_year[key] * 100 / counter_videos_per_extension['mp4']))+"%"
         file.write("Percentage of videos per year: " + "\n")
         file.write(str(dict(sorted(percentage_videos_per_year.items(), key=lambda item: item[0]))) + "\n")
+
         file.write("Count of images per extension: " + "\n")
         file.write(str(counter_images_per_extension) + "\n")
+        file.write("Count of images per year: " + "\n")
+        file.write(str(dict(sorted(counter_images_per_year.items(), key=lambda item: item[0]))) + "\n")
+        percentage_images_per_year = counter_images_per_year
+        for key in percentage_images_per_year:
+            percentage_images_per_year[key] = str(round(percentage_images_per_year[key] * 100 / counter_images_per_extension['jpg']))+"%"
+        file.write("Percentage of images per year: " + "\n")
+        file.write(str(dict(sorted(percentage_images_per_year.items(), key=lambda item: item[0]))) + "\n")
+
         file.write("Count of rest of files per extension: " + "\n")
         file.write(str(counter_any_files_per_extension) + "\n")
+
+        file.write("Meter of videos per extension: " + "\n")
+        file.write(str(meter_videos_per_extension) + "\n")
+        for ext in meter_videos_per_extension:
+            size = meter_videos_per_extension[ext] / 1048576
+            file.write(f"{ext}: {size:.2f} MB\n")
+
+        meter_videos_per_year = dict(sorted(meter_videos_per_year.items(), key=lambda item: item[0]))
+        file.write("Meter of videos per year: " + "\n")
+        file.write(str(meter_videos_per_year) + "\n")
+        for ext in meter_videos_per_year:
+            size = meter_videos_per_year[ext] / 1048576
+            file.write(f"{ext}: {size:.2f} MB\n")
+
+        file.write("Meter of images per extension: " + "\n")
+        file.write(str(meter_images_per_extension) + "\n")
+        for ext in meter_images_per_extension:
+            size = meter_images_per_extension[ext] / 1048576
+            file.write(f"{ext}: {size:.2f} MB\n")
+
+        meter_images_per_year = dict(sorted(meter_images_per_year.items(), key=lambda item: item[0]))
+        file.write("Meter of images per year: " + "\n")
+        file.write(str(meter_images_per_year) + "\n")
+        for ext in meter_images_per_year:
+            size = meter_images_per_year[ext] / 1048576
+            file.write(f"{ext}: {size:.2f} MB\n")
+
+        file.write("Meter of any files per extension: " + "\n")
+        file.write(str(meter_any_files_per_extension) + "\n")
+        for ext in meter_any_files_per_extension:
+            size = meter_any_files_per_extension[ext] / 1048576
+            file.write(f"{ext}: {size:.2f} MB\n")
 
 def sort_file(input_file_path, output_file_path, reverse=False):
     with open(input_file_path, 'r') as file:
@@ -946,7 +1013,7 @@ def main():
     # rename_uppercase_extensions(root_directory)
     # rename_jpeg_extensions(root_directory)
     # rename_special_chars(root_directory)
-    find_videos(root_directory)
+    find_and_count_files(root_directory)
     # compress_non_mp4_videos(root_directory)
     # check_exif_datetime_images(root_directory)
     # check_exif_datetime_videos(root_directory)
