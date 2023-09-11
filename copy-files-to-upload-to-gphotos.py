@@ -97,14 +97,11 @@ def calculate_count_of_files_with_the_extenstion(source_dir, extension):
         return 0
 
 
-def find_and_copy(source_dir, destiny_dir, video_preset):
+def find_and_copy_images(source_dir, destiny_dir):
     total_images = calculate_count_of_files_with_the_extenstion(source_dir, 'jpg')
-    total_videos = calculate_count_of_files_with_the_extenstion(source_dir, 'mp4')
 
-    videos_pattern = re.compile(r'^(?P<year>[0-9]{4})-.+\.(?P<video_extension>mp4)$')
     images_pattern = re.compile(r'^(?P<year>[0-9]{4})-.+\.(?P<image_extension>jpg)$')
 
-    video_counter = 0
     image_counter = 0
     for folder_name, subfolders, filenames in os.walk(source_dir):
         for filename in filenames:
@@ -117,7 +114,6 @@ def find_and_copy(source_dir, destiny_dir, video_preset):
                 os.makedirs(new_folder_name)
             full_new_filename = os.path.join(new_folder_name, filename)
 
-            videos_pattern_match = videos_pattern.match(filename)
             images_pattern_match = images_pattern.match(filename)
 
             if images_pattern_match:
@@ -125,18 +121,42 @@ def find_and_copy(source_dir, destiny_dir, video_preset):
                 target_width = 1200
                 resize_image(full_filename, full_new_filename, target_width)
 
-            elif videos_pattern_match:
-                video_counter += 1
-                resize_video(filename, full_filename, full_new_filename, video_preset, f"images: {image_counter}/{total_images} videos: {video_counter}/{total_videos}")
+            print(f"images: {image_counter}/{total_images}")
 
-            print(f"images: {image_counter}/{total_images} videos: {video_counter}/{total_videos}")
+
+def find_and_copy_videos(source_dir, destiny_dir, video_preset):
+    total_videos = calculate_count_of_files_with_the_extenstion(source_dir, 'mp4')
+
+    videos_pattern = re.compile(r'^(?P<year>[0-9]{4})-.+\.(?P<video_extension>mp4)$')
+
+    video_counter = 0
+    for folder_name, subfolders, filenames in os.walk(source_dir):
+        for filename in filenames:
+            if filename == ".DS_Store" or filename == ".localized":
+                continue
+
+            full_filename = os.path.join(folder_name, filename)
+            new_folder_name = folder_name.replace(source_dir, destiny_dir)
+            if not os.path.exists(new_folder_name):
+                os.makedirs(new_folder_name)
+            full_new_filename = os.path.join(new_folder_name, filename)
+
+            videos_pattern_match = videos_pattern.match(filename)
+
+            if videos_pattern_match:
+                video_counter += 1
+                resize_video(filename, full_filename, full_new_filename, video_preset, f"videos: {video_counter}/{total_videos}")
+
+            print(f"videos: {video_counter}/{total_videos}")
 
 
 def main():
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("--source", required=True, help="Source directory")
     parser.add_argument("--destiny", required=True, help="Destiny directory")
-    parser.add_argument("--video_preset", required=True, help="Handbrake Video preset: veryfast480p | social480p | social360p")
+    parser.add_argument("--copy_images", action="store_true", help="Copy and resize images")
+    parser.add_argument("--copy_videos", action="store_true", help="Copy and resize videos")
+    parser.add_argument("--video_preset", required=False, help="Handbrake Video preset: veryfast480p | social480p | social360p")
     args = parser.parse_args()
 
     source_dir = args.source
@@ -146,8 +166,17 @@ def main():
         "social480p": "Social 50 MB 10 Minutes 480p30",
         "social360p": "Social 8 MB 3 Minutes 360p30"
     }
-    video_preset = video_presets[args.video_preset]
-    find_and_copy(source_dir, destiny_dir, video_preset)
+    
+    if args.copy_images:
+        print('Copying and resizing images...')
+        find_and_copy_images(source_dir, destiny_dir)
+    if args.copy_videos:
+        print('Copying and compressing videos...')
+        if args.video_preset not in video_presets:
+            raise ValueError(f"Error: if --copy_videos is present then --video_preset must be provided with one of these values: {video_presets.keys()}")
+        video_preset = video_presets[args.video_preset]
+        find_and_copy_videos(source_dir, destiny_dir, video_preset)
+
 
 if __name__ == "__main__":
     main()
