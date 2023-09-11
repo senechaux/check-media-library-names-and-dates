@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 
 logs/*.log
+logs_copy_to_upload_to_gphotos/*.log

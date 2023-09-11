@@ -11,7 +11,7 @@ from datetime import datetime
 # TODO 
 # estimate date for "Fotos antiguas" and "Yo de peque"
 # upload all photos to google photos
-#   compress videos before uploading
+#   compress images and videos before uploading
 
 # DONE
 # rename ny by ñ
