@@ -4,6 +4,7 @@ import argparse
 import subprocess
 import math
 import json
+import shutil
 from datetime import datetime
 from PIL import Image
 
@@ -97,6 +98,16 @@ def calculate_count_of_files_with_the_extenstion(source_dir, extension):
         return 0
 
 
+def moveFile(source_file, destination_folder):
+    try:
+        # Use the shutil.move() function to move the file
+        shutil.move(source_file, destination_folder)
+        print(f"File '{source_file}' moved to '{destination_folder}' successfully.")
+    except FileNotFoundError:
+        print(f"File '{source_file}' not found.")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+
 def find_and_copy_images(source_dir, destiny_dir):
     total_images = calculate_count_of_files_with_the_extenstion(source_dir, 'jpg')
 
@@ -105,23 +116,26 @@ def find_and_copy_images(source_dir, destiny_dir):
     image_counter = 0
     for folder_name, subfolders, filenames in os.walk(source_dir):
         for filename in filenames:
-            if filename == ".DS_Store" or filename == ".localized":
+            if filename == ".DS_Store" or filename == ".localized" or not images_pattern.match(filename):
                 continue
+
+            image_counter += 1
 
             full_filename = os.path.join(folder_name, filename)
             new_folder_name = folder_name.replace(source_dir, destiny_dir)
             if not os.path.exists(new_folder_name):
                 os.makedirs(new_folder_name)
+            full_tmp_filename = os.path.join(destiny_dir, 'tmp', filename)
             full_new_filename = os.path.join(new_folder_name, filename)
 
-            images_pattern_match = images_pattern.match(filename)
-
-            if images_pattern_match:
-                image_counter += 1
-                target_width = 1200
-                resize_image(full_filename, full_new_filename, target_width)
-
             print(f"images: {image_counter}/{total_images}")
+            if os.path.exists(full_new_filename):
+                print(f"Image already exists: {full_new_filename}")
+                continue
+
+            target_width = 1200
+            resize_image(full_filename, full_tmp_filename, target_width)
+            moveFile(full_tmp_filename, full_new_filename)
 
 
 def find_and_copy_videos(source_dir, destiny_dir, video_preset):
@@ -132,22 +146,26 @@ def find_and_copy_videos(source_dir, destiny_dir, video_preset):
     video_counter = 0
     for folder_name, subfolders, filenames in os.walk(source_dir):
         for filename in filenames:
-            if filename == ".DS_Store" or filename == ".localized":
+            if filename == ".DS_Store" or filename == ".localized" or not videos_pattern.match(filename):
                 continue
+
+            video_counter += 1
 
             full_filename = os.path.join(folder_name, filename)
             new_folder_name = folder_name.replace(source_dir, destiny_dir)
             if not os.path.exists(new_folder_name):
                 os.makedirs(new_folder_name)
+            full_tmp_filename = os.path.join(destiny_dir, 'tmp', filename)
             full_new_filename = os.path.join(new_folder_name, filename)
 
-            videos_pattern_match = videos_pattern.match(filename)
-
-            if videos_pattern_match:
-                video_counter += 1
-                resize_video(filename, full_filename, full_new_filename, video_preset, f"videos: {video_counter}/{total_videos}")
-
             print(f"videos: {video_counter}/{total_videos}")
+            if os.path.exists(full_new_filename):
+                print(f"Video already exists: {full_new_filename}")
+                continue
+
+            resize_video(filename, full_filename, full_tmp_filename, video_preset, f"videos: {video_counter}/{total_videos}")
+            moveFile(full_tmp_filename, full_new_filename)
+
 
 
 def main():
@@ -166,7 +184,11 @@ def main():
         "social480p": "Social 50 MB 10 Minutes 480p30",
         "social360p": "Social 8 MB 3 Minutes 360p30"
     }
-    
+
+    if not os.path.exists(os.path.join(destiny_dir, 'tmp')):
+        print('Creating temporary')
+        os.makedirs(os.path.join(destiny_dir, 'tmp'))
+
     if args.copy_images:
         print('Copying and resizing images...')
         find_and_copy_images(source_dir, destiny_dir)
