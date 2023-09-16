@@ -8,29 +8,6 @@ from PIL import Image
 from PIL.ExifTags import TAGS
 from datetime import datetime
 
-# TODO 
-# estimate date for "Fotos antiguas" and "Yo de peque"
-# upload all photos to google photos
-#   compress images and videos before uploading
-
-# DONE
-# rename ny by ñ
-# rename folders like 2001-02-03 (4-5) to 2001-02-03 (04-05)
-# extension to lowercase
-# extension jpeg to jpg
-# convert videos to mp4
-# change EXIF data based on filename for images
-# change EXIF data based on filename for videos
-# remove all photos from google photos
-# remove all albums from google photos using MacroRecorder
-# encode to reduce size of biggest videos
-#   mediainfo --Inform="Video;bitrate:%BitRate%b/s duration:%Duration%ms" video.mp4
-# download folders from Google Drive and compare with local ones
-# recover original videos from external disk
-# check exif datetimes again
-# check "2010-01-16 Cumpleaños Paloma" in external disk
-# "2017-01-07 Reyes magos Prosperidad" is empty everywhere! check photos and videos in other folders
-
 def remove_log_files():
     dir = "logs"
 
