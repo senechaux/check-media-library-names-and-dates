@@ -326,10 +326,10 @@ def find_and_count_files(root_dir):
                 counter_any_files_per_extension[matched_groups['extension']] += 1
                 meter_any_files_per_extension[matched_groups['extension']] += os.path.getsize(os.path.join(folder_name, filename))
 
-    with open('logs/video_counts.log', 'a') as file:
-        file.write(filename + "\n")
+    with open('logs/file_counts.log', 'a') as file:
         file.write("Count of videos: {}".format(video_counter) + "\n")
-        file.write("Count of mp4 videos: {}".format(counter_videos_per_extension['mp4']) + "\n")
+        if 'mp4' in counter_videos_per_extension:
+            file.write("Count of mp4 videos: {}".format(counter_videos_per_extension['mp4']) + "\n")
         file.write("Count of images: {}".format(image_counter) + "\n")
         file.write("Count of other files: {}".format(any_file_counter) + "\n")
         file.write("Video extensions: " + "\n")
@@ -338,57 +338,68 @@ def find_and_count_files(root_dir):
         file.write(str(image_extensions) + "\n")
         file.write("Other files extensions: " + "\n")
         file.write(str(any_file_extensions) + "\n")
+
         file.write("Count of videos per extension: " + "\n")
-        file.write(str(counter_videos_per_extension) + "\n")
+        for ext in counter_videos_per_extension:
+            file.write(f"{ext}: {counter_videos_per_extension[ext]}\n")
+
         file.write("Count of videos per year: " + "\n")
-        file.write(str(dict(sorted(counter_videos_per_year.items(), key=lambda item: item[0]))) + "\n")
+        counter_videos_per_year_sorted = dict(sorted(counter_videos_per_year.items(), key=lambda item: item[0]))
+        for year in counter_videos_per_year_sorted:
+            file.write(f"{year}: {counter_videos_per_year_sorted[year]}\n")
+
         percentage_videos_per_year = counter_videos_per_year
         for key in percentage_videos_per_year:
             percentage_videos_per_year[key] = str(round(percentage_videos_per_year[key] * 100 / counter_videos_per_extension['mp4']))+"%"
         file.write("Percentage of videos per year: " + "\n")
-        file.write(str(dict(sorted(percentage_videos_per_year.items(), key=lambda item: item[0]))) + "\n")
+        percentage_videos_per_year_sorted = dict(sorted(percentage_videos_per_year.items(), key=lambda item: item[0]))
+        for year in percentage_videos_per_year_sorted:
+            file.write(f"{year}: {percentage_videos_per_year_sorted[year]}\n")
 
         file.write("Count of images per extension: " + "\n")
-        file.write(str(counter_images_per_extension) + "\n")
+        for ext in counter_images_per_extension:
+            file.write(f"{ext}: {counter_images_per_extension[ext]}\n")
+
         file.write("Count of images per year: " + "\n")
-        file.write(str(dict(sorted(counter_images_per_year.items(), key=lambda item: item[0]))) + "\n")
+        counter_images_per_year_sorted = dict(sorted(counter_images_per_year.items(), key=lambda item: item[0]))
+        for year in counter_images_per_year_sorted:
+            file.write(f"{year}: {counter_images_per_year_sorted[year]}\n")
+
         percentage_images_per_year = counter_images_per_year
         for key in percentage_images_per_year:
             percentage_images_per_year[key] = str(round(percentage_images_per_year[key] * 100 / counter_images_per_extension['jpg']))+"%"
         file.write("Percentage of images per year: " + "\n")
-        file.write(str(dict(sorted(percentage_images_per_year.items(), key=lambda item: item[0]))) + "\n")
+        percentage_images_per_year_sorted = dict(sorted(percentage_images_per_year.items(), key=lambda item: item[0]))
+        for year in percentage_images_per_year_sorted:
+            file.write(f"{year}: {percentage_images_per_year_sorted[year]}\n")
 
         file.write("Count of rest of files per extension: " + "\n")
-        file.write(str(counter_any_files_per_extension) + "\n")
+        for ext in counter_any_files_per_extension:
+            file.write(f"{ext}: {counter_any_files_per_extension[ext]}\n")
 
         file.write("Meter of videos per extension: " + "\n")
-        file.write(str(meter_videos_per_extension) + "\n")
         for ext in meter_videos_per_extension:
             size = meter_videos_per_extension[ext] / 1048576
             file.write(f"{ext}: {size:.2f} MB\n")
 
         meter_videos_per_year = dict(sorted(meter_videos_per_year.items(), key=lambda item: item[0]))
         file.write("Meter of videos per year: " + "\n")
-        file.write(str(meter_videos_per_year) + "\n")
         for ext in meter_videos_per_year:
             size = meter_videos_per_year[ext] / 1048576
             file.write(f"{ext}: {size:.2f} MB\n")
 
         file.write("Meter of images per extension: " + "\n")
-        file.write(str(meter_images_per_extension) + "\n")
         for ext in meter_images_per_extension:
             size = meter_images_per_extension[ext] / 1048576
             file.write(f"{ext}: {size:.2f} MB\n")
 
         meter_images_per_year = dict(sorted(meter_images_per_year.items(), key=lambda item: item[0]))
         file.write("Meter of images per year: " + "\n")
-        file.write(str(meter_images_per_year) + "\n")
         for ext in meter_images_per_year:
             size = meter_images_per_year[ext] / 1048576
             file.write(f"{ext}: {size:.2f} MB\n")
 
         file.write("Meter of any files per extension: " + "\n")
-        file.write(str(meter_any_files_per_extension) + "\n")
         for ext in meter_any_files_per_extension:
             size = meter_any_files_per_extension[ext] / 1048576
             file.write(f"{ext}: {size:.2f} MB\n")
@@ -432,7 +443,7 @@ def convert_milliseconds(milliseconds):
 
 def log_filenames(root_dir, include_dir=False):
     videos_pattern = re.compile(r'^(?P<year>[0-9]{4})-.+\.(?P<video_extension>mp4|avi|mov|mpg|m4v|webm|3gp|wmv|mkv)$')
-    images_pattern = re.compile(r'^.+\.(?P<image_extension>jpg|jpeg|png|gif|bmp)$')
+    images_pattern = re.compile(r'^(?P<year>[0-9]{4})-.+\.(?P<image_extension>jpg|jpeg|png|gif|bmp)$')
     any_file_pattern = re.compile(r'^.+\.(?P<extension>.+)$')
 
     video_counter = 0

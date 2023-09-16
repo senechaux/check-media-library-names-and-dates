@@ -51,7 +51,7 @@ def resize_video(filename, full_filename, full_new_filename, video_preset, log_p
         print("Error executing mediainfo_command:")
         print(error)
 
-    handbrake_command = '/Applications/HandBrakeCLI --input "{}" --output "{}" --width {} --height {} --preset="{}"'.format(
+    handbrake_command = 'HandBrakeCLI --input "{}" --output "{}" --width {} --height {} --preset="{}"'.format(
             full_filename,
             full_new_filename,
             width,
@@ -128,9 +128,9 @@ def find_and_copy_images(source_dir, destiny_dir):
             full_tmp_filename = os.path.join(destiny_dir, 'tmp', filename)
             full_new_filename = os.path.join(new_folder_name, filename)
 
-            print(f"images: {image_counter}/{total_images}")
+            # print(f"images: {image_counter}/{total_images}")
             if os.path.exists(full_new_filename):
-                print(f"Image already exists: {full_new_filename}")
+                # print(f"Image already exists: {full_new_filename}")
                 continue
 
             target_width = 1200
@@ -158,9 +158,9 @@ def find_and_copy_videos(source_dir, destiny_dir, video_preset):
             full_tmp_filename = os.path.join(destiny_dir, 'tmp', filename)
             full_new_filename = os.path.join(new_folder_name, filename)
 
-            print(f"videos: {video_counter}/{total_videos}")
+            # print(f"videos: {video_counter}/{total_videos}")
             if os.path.exists(full_new_filename):
-                print(f"Video already exists: {full_new_filename}")
+                # print(f"Video already exists: {full_new_filename}")
                 continue
 
             resize_video(filename, full_filename, full_tmp_filename, video_preset, f"videos: {video_counter}/{total_videos}")
