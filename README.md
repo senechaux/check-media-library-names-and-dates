@@ -24,6 +24,7 @@ check exif datetimes again
 check "2010-01-16 Cumpleaños Paloma" in external disk
 "2017-01-07 Reyes magos Prosperidad" is empty everywhere! check photos and videos in other folders
 split script run-files in several scripts
+cut photos with gray areas from "2008-10-04 Paracaidas" folder
 
 Fix
 ===
