@@ -5,7 +5,6 @@
 estimate date for "Fotos antiguas" and "Yo de peque"
 upload all photos to google photos
   compress images and videos before uploading
-split script run-files in several scripts
 
 # DONE
 rename ny by ñ
@@ -24,6 +23,7 @@ recover original videos from external disk
 check exif datetimes again
 check "2010-01-16 Cumpleaños Paloma" in external disk
 "2017-01-07 Reyes magos Prosperidad" is empty everywhere! check photos and videos in other folders
+split script run-files in several scripts
 
 Fix
 ===

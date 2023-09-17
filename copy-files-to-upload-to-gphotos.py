@@ -2,10 +2,7 @@ import os
 import re
 import argparse
 import subprocess
-import math
-import json
-import shutil
-from datetime import datetime
+import common_functions
 from PIL import Image
 
 def resize_image(input_image_path, output_image_path, target_width):
@@ -85,31 +82,8 @@ def resize_video(filename, full_filename, full_new_filename, video_preset, log_p
                     file.write(f"{full_filename}\n")
 
 
-def calculate_count_of_files_with_the_extenstion(source_dir, extension):
-    count_command = f"find '{source_dir}' -type f -iname '*.{extension}' | wc -l"
-    print(count_command)
-    result = subprocess.run(count_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    if result.returncode == 0:
-        return result.stdout.replace("\n", "").replace(" ", "")
-    else:
-        error = result.stderr
-        print("Error executing count_command:")
-        print(error)
-        return 0
-
-
-def moveFile(source_file, destination_folder):
-    try:
-        # Use the shutil.move() function to move the file
-        shutil.move(source_file, destination_folder)
-        print(f"File '{source_file}' moved to '{destination_folder}' successfully.")
-    except FileNotFoundError:
-        print(f"File '{source_file}' not found.")
-    except Exception as e:
-        print(f"An error occurred: {str(e)}")
-
 def find_and_copy_images(source_dir, destiny_dir):
-    total_images = calculate_count_of_files_with_the_extenstion(source_dir, 'jpg')
+    total_images = common_functions.count_files_with_the_extension(source_dir, 'jpg')
 
     images_pattern = re.compile(r'^(?P<year>[0-9]{4})-.+\.(?P<image_extension>jpg)$')
 
@@ -135,11 +109,11 @@ def find_and_copy_images(source_dir, destiny_dir):
 
             target_width = 1200
             resize_image(full_filename, full_tmp_filename, target_width)
-            moveFile(full_tmp_filename, full_new_filename)
+            common_functions.moveFile(full_tmp_filename, full_new_filename)
 
 
 def find_and_copy_videos(source_dir, destiny_dir, video_preset):
-    total_videos = calculate_count_of_files_with_the_extenstion(source_dir, 'mp4')
+    total_videos = common_functions.count_files_with_the_extension(source_dir, 'mp4')
 
     videos_pattern = re.compile(r'^(?P<year>[0-9]{4})-.+\.(?P<video_extension>mp4)$')
 

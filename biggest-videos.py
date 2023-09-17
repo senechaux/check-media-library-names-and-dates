@@ -3,25 +3,8 @@ import re
 import argparse
 import subprocess
 import math
+import common_functions
 from datetime import datetime
-
-def convert_milliseconds(milliseconds):
-    total_seconds = milliseconds / 1000
-    minutes = total_seconds / 60
-    seconds = total_seconds % 60
-    return minutes, seconds
-
-
-def sort_file(input_file_path, output_file_path, reverse=False):
-    with open(input_file_path, 'r') as file:
-        lines = file.readlines()
-    
-    lines.sort(reverse=reverse)
-    
-    with open(output_file_path, 'w') as file:
-        for line in lines:
-            file.write(line)
-
 
 def find_biggest_videos(dir, logs_dir):
     videos_pattern = re.compile(r'^(?P<year>[0-9]{4})-.+\.(?P<video_extension>mp4|avi|mov|mpg|m4v|webm|3gp|wmv|mkv)$')
@@ -55,7 +38,7 @@ def find_biggest_videos(dir, logs_dir):
                 bitrate_splitted = str(bitrate).split('.')
                 bitrate = bitrate_splitted[0].rjust(2, "0") + '.' + bitrate_splitted[1].ljust(2, "0")
                 duration_milliseconds = output_splitted[1]
-                duration_minutes, duration_seconds = convert_milliseconds(int(duration_milliseconds))
+                duration_minutes, duration_seconds = common_functions.convert_milliseconds(int(duration_milliseconds))
                 duration_minutes = math.floor(duration_minutes)
                 duration_seconds = math.floor(duration_seconds)
                 width_x_height = output_splitted[2]
@@ -69,8 +52,8 @@ def find_biggest_videos(dir, logs_dir):
             with open(f'{logs_dir}/biggest_videos_by_bitrate.log', 'a') as file:
                 file.write(str(bitrate) + " Mb/s | " + str(file_size_mb_padded) + " MB | " + str(duration_minutes) + "m" + str(duration_seconds) + "s | " + width_x_height + " -> " + filename + " " + full_filename + "\n")
 
-    sort_file(f'{logs_dir}/biggest_videos_by_size.log', f'{logs_dir}/biggest_videos_by_size.log', reverse=True)
-    sort_file(f'{logs_dir}/biggest_videos_by_bitrate.log', f'{logs_dir}/biggest_videos_by_bitrate.log', reverse=True)
+    common_functions.sort_file(f'{logs_dir}/biggest_videos_by_size.log', f'{logs_dir}/biggest_videos_by_size.log', reverse=True)
+    common_functions.sort_file(f'{logs_dir}/biggest_videos_by_bitrate.log', f'{logs_dir}/biggest_videos_by_bitrate.log', reverse=True)
 
 
 def main():
