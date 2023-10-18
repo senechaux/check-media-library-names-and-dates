@@ -1,10 +1,10 @@
 # Dependencies
-`pip3 install Pillow`
+`pip3 install Pillow opencv-python scikit-image`
 
 # TODO
 estimate date for "Fotos antiguas" and "Yo de peque"
-upload all photos to google photos
-  compress images and videos before uploading
+investigate on how to rename videos with names like "rduced_size"
+investigate on how to rotate images according to their orientation, then resize them and then reupload them
 
 # DONE
 rename ny by ñ
@@ -25,6 +25,8 @@ check "2010-01-16 Cumpleaños Paloma" in external disk
 "2017-01-07 Reyes magos Prosperidad" is empty everywhere! check photos and videos in other folders
 split script run-files in several scripts
 cut photos with gray areas from "2008-10-04 Paracaidas" folder
+upload all photos to google photos
+  compress images and videos before uploading
 
 Fix
 ===

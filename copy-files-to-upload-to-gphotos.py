@@ -5,25 +5,27 @@ import subprocess
 import common_functions
 from PIL import Image
 
-def resize_image(input_image_path, output_image_path, target_width):
+def resize_image(input_image_path, output_image_path, target_max_size):
     try:
         with Image.open(input_image_path) as img:
             # Determine whether the image is portrait or landscape
             width, height = img.size
-            if width > height:
-                # Landscape image
-                new_width = target_width
-                new_height = int(height * (target_width / width))
-            else:
-                # Portrait image or square image
-                new_height = target_width
-                new_width = int(width * (target_width / height))
+            if width > target_max_size or height > target_max_size:
+                if width > height:
+                    # Landscape image
+                    new_width = target_max_size
+                    new_height = int(height * (target_max_size / width))
+                else:
+                    # Portrait image or square image
+                    new_height = target_max_size
+                    new_width = int(width * (target_max_size / height))
 
-            # Resize the image while maintaining aspect ratio
-            img.thumbnail((new_width, new_height))
+                # Resize the image while maintaining aspect ratio
+                img.thumbnail((new_width, new_height))
 
+            exif = img.info['exif']
             # Save the resized image
-            img.save(output_image_path)
+            img.save(output_image_path, 'JPEG', exif=exif)
             print(f"Image resized and saved as {output_image_path}")
     except FileNotFoundError:
         print(f"File {input_image_path} not found.")
@@ -107,8 +109,8 @@ def find_and_copy_images(source_dir, destiny_dir):
                 # print(f"Image already exists: {full_new_filename}")
                 continue
 
-            target_width = 1200
-            resize_image(full_filename, full_tmp_filename, target_width)
+            target_max_size = 1200
+            resize_image(full_filename, full_tmp_filename, target_max_size)
             common_functions.moveFile(full_tmp_filename, full_new_filename)
 
 

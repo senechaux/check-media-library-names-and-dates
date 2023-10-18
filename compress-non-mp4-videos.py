@@ -2,10 +2,6 @@ import os
 import re
 import argparse
 import subprocess
-import math
-import json
-from PIL import Image
-from PIL.ExifTags import TAGS
 from datetime import datetime
 
 

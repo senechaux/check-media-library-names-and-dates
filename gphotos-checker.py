@@ -20,8 +20,12 @@ def check_photos_uploaded_to_gphotos(dir, logs_dir):
             folder_parts = folder_name.replace(dir, '').split('/')
             folder = folder_parts[2]
             year = folder_parts[1]
+
             # if year != '2000' and year != '2001':
             #     continue
+            # if folder != "2000 Santander - Papa y Mama":
+            #     continue
+
             if not year in albums_with_counter:
                 albums_with_counter[year] = {}
             if not folder in albums_with_counter[year]:
@@ -29,12 +33,12 @@ def check_photos_uploaded_to_gphotos(dir, logs_dir):
             else:
                 albums_with_counter[year][folder] += 1
 
+
             if not year in albums_with_images:
                 albums_with_images[year] = {}
             if not folder in albums_with_images[year]:
                 albums_with_images[year][folder] = []
-            else:
-                albums_with_images[year][folder].append(filename)
+            albums_with_images[year][folder].append(filename)
     
     years = sorted(albums_with_counter.keys())
     sorted_albums_with_counter = {}

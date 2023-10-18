@@ -33,8 +33,6 @@ $photosLibraryClient = new PhotosLibraryClient(['credentials' => $_SESSION['cred
  * Retrieves the user's albums, and renders them in a grid.
  */
 
-$requestedYear = $_GET['year'] ?? '2000';
-
 try {
     $pagedResponse = $photosLibraryClient->listAlbums();
     $albums = $pagedResponse->iterateAllElements();
@@ -42,16 +40,6 @@ try {
     $extractedAlbumsCountOfFiles = [];
     $extractedAlbumsWithImages = [];
 
-    // preload data in files
-    foreach (range(2000, 2023) as $year) {
-        $filename = "albums_in_gphotos_with_images_{$year}.json";
-        if (!file_exists($filename)) {
-            continue;
-        }
-        $yearFileContents = file_get_contents($filename);
-        $yearArray = json_decode($yearFileContents, true);
-        $extractedAlbumsWithImages = array_replace_recursive($extractedAlbumsWithImages, $yearArray);
-    }    
     foreach ($albums as $album) {
         preg_match('/(?<year>\d{4}).+/', $album->getTitle(), $matches);
         $year = $matches['year'];
@@ -66,13 +54,11 @@ try {
             $extractedAlbumsWithImages[$year][$album->getTitle()] = [];
         }
 
-        if ($year == $requestedYear) {
-            echo "looking for images in album: {$album->getTitle()}<br>";
-            $searchInAlbumResponse = $photosLibraryClient->searchMediaItems(['albumId' => $album->getId()]);
-            $mediaItems = $searchInAlbumResponse->iterateAllElements();
-            foreach($mediaItems as $mediaItem) {
-                $extractedAlbumsWithImages[$year][$album->getTitle()][] = $mediaItem->getFilename();
-            }
+        echo "looking for images in album: {$album->getTitle()}<br>";
+        $searchInAlbumResponse = $photosLibraryClient->searchMediaItems(['albumId' => $album->getId()]);
+        $mediaItems = $searchInAlbumResponse->iterateAllElements();
+        foreach($mediaItems as $mediaItem) {
+            $extractedAlbumsWithImages[$year][$album->getTitle()][] = $mediaItem->getFilename();
         }
     }
 
@@ -92,9 +78,9 @@ try {
             $extractedAlbumsWithImages[$year][$album] = $images;
         }
     }
-    file_put_contents("albums_in_gphotos_with_images_{$requestedYear}.json", json_encode($extractedAlbumsWithImages, JSON_PRETTY_PRINT));
+    file_put_contents("albums_in_gphotos_with_images.json", json_encode($extractedAlbumsWithImages, JSON_PRETTY_PRINT));
 
-    echo "END of dumping images album images of year {$requestedYear}<br>";
+    echo "END of dumping album images<br>";
 } catch (\Google\ApiCore\ApiException $e) {
     echo $templates->render('error', ['exception' => $e]);
 }
