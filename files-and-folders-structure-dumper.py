@@ -61,11 +61,8 @@ def check_photos_uploaded_to_gphotos(dir, logs_dir):
         file.write(json.dumps(sorted_albums_with_images, indent=4))
 
 
-
-
-
 def main():
-    parser = argparse.ArgumentParser(description="Check all files recursively and check if the datetime in their name matches the datetime in Exif data")
+    parser = argparse.ArgumentParser(description="Dump to two files a JSON representing the structure of files and folders")
     parser.add_argument("--dir", required=True, help="Source directory of files")
     args = parser.parse_args()
 
@@ -73,7 +70,7 @@ def main():
 
     current_datetime = datetime.now()
     formatted_datetime = current_datetime.strftime("%Y%m%d_%H%M%S")
-    logs_dir = f'logs/{formatted_datetime}_gphotos_checker'
+    logs_dir = f'logs/{formatted_datetime}_files-and-folders-structure-dumper'
     if not os.path.exists(logs_dir):
         os.makedirs(logs_dir)
 
