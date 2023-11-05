@@ -32,7 +32,12 @@ investigate on how to rotate images according to their orientation, then resize 
 # HOW TO USE
 
 ## files-and-folders-structure-dumper.py
-```python3 gphotos-checker.py --dir ~/Fotitos_compressed_to_upload_to_gphotos```
+```python3 files-and-folders-structure-dumper.py --dir ~/Fotitos_compressed_to_upload_to_gphotos```
+
+## copy-files-to-upload-to-gphotos.py
+--copy_images: to copy images
+--copy_videos --video_preset veryfast480p: to compress and copy videos
+```python3 copy-files-to-upload-to-gphotos.py --source "/users/angel/Insync/ladirecciondeangel@gmail.com/Google Drive/Fotitos/2023/" --destiny "/users/angel/Fotitos_compressed_to_upload_to_gphotos/2023/" --copy_images --copy_videos --video_preset veryfast480p```
 
 
 Fix
