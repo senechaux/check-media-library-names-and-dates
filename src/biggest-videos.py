@@ -6,13 +6,15 @@ import math
 import common_functions
 from datetime import datetime
 
+MIN_FILE_SIZE_IN_MB = 100
+
 def find_biggest_videos(dir, logs_dir):
     videos_pattern = re.compile(r'^(?P<year>[0-9]{4})-.+\.(?P<video_extension>mp4|avi|mov|mpg|m4v|webm|3gp|wmv|mkv)$')
 
     video_counter = 0
     for folder_name, subfolders, filenames in os.walk(dir):
         for filename in filenames:
-            if filename == ".DS_Store" or filename == ".localized":
+            if filename == ".DS_Store" or filename == ".localized" or "reduced_size" in filename:
                 continue
 
             videos_pattern_match = videos_pattern.match(filename)
@@ -23,7 +25,7 @@ def find_biggest_videos(dir, logs_dir):
             full_filename = os.path.join(folder_name, filename)
             file_size = os.path.getsize(full_filename)
             file_size_mb = math.floor(file_size / 1000 / 1000)
-            if file_size_mb < 100:
+            if file_size_mb < MIN_FILE_SIZE_IN_MB:
                 continue
             mediainfo_command = 'mediainfo --Inform="Video;%BitRate% | %Duration% | %Width%x%Height%" "'+full_filename+'"'
             result = subprocess.run(mediainfo_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -57,10 +59,7 @@ def find_biggest_videos(dir, logs_dir):
 
 
 def main():
-    print("IT MAY NOT WORK, TEST NEEDED")
-    return
-
-    parser = argparse.ArgumentParser(description="")
+    parser = argparse.ArgumentParser(description="Find and log to an output file biggest videos in a folder.")
     parser.add_argument("--dir", required=True, help="Source directory of files")
     args = parser.parse_args()
 

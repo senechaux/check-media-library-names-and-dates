@@ -64,11 +64,11 @@ def resize_video(filename, full_filename, full_new_filename, video_preset, log_p
             for line in process.stdout:
                 print(f"{log_prefix} {filename} {line}", end='')
     except subprocess.CalledProcessError as e:
-        with open('logs_copy_to_upload_to_gphotos/compression_errors.log', 'a') as file:
+        with open('../logs/logs_copy_to_upload_to_gphotos/compression_errors.log', 'a') as file:
             file.write(handbrake_command)
     else:
         if not os.path.exists(full_new_filename):
-            with open('logs_copy_to_upload_to_gphotos/compression_errors_new_file_not_found.log', 'a') as file:
+            with open('../logs/logs_copy_to_upload_to_gphotos/compression_errors_new_file_not_found.log', 'a') as file:
                 file.write(handbrake_command+"\n")
         else:
             new_file_size = os.path.getsize(full_new_filename) / 1048576
@@ -76,11 +76,11 @@ def resize_video(filename, full_filename, full_new_filename, video_preset, log_p
             print(f"Size of new video {full_new_filename}: {new_file_size:.2f} MB")
             if new_file_size > file_size:
                 print(f"ERROR: new file is bigger {filename}")
-                with open('logs_copy_to_upload_to_gphotos/bigger_sizes.log', 'a') as file:
+                with open('../logs/logs_copy_to_upload_to_gphotos/bigger_sizes.log', 'a') as file:
                     file.write(f"Size of original video {full_filename}: {file_size:.2f} MB\n")
                     file.write(f"Size of new video {full_new_filename}: {new_file_size:.2f} MB\n")
             else:
-                with open('logs_copy_to_upload_to_gphotos/compressed_videos.log', 'a') as file:
+                with open('../logs/logs_copy_to_upload_to_gphotos/compressed_videos.log', 'a') as file:
                     file.write(f"{full_filename}\n")
 
 
@@ -145,7 +145,7 @@ def find_and_copy_videos(source_dir, destiny_dir, video_preset):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="")
+    parser = argparse.ArgumentParser(description="Creates a thumbnail of the images (the larger size will be 1200px) and a compressed copy of the videos from the source directory to the destiny directory.")
     parser.add_argument("--source", required=True, help="Source directory")
     parser.add_argument("--destiny", required=True, help="Destiny directory")
     parser.add_argument("--copy_images", action="store_true", help="Copy and resize images")

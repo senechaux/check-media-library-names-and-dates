@@ -39,9 +39,9 @@ def rename_files(dir, logs_dir, do_rename=False):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="")
+    parser = argparse.ArgumentParser(description="Rename files attending to regexp rules. Convert the extension to lowercase and rename 'jpeg' extensions to 'jpg'.")
     parser.add_argument("--dir", required=True, help="Source directory of files")
-    parser.add_argument("--do_rename", action="store_true", help="Do not rename files, log changes")
+    parser.add_argument("--do_rename", action="store_true", help="Do rename files, instead of just logging changes")
     args = parser.parse_args()
 
     dir = args.dir

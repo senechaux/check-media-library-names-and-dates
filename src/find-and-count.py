@@ -171,7 +171,7 @@ def find_and_count_files(dir, logs_dir, include_dir=False):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="")
+    parser = argparse.ArgumentParser(description="Count how many files there are per type and year. Log all names to output files.")
     parser.add_argument("--dir", required=True, help="Source directory of files")
     parser.add_argument("--include_dir", action="store_true", help="Log full path filenames")
     args = parser.parse_args()

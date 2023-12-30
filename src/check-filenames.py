@@ -4,7 +4,7 @@ import argparse
 from datetime import datetime
 
 
-def check_file_names(dir, logs_dir):
+def check_file_names(dir, logs_dir, do_rename=False):
     extensions = "jpg|JPG|jpeg|png|gif|bmp|HEIC|mp4|avi|AVI|mov|MOV|mpg|m4v|webm|3gp|wmv|mkv|wav|m4a"
     extension_regex = '\.(?P<extension>'+extensions+')'
     yyyymmdd = "(?P<year>[0-9]{4})(?P<month>0[1-9]|1[0-2])(?P<day>[0-2][0-9]|3[01])"
@@ -103,7 +103,8 @@ def check_file_names(dir, logs_dir):
                     invalid_files[index].append(os.path.join(folder_name, filename) + " -> " + new_filename)
                     if index in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]:
                         print(filename+" -> "+new_filename)
-                        # os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
+                        if do_rename:
+                            os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
                 break
 
             if not matched:
@@ -136,14 +137,13 @@ def check_file_names(dir, logs_dir):
 
 
 def main():
-    print("IT MAY NOT WORK, TEST NEEDED")
-    return
-
-    parser = argparse.ArgumentParser(description="Check all files recursively to find those that do not match the desired name structure")
+    parser = argparse.ArgumentParser(description="Check all files recursively to find those that do not match the desired name structure. Rename to a correct format.")
     parser.add_argument("--dir", required=True, help="Source directory of files")
+    parser.add_argument("--do_rename", action="store_true", help="Do rename files, instead of just logging changes")
     args = parser.parse_args()
 
     dir = args.dir
+    do_rename = args.do_rename
 
     current_datetime = datetime.now()
     formatted_datetime = current_datetime.strftime("%Y%m%d_%H%M%S")
@@ -151,7 +151,7 @@ def main():
     if not os.path.exists(logs_dir):
         os.makedirs(logs_dir)
 
-    check_file_names(dir, logs_dir)
+    check_file_names(dir, logs_dir, do_rename)
 
 
 if __name__ == "__main__":

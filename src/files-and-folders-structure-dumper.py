@@ -62,7 +62,7 @@ def check_photos_uploaded_to_gphotos(dir, logs_dir):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Dump to two files a JSON representing the structure of files and folders")
+    parser = argparse.ArgumentParser(description="Dump to two files a JSON representing the structure of files and folders.")
     parser.add_argument("--dir", required=True, help="Source directory of files")
     args = parser.parse_args()
 

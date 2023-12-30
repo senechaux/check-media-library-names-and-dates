@@ -1,6 +1,18 @@
 # Dependencies
 `pip3 install Pillow opencv-python scikit-image`
 
+# PROCESS OF CATALOGUING PHOTOS AND VIDEOS
+1. Check all images from Elena's phone have been uploaded to Dropbox
+2. Copy all uploaded photos from Elena's Dropbox and Angel's Dropbox to Angel's Camera uploads in Google Drive
+*** pending to create a script to do this step
+3. Review manually, remove useless images
+4. Run check-filenames.py and rename if needed in a second running using the argument --do_rename.
+5. Run check-exif-datetime.py and review logs. Use 'A Better Finder Attributes' to fix metadata datetimes or 'A Bettet Finder Rename' to rename files.
+6. Create script to compress biggest videos and move them to a different folder, and then move the compressed ones to the same folder the biggest one was. ************
+7. Copy photos and videos to gphotos folder
+8. Run gphotos uploader: time python3 ~/workspace/check-media-library-names-and-dates/src/copy-files-to-upload-to-gphotos.py --source ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023/ --destiny ~/Fotitos_compressed_to_upload_to_gphotos/2023/ --copy_images --copy_videos --video_preset veryfast480p
+9. Run check-exif-datetime.py on "~/Fotitos_compressed_to_upload_to_gphotos/2023/" and review logs. Use 'A Better Finder Attributes' to fix metadata datetimes or 'A Bettet Finder Rename' to rename files.
+
 # TODO
 estimate date for "Fotos antiguas" and "Yo de peque"
 
@@ -32,13 +44,54 @@ investigate on how to rotate images according to their orientation, then resize 
 # HOW TO USE
 
 ## files-and-folders-structure-dumper.py
+Dump to two files a JSON representing the structure of files and folders.
+
 ```python3 files-and-folders-structure-dumper.py --dir ~/Fotitos_compressed_to_upload_to_gphotos```
 
 ## copy-files-to-upload-to-gphotos.py
---copy_images: to copy images
---copy_videos --video_preset veryfast480p: to compress and copy videos
+Creates a thumbnail of the images (the larger size will be 1200px) and a compressed copy of the videos from the source directory to the destiny directory.
+### args
+  --copy_images: to copy images
+  --copy_videos --video_preset veryfast480p: to compress and copy videos
+
 ```python3 copy-files-to-upload-to-gphotos.py --source "/users/angel/Insync/ladirecciondeangel@gmail.com/Google Drive/Fotitos/2023/" --destiny "/users/angel/Fotitos_compressed_to_upload_to_gphotos/2023/" --copy_images --copy_videos --video_preset veryfast480p```
 
+## find-and-count.py
+Count how many files there are per type and year. Log all names to output files.
+
+```python3 find-and-count.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/```
+
+## rename-files.py
+Rename files attending to regexp rules. Convert the extension to lowercase and rename 'jpeg' extensions to 'jpg'.
+
+### args
+  --do_rename: Do rename files, instead of just logging changes
+
+```python3 rename-files.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023/```
+
+## biggest-videos.py
+Find and log to an output file biggest videos in a folder. Ignores videos which name contains "reduced_video" since they have been already reduced.
+
+```python3 biggest-videos.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023/```
+
+## compress-non-mp4-videos.py
+DO NOT USE. Not needed now.
+
+## check-filenames.py
+Check all files recursively to find those that do not match the desired name structure. Rename to a correct format.
+
+### args
+  --do_rename: Do rename files, instead of just logging changes
+
+```python3 check-filenames.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023/```
+
+## check-exif-datetime.py
+Check all files recursively and check if the datetime in their name matches the datetime in Exif data
+
+### args
+  --do_rename: Do rename files, instead of just logging changes
+
+```python3 check-exif-datetime.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023/```
 
 Fix
 ===

@@ -80,7 +80,7 @@ def check_exif_datetime_images(dir, logs_dir, do_rename=False):
                     time_difference = date_object_from_filename - date_object_from_exif
                     difference_in_hours = math.floor(abs(time_difference.total_seconds() / 3600))
 
-                    new_filename = "diff_more_1_year_to_change " + filename
+                    new_filename = "diff_datetime " + filename
                     if do_rename:
                         os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
                     with open(f'{logs_dir}/exif_date_different_from_filename_date.log', 'a') as file:
@@ -160,6 +160,9 @@ def check_exif_datetime_videos(dir, logs_dir, do_rename=False):
             if difference_in_hours == 1 or difference_in_hours == 2:
                 write_log_exif_datetime_videos(f'{logs_dir}/videos_diff_OK_because_of_timezone.log', dir, full_filename, tag_date, tag_com_apple_quicktime_creationdate, tag_creation_time, filename_time, difference_in_days, time_difference)
             else:
+                new_filename = "diff_datetime " + filename
+                if do_rename:
+                    os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
                 write_log_exif_datetime_videos(f'{logs_dir}/videos_diff_KO.log', dir, full_filename, tag_date, tag_com_apple_quicktime_creationdate, tag_creation_time, filename_time, difference_in_days, time_difference)
 
 
