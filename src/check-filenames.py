@@ -6,46 +6,46 @@ from datetime import datetime
 
 def check_file_names(dir, logs_dir, do_rename=False):
     extensions = "jpg|JPG|jpeg|png|gif|bmp|HEIC|mp4|avi|AVI|mov|MOV|mpg|m4v|webm|3gp|wmv|mkv|wav|m4a"
-    extension_regex = '\.(?P<extension>'+extensions+')'
+    extension_regex = r'\.(?P<extension>'+extensions+')'
     yyyymmdd = "(?P<year>[0-9]{4})(?P<month>0[1-9]|1[0-2])(?P<day>[0-2][0-9]|3[01])"
     yyyymmdd_hyphens = "(?P<year>[0-9]{4})-(?P<month>0[1-9]|1[0-2])-(?P<day>[0-2][0-9]|3[01])"
     hhmmss = "(?P<hour>[0-2][0-9])(?P<minutes>[0-5][0-9])(?P<seconds>[0-5][0-9])"
     hhmmss_hyphens = "(?P<hour>[0-2][0-9])-(?P<minutes>[0-5][0-9])-(?P<seconds>[0-5][0-9])"
-    hhmmss_dots = "(?P<hour>[0-2][0-9])\.(?P<minutes>[0-5][0-9])\.(?P<seconds>[0-5][0-9])"
+    hhmmss_dots = r"(?P<hour>[0-2][0-9])\.(?P<minutes>[0-5][0-9])\.(?P<seconds>[0-5][0-9])"
     valid_filename_pattern = re.compile(r'^'+yyyymmdd_hyphens+' '+hhmmss_dots+'( .+)?'+extension_regex+'$')
     invalid_filename_patterns = [
         # 00 -> 2794 --> filename does not start with a year, i.e.: descenso.jpg or 13.jpg
         re.compile(r'^(?![0-9]{4}).*\.(?:'+extensions+')$'),
         # 01 -> 479 --> 2016-02-28 11.22.592.jpg
-        re.compile(r'^'+yyyymmdd_hyphens+'[ _-]'+hhmmss_dots+'(?P<extra_info>[0-9a-zA-Z ]*)'+extension_regex+'$'),
+        re.compile(r'^'+yyyymmdd_hyphens+r'[ _-]'+hhmmss_dots+r'(?P<extra_info>[0-9a-zA-Z ]*)'+extension_regex+r'$'),
         # 02 -> 15167 --> 2003-02-23 (10-15-04) Los delicuentes- Angel.jpg
-        re.compile(r'^'+yyyymmdd_hyphens+'[ _-]\('+hhmmss_hyphens+'\)[ _-]?(?P<extra_info>[a-zA-Z0-9\(\)]*)?'+extension_regex+'$'),
+        re.compile(r'^'+yyyymmdd_hyphens+r'[ _-]\('+hhmmss_hyphens+r'\)[ _-]?(?P<extra_info>[a-zA-Z0-9\(\)]*)?'+extension_regex+r'$'),
         # 03 -> 13356 --> 2004-07-03_19-27-48.avi
-        re.compile(r'^'+yyyymmdd_hyphens+'[ _-]'+hhmmss_hyphens+extension_regex+'$'),
+        re.compile(r'^'+yyyymmdd_hyphens+r'[ _-]'+hhmmss_hyphens+extension_regex+r'$'),
         # 04 -> 1350 --> 2012-02-18_11.55.20-1.jpg
-        re.compile(r'^'+yyyymmdd_hyphens+'[ _-]'+hhmmss_dots+'[ _-](?P<extra_info>\d{1})'+extension_regex+'$'),
+        re.compile(r'^'+yyyymmdd_hyphens+r'[ _-]'+hhmmss_dots+r'[ _-](?P<extra_info>\d{1})'+extension_regex+r'$'),
         # 05 -> 2428 --> 2011-12-16-01-11-18_x264.avi
-        re.compile(r'^'+yyyymmdd_hyphens+'[ _-]'+hhmmss_hyphens+'[ _-](?P<extra_info>.+)'+extension_regex+'$'),
+        re.compile(r'^'+yyyymmdd_hyphens+r'[ _-]'+hhmmss_hyphens+r'[ _-](?P<extra_info>.+)'+extension_regex+r'$'),
         # 06 -> 472 --> 2004-03-20_11-02-00l.jpg
-        re.compile(r'^'+yyyymmdd_hyphens+'[ _-]'+hhmmss_hyphens+'(?P<extra_info>.+)'+extension_regex+'$'),
+        re.compile(r'^'+yyyymmdd_hyphens+r'[ _-]'+hhmmss_hyphens+r'(?P<extra_info>.+)'+extension_regex+r'$'),
         # 07 -> 58 --> 2004-05-15 (15-37-14l).jpg
-        re.compile(r'^'+yyyymmdd_hyphens+' \('+hhmmss_hyphens+'(?P<extra_info>.+)\)'+extension_regex+'$'),
+        re.compile(r'^'+yyyymmdd_hyphens+r' \('+hhmmss_hyphens+r'(?P<extra_info>.+)\)'+extension_regex+r'$'),
         # 08 -> 78 --> 2003-07-01 (11.08.47).jpg
-        re.compile(r'^'+yyyymmdd_hyphens+'[ _-]\('+hhmmss_dots+'(?P<extra_info>.*)\)'+extension_regex+'$'),
+        re.compile(r'^'+yyyymmdd_hyphens+r'[ _-]\('+hhmmss_dots+r'(?P<extra_info>.*)\)'+extension_regex+r'$'),
         # 09 -> 439 --> 2017-05-07 17.00.00_36.jpeg
-        re.compile(r'^'+yyyymmdd_hyphens+'[ _-]'+hhmmss_dots+'[ _-](?P<extra_info>.+)'+extension_regex+'$'),
+        re.compile(r'^'+yyyymmdd_hyphens+r'[ _-]'+hhmmss_dots+r'[ _-](?P<extra_info>.+)'+extension_regex+r'$'),
         # 10 -> 578 --> 2007-04-06 (18-33-00)-Voltereta en la arena-c.avi
-        re.compile(r'^'+yyyymmdd_hyphens+'[ _-]\('+hhmmss_hyphens+'\)[ _-](?P<extra_info>.+)'+extension_regex+'$'),
+        re.compile(r'^'+yyyymmdd_hyphens+r'[ _-]\('+hhmmss_hyphens+r'\)[ _-](?P<extra_info>.+)'+extension_regex+r'$'),
         # 11 -> 783 --> 2004-08-02 Mari Ca lucia luciaate.mpg
-        re.compile(r'^'+yyyymmdd_hyphens+'[ _-](?P<extra_info>[a-zA-Z\(].+)'+extension_regex+'$'),
+        re.compile(r'^'+yyyymmdd_hyphens+r'[ _-](?P<extra_info>[a-zA-Z\(].+)'+extension_regex+r'$'),
         # 12 -> 186 --> 2004-12-18 26.jpg
-        re.compile(r'^'+yyyymmdd_hyphens+'[ _-](?P<extra_info>\d{2,3}|[a-z])'+extension_regex+'$'),
+        re.compile(r'^'+yyyymmdd_hyphens+r'[ _-](?P<extra_info>\d{2,3}|[a-z])'+extension_regex+r'$'),
         # 13 -> 108 --> 2005-12-23 04 fatima.jpg
-        re.compile(r'^'+yyyymmdd_hyphens+' (?P<extra_info>(\d{2}|-) [a-zA-Z].*)'+extension_regex+'$'),
+        re.compile(r'^'+yyyymmdd_hyphens+r' (?P<extra_info>(\d{2}|-) [a-zA-Z].*)'+extension_regex+r'$'),
         # 14 -> 143 --> 1996-08 34_Guernika Pais Vasco.jpg
-        re.compile(r'^(?P<year>19[0-9]{2}|20[0-9]{2})[ _-](?P<month>0[1-9]|1[0-2])[ _-](?P<extra_info>.*)'+extension_regex+'$'),
+        re.compile(r'^(?P<year>19[0-9]{2}|20[0-9]{2})[ _-](?P<month>0[1-9]|1[0-2])[ _-](?P<extra_info>.*)'+extension_regex+r'$'),
         # 15 -> 508 --> 2004 Dubrovnik-2.jpg
-        re.compile(r'^(?P<year>19[0-9]{2}|20[0-9]{2})[ _-](?P<extra_info>[ ,0-9a-zA-Z\(\)-_]+)'+extension_regex+'$'),
+        re.compile(r'^(?P<year>19[0-9]{2}|20[0-9]{2})[ _-](?P<extra_info>[ ,0-9a-zA-Z\(\)-_]+)'+extension_regex+r'$'),
         # 16 -> 112 --> Not recognized extensions
         re.compile(r'^.+\.(tif|xml|psd|mov_gs1|mov_gs2|mov_gs3|mov_gs4|txt|mcf|asf|xptv|eps|svg|pdf|ai|vob|VOB|IFO|BUP|7z|thm|mp3|url|rss|wlmp|tmp|nmea|itm|gpx|xcf|db|aup|localized)$'),
     ]

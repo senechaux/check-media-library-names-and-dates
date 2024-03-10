@@ -54,8 +54,10 @@ def find_biggest_videos(dir, logs_dir):
             with open(f'{logs_dir}/biggest_videos_by_bitrate.log', 'a') as file:
                 file.write(str(bitrate) + " Mb/s | " + str(file_size_mb_padded) + " MB | " + str(duration_minutes) + "m" + str(duration_seconds) + "s | " + width_x_height + " -> " + filename + " " + full_filename + "\n")
 
-    common_functions.sort_file(f'{logs_dir}/biggest_videos_by_size.log', f'{logs_dir}/biggest_videos_by_size.log', reverse=True)
-    common_functions.sort_file(f'{logs_dir}/biggest_videos_by_bitrate.log', f'{logs_dir}/biggest_videos_by_bitrate.log', reverse=True)
+    if os.path.exists(f'{logs_dir}/biggest_videos_by_size.log'):
+        common_functions.sort_file(f'{logs_dir}/biggest_videos_by_size.log', f'{logs_dir}/biggest_videos_by_size.log', reverse=True)
+    if os.path.exists(f'{logs_dir}/biggest_videos_by_bitrate.log'):
+        common_functions.sort_file(f'{logs_dir}/biggest_videos_by_bitrate.log', f'{logs_dir}/biggest_videos_by_bitrate.log', reverse=True)
 
 
 def main():

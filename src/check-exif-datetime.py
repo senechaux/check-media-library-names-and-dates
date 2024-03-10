@@ -28,9 +28,9 @@ def check_exif_datetime_images(dir, logs_dir, do_rename=False):
     print(f'Count of jpg images: {count_of_jpg_images}')
 
     extensions = "jpg|png|gif|bmp"
-    extension_regex = '\.(?P<extension>'+extensions+')'
+    extension_regex = r'\.(?P<extension>'+extensions+')'
     yyyymmdd_hyphens = "(?P<year>[0-9]{4})-(?P<month>0[1-9]|1[0-2])-(?P<day>[0-2][0-9]|3[01])"
-    hhmmss_dots = "(?P<hour>[0-2][0-9])\.(?P<minutes>[0-5][0-9])\.(?P<seconds>[0-5][0-9])"
+    hhmmss_dots = r"(?P<hour>[0-2][0-9])\.(?P<minutes>[0-5][0-9])\.(?P<seconds>[0-5][0-9])"
     valid_image_filename_pattern = re.compile(r'^'+yyyymmdd_hyphens+' '+hhmmss_dots+'( .+)?'+extension_regex+'$')
     videos_pattern = re.compile(r'^.+\.(?P<video_extension>mp4|avi|mov|mpg|m4v|webm|3gp|wmv|mkv)$')
     not_valid_files_extention = re.compile(r'^.+\.(eps|ai|mp3|itm|txt|aup|m4a|7z|xml|wav|nmea|pdf|tif|gpx|mcf|svg)$')
@@ -84,7 +84,7 @@ def check_exif_datetime_images(dir, logs_dir, do_rename=False):
                     if do_rename:
                         os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
                     with open(f'{logs_dir}/exif_date_different_from_filename_date.log', 'a') as file:
-                        file.write('file: ' + new_filename + "\n")
+                        file.write('file: ' + full_filename.replace(dir, '') + "\n")
                         file.write('datetime_from_file : '+datetime_from_filename + "\n")
                         file.write('date_time_original : '+date_time_original + "\n")
                         file.write('date_time_digitized: '+date_time_digitized + "\n")
@@ -93,7 +93,7 @@ def check_exif_datetime_images(dir, logs_dir, do_rename=False):
                 if do_rename:
                     os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
                 with open(f'{logs_dir}/exif_getting_error.log', 'a') as file:
-                    file.write('file: ' + new_filename + "\n")
+                    file.write('file: ' + filename + "\n")
                     file.write("Error on file: " + full_filename.replace(dir, '') + " - " + str(e) + "\n")
 
 
@@ -103,9 +103,9 @@ def check_exif_datetime_videos(dir, logs_dir, do_rename=False):
 
     ignored_folder_names = re.compile(r'^.*(En proceso|Fotos de gente|Fotos Alicia|Camera Uploads|Capturas de pantalla|Foto dibujo caricatura Carmela|Castigos de juegos).*$')
     yyyymmdd_hyphens = "(?P<year>[0-9]{4})-(?P<month>0[1-9]|1[0-2])-(?P<day>[0-2][0-9]|3[01])"
-    hhmmss_dots = "(?P<hour>[0-2][0-9])\.(?P<minutes>[0-5][0-9])\.(?P<seconds>[0-5][0-9])"
-    videos_pattern = re.compile(r'^'+yyyymmdd_hyphens+' '+hhmmss_dots+'( .+)?\.(mp4|mov)$')
-    renamed_videos_pattern = re.compile(r'^(equal_with_different_timezone_to_change) '+yyyymmdd_hyphens+' '+hhmmss_dots+'( .+)?\.(mp4|mov)$')
+    hhmmss_dots = r"(?P<hour>[0-2][0-9])\.(?P<minutes>[0-5][0-9])\.(?P<seconds>[0-5][0-9])"
+    videos_pattern = re.compile(r'^'+yyyymmdd_hyphens+' '+hhmmss_dots+r'( .+)?\.(mp4|mov)$')
+    renamed_videos_pattern = re.compile(r'^(equal_with_different_timezone_to_change) '+yyyymmdd_hyphens+' '+hhmmss_dots+r'( .+)?\.(mp4|mov)$')
     videos_counter = 0
     renamed_videos_counter = 0
     for folder_name, subfolders, filenames in os.walk(dir):
@@ -183,6 +183,9 @@ def main():
 
     check_exif_datetime_images(dir, logs_dir, do_rename)
     check_exif_datetime_videos(dir, logs_dir, do_rename)
+
+    if do_rename:
+        print("Files with differences have been renamed to have the preffix 'diff_datetime'")
 
 
 if __name__ == "__main__":
