@@ -161,3 +161,5 @@ cython_debug/
 
 logs/*.log
 logs_copy_to_upload_to_gphotos/*.log
+biggest_videos_compressed/*
+biggest_videos_to_compress/*

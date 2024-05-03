@@ -7,17 +7,24 @@
 *** pending to create a script to do this step
 3. Review manually, remove useless images
 4. Run check-filenames.py and rename if needed in a second running using the argument --do_rename.
-5. ******** TO DO ******** It should check if a video is not mp4
+   ```.venv/bin/python3 check-filenames.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2024```
+5. ******** TO DO ******** It should check if a video is not mp4. Meanwhile it can be checked doing a serach with Finder for files of type Video and ensuring all of them are MP4
 6. Run check-exif-datetime.py and review logs in './src/logs'. 
+  ```.venv/bin/python3 check-exif-datetime.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2024```
    To fix these articles, run again the script with the parametet '--do_rename', it will add the preffix 'diff_datetime' to all these files making easy to locate them in Finder.
    Use 'A Better Finder Attributes' to fix metadata datetimes or 'A Bettet Finder Rename' to rename files.
-7. Run biggest-videos.py and review logs in './src/logs'. Use Handbrake to compress videos.
-8. ******** TO DO ******** Create script to compress biggest videos and move them to a different folder, and then move the compressed ones to the same folder the biggest one was. Or at least a script to execute the commands to copy and/or move the biggest videos and the compressed one.
-9.  Copy photos and videos to gphotos folder: `time python3 ~/workspace/check-media-library-names-and-dates/src/copy-files-to-upload-to-gphotos.py --source ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/_YEAR_/ --destiny ~/Fotitos_compressed_to_upload_to_gphotos/_YEAR_/ --copy_images --copy_videos --video_preset veryfast480p`
-10. Run check-exif-datetime.py on "~/Fotitos_compressed_to_upload_to_gphotos/_YEAR_/" and review logs in './src/logs'.
+7. Run find-biggest-videos.py and review logs in './src/logs'. Use Handbrake to compress videos.
+  ```.venv/bin/python find-biggest-videos.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2024```
+8. Compress videos in "biggest_videos_to_compress" and output them into "biggest_videos_compressed".
+9. Check new sizes are small enough. If they are not then use a smaller size for the reduced video.
+10. Set the correct datetime metadata using "A better finder attributes"
+11. Run move_biggest_videos.py. It renames the videos adding the suffix " reduced_size", move them to the correct folder, move the original video to "/Users/angel/Insync/ladirecciondeangel@gmail.com/Google Drive/Fotitos videos con bit rate muy alto tmp" and remove the copied videos from folder "biggest_videos_to_compress".
+12. Copy photos and videos to gphotos folder: `time .venv/bin/python ~/workspace/check-media-library-names-and-dates/src/copy-files-to-upload-to-gphotos.py --source ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/#########_YEAR_#########/ --destiny ~/Fotitos_compressed_to_upload_to_gphotos/#########_YEAR_#########/ --copy_images --copy_videos --video_preset veryfast480p`
+13. Run check-exif-datetime.py on "~/Fotitos_compressed_to_upload_to_gphotos/#########_YEAR_#########/" and review logs in './src/logs'.
+   ```.venv/bin/python3 check-exif-datetime.py --dir ~/Fotitos_compressed_to_upload_to_gphotos/#########_YEAR_#########/```
    To fix these articles, run again the script with the parametet '--do_rename', it will add the preffix 'diff_datetime' to all these files making easy to locate them in Finder.
    Use 'A Better Finder Attributes' to fix metadata datetimes or 'A Bettet Finder Rename' to rename files.
-11. Run gphotos uploader
+14. Run gphotos uploader
 
 # TIPS
 - How to look for several file names: `find ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023/ -type f \( -name "2023-12-07 12.02.23.mp4" -o -name \)`. If you want to add them to A Better Finder Attributes just change the default application to open MP4 files and click in the filenames in Terminal.
@@ -25,7 +32,6 @@
 # TODO
 - Estimate date for "Fotos antiguas" and "Yo de peque"
 - Change check-filenames.py to check if a video is not mp4
-- Create script to compress biggest videos and move them to a different folder, and then move the compressed ones to the same folder the biggest one was. Or at least a script to execute the commands to copy and/or move the biggest videos and the compressed one.
 
 # DONE
 rename ny by ñ
@@ -50,6 +56,7 @@ upload all photos to google photos
   compress images and videos before uploading
 investigate on how to rename videos with names like "rduced_size"
 investigate on how to rotate images according to their orientation, then resize them and then reupload them
+Create script to compress biggest videos and move them to a different folder, and then move the compressed ones to the same folder the biggest one was. Or at least a script to execute the commands to copy and/or move the biggest videos and the compressed one.
 
 
 # HOW TO USE
@@ -80,10 +87,10 @@ Rename files attending to regexp rules. Convert the extension to lowercase and r
 
 ```python3 rename-files.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023/```
 
-## biggest-videos.py
+## find-biggest-videos.py
 Find and log to an output file biggest videos in a folder. Ignores videos which name contains "reduced_video" since they have been already reduced.
 
-```python3 biggest-videos.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023/```
+```python3 find-biggest-videos.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023/```
 
 ## compress-non-mp4-videos.py
 DO NOT USE. Not needed now.

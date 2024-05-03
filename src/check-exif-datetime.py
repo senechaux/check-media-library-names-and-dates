@@ -140,6 +140,9 @@ def check_exif_datetime_videos(dir, logs_dir, do_rename=False):
                 if key == 'com.apple.quicktime.creationdate':
                     tag_com_apple_quicktime_creationdate = value
             if tag_creation_time == None:
+                if do_rename:
+                    new_filename = "diff_datetime " + filename
+                    os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
                 with open(f'{logs_dir}/videos_no_tag_creation_time.log', 'a') as f:
                     f.write(f"{full_filename.replace(dir, '')}\n")
                 continue
