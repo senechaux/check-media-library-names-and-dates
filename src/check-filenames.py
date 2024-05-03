@@ -5,7 +5,7 @@ from datetime import datetime
 
 
 def check_file_names(dir, logs_dir, do_rename=False):
-    extensions = "jpg|JPG|jpeg|png|gif|bmp|HEIC|mp4|avi|AVI|mov|MOV|mpg|m4v|webm|3gp|wmv|mkv|wav|m4a"
+    extensions = "jpg|JPG|jpeg|png|gif|bmp|HEIC|mp4"
     extension_regex = r'\.(?P<extension>'+extensions+')'
     yyyymmdd = "(?P<year>[0-9]{4})(?P<month>0[1-9]|1[0-2])(?P<day>[0-2][0-9]|3[01])"
     yyyymmdd_hyphens = "(?P<year>[0-9]{4})-(?P<month>0[1-9]|1[0-2])-(?P<day>[0-2][0-9]|3[01])"
@@ -47,7 +47,7 @@ def check_file_names(dir, logs_dir, do_rename=False):
         # 15 -> 508 --> 2004 Dubrovnik-2.jpg
         re.compile(r'^(?P<year>19[0-9]{2}|20[0-9]{2})[ _-](?P<extra_info>[ ,0-9a-zA-Z\(\)-_]+)'+extension_regex+r'$'),
         # 16 -> 112 --> Not recognized extensions
-        re.compile(r'^.+\.(tif|xml|psd|mov_gs1|mov_gs2|mov_gs3|mov_gs4|txt|mcf|asf|xptv|eps|svg|pdf|ai|vob|VOB|IFO|BUP|7z|thm|mp3|url|rss|wlmp|tmp|nmea|itm|gpx|xcf|db|aup|localized)$'),
+        re.compile(r'^.+\.(avi|AVI|mov|MOV|mpg|m4v|webm|3gp|wmv|mkv|wav|m4a|tif|xml|psd|mov_gs1|mov_gs2|mov_gs3|mov_gs4|txt|mcf|asf|xptv|eps|svg|pdf|ai|vob|VOB|IFO|BUP|7z|thm|mp3|url|rss|wlmp|tmp|nmea|itm|gpx|xcf|db|aup|localized)$'),
     ]
     invalid_files_rest_of_cases = []
     invalid_files = [[] for _ in range(len(invalid_filename_patterns))]
@@ -125,10 +125,11 @@ def check_file_names(dir, logs_dir, do_rename=False):
                 filename_logged = filename.replace(dir, "")
                 f.write(f"{filename_logged}\n")
 
-    with open(f"{logs_dir}/invalid_files_rest_of_cases.log", "w") as f:
-        for filename in invalid_files_rest_of_cases:
-            filename_logged = filename.replace(dir, "")
-            f.write(f"{filename_logged}\n")
+    if len(invalid_files_rest_of_cases) > 0:
+        with open(f"{logs_dir}/invalid_files_rest_of_cases.log", "w") as f:
+            for filename in invalid_files_rest_of_cases:
+                filename_logged = filename.replace(dir, "")
+                f.write(f"{filename_logged}\n")
 
     for index, invalid_file_case in enumerate(invalid_files):
         print(f"Count of case {index} files: {len(invalid_file_case)}")

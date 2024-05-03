@@ -31,7 +31,6 @@
 
 # TODO
 - Estimate date for "Fotos antiguas" and "Yo de peque"
-- Change check-filenames.py to check if a video is not mp4
 
 # DONE
 rename ny by ñ
@@ -57,6 +56,7 @@ upload all photos to google photos
 investigate on how to rename videos with names like "rduced_size"
 investigate on how to rotate images according to their orientation, then resize them and then reupload them
 Create script to compress biggest videos and move them to a different folder, and then move the compressed ones to the same folder the biggest one was. Or at least a script to execute the commands to copy and/or move the biggest videos and the compressed one.
+Change check-filenames.py to check if a video is not mp4
 
 
 # HOW TO USE
