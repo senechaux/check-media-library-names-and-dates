@@ -28,25 +28,27 @@ def check_file_names(dir, logs_dir, do_rename=False):
         re.compile(r'^'+yyyymmdd_hyphens+r'[ _-]'+hhmmss_hyphens+r'[ _-](?P<extra_info>.+)'+extension_regex+r'$'),
         # 06 -> 472 --> 2004-03-20_11-02-00l.jpg
         re.compile(r'^'+yyyymmdd_hyphens+r'[ _-]'+hhmmss_hyphens+r'(?P<extra_info>.+)'+extension_regex+r'$'),
-        # 07 -> 58 --> 2004-05-15 (15-37-14l).jpg
+        # 07 --> 2024-05-12 14.00.00(41).jpg
+        re.compile(r'^'+yyyymmdd_hyphens+r'[ _-]'+hhmmss_dots+r'(?P<extra_info>\(.+\))'+extension_regex+r'$'),
+        # 08 -> 58 --> 2004-05-15 (15-37-14l).jpg
         re.compile(r'^'+yyyymmdd_hyphens+r' \('+hhmmss_hyphens+r'(?P<extra_info>.+)\)'+extension_regex+r'$'),
-        # 08 -> 78 --> 2003-07-01 (11.08.47).jpg
+        # 09 -> 78 --> 2003-07-01 (11.08.47).jpg
         re.compile(r'^'+yyyymmdd_hyphens+r'[ _-]\('+hhmmss_dots+r'(?P<extra_info>.*)\)'+extension_regex+r'$'),
-        # 09 -> 439 --> 2017-05-07 17.00.00_36.jpeg
+        # 10 -> 439 --> 2017-05-07 17.00.00_36.jpeg
         re.compile(r'^'+yyyymmdd_hyphens+r'[ _-]'+hhmmss_dots+r'[ _-](?P<extra_info>.+)'+extension_regex+r'$'),
-        # 10 -> 578 --> 2007-04-06 (18-33-00)-Voltereta en la arena-c.avi
+        # 11 -> 578 --> 2007-04-06 (18-33-00)-Voltereta en la arena-c.avi
         re.compile(r'^'+yyyymmdd_hyphens+r'[ _-]\('+hhmmss_hyphens+r'\)[ _-](?P<extra_info>.+)'+extension_regex+r'$'),
-        # 11 -> 783 --> 2004-08-02 Mari Ca lucia luciaate.mpg
+        # 12 -> 783 --> 2004-08-02 Mari Ca lucia luciaate.mpg
         re.compile(r'^'+yyyymmdd_hyphens+r'[ _-](?P<extra_info>[a-zA-Z\(].+)'+extension_regex+r'$'),
-        # 12 -> 186 --> 2004-12-18 26.jpg
+        # 13 -> 186 --> 2004-12-18 26.jpg
         re.compile(r'^'+yyyymmdd_hyphens+r'[ _-](?P<extra_info>\d{2,3}|[a-z])'+extension_regex+r'$'),
-        # 13 -> 108 --> 2005-12-23 04 fatima.jpg
+        # 14 -> 108 --> 2005-12-23 04 fatima.jpg
         re.compile(r'^'+yyyymmdd_hyphens+r' (?P<extra_info>(\d{2}|-) [a-zA-Z].*)'+extension_regex+r'$'),
-        # 14 -> 143 --> 1996-08 34_Guernika Pais Vasco.jpg
+        # 15 -> 143 --> 1996-08 34_Guernika Pais Vasco.jpg
         re.compile(r'^(?P<year>19[0-9]{2}|20[0-9]{2})[ _-](?P<month>0[1-9]|1[0-2])[ _-](?P<extra_info>.*)'+extension_regex+r'$'),
-        # 15 -> 508 --> 2004 Dubrovnik-2.jpg
+        # 16 -> 508 --> 2004 Dubrovnik-2.jpg
         re.compile(r'^(?P<year>19[0-9]{2}|20[0-9]{2})[ _-](?P<extra_info>[ ,0-9a-zA-Z\(\)-_]+)'+extension_regex+r'$'),
-        # 16 -> 112 --> Not recognized extensions
+        # 17 -> 112 --> Not recognized extensions
         re.compile(r'^.+\.(avi|AVI|mov|MOV|mpg|m4v|webm|3gp|wmv|mkv|wav|m4a|tif|xml|psd|mov_gs1|mov_gs2|mov_gs3|mov_gs4|txt|mcf|asf|xptv|eps|svg|pdf|ai|vob|VOB|IFO|BUP|7z|thm|mp3|url|rss|wlmp|tmp|nmea|itm|gpx|xcf|db|aup|localized)$'),
     ]
     invalid_files_rest_of_cases = []

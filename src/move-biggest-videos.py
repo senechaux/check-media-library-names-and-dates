@@ -48,7 +48,7 @@ def move_videos_compressed(videos_compressed_dir, video_list):
             continue
         print(f'Moving "{videos_compressed_dir}/{filename}" to "{fullpath_video_folder}"')
         shutil.move(f'{videos_compressed_dir}/{filename}', fullpath_video_folder)
-        os.remove(f'{videos_compressed_dir}/{filename}_full_path.txt')
+        os.remove(f'{videos_compressed_dir}/{filename_with_fullpath_video_filename}')
 
 
 def move_videos_original(videos_compressed_dir, dest_dir_original_biggest_videos, video_list):
@@ -64,7 +64,7 @@ def move_videos_original(videos_compressed_dir, dest_dir_original_biggest_videos
             and os.path.exists(fullpath_video_filename)):
             print(f'[ERROR] - The video is duplicated in "{fullpath_video_filename}" and "{dest_dir_original_biggest_videos}"')
             continue
-        print(f'Moving "{fullpath_video_filename}" to "{dest_dir_original_biggest_videos}"')
+        print(f'Moving original "{fullpath_video_filename}" to "{dest_dir_original_biggest_videos}"')
         shutil.move(fullpath_video_filename, dest_dir_original_biggest_videos)
 
 

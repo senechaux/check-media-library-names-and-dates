@@ -188,7 +188,7 @@ def main():
     check_exif_datetime_videos(dir, logs_dir, do_rename)
 
     if do_rename:
-        print("Files with differences have been renamed to have the preffix 'diff_datetime'")
+        print("Files with differences have been renamed to have the preffix 'diff_datetime' or 'exif_getting_error'")
 
 
 if __name__ == "__main__":
