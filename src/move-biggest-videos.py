@@ -48,7 +48,7 @@ def move_videos_compressed(videos_compressed_dir, video_list):
             continue
         print(f'Moving "{videos_compressed_dir}/{filename}" to "{fullpath_video_folder}"')
         shutil.move(f'{videos_compressed_dir}/{filename}', fullpath_video_folder)
-        os.remove(f'{videos_compressed_dir}/{filename_with_fullpath_video_filename}')
+        common_functions.remove_file(f'{videos_compressed_dir}/{filename_with_fullpath_video_filename}')
 
 
 def move_videos_original(videos_compressed_dir, dest_dir_original_biggest_videos, video_list):
@@ -71,8 +71,8 @@ def move_videos_original(videos_compressed_dir, dest_dir_original_biggest_videos
 def remove_videos_to_compress(videos_to_compress_dir, video_list):
     for video in video_list:
         print(f'Removing "{videos_to_compress_dir}/{video}"')
-        os.remove(f'{videos_to_compress_dir}/{video}')
-        os.remove(f'{videos_to_compress_dir}/{video}_full_path.txt')
+        common_functions.remove_file(f'{videos_to_compress_dir}/{video}')
+        common_functions.remove_file(f'{videos_to_compress_dir}/{video}_full_path.txt')
 
 
 def main():

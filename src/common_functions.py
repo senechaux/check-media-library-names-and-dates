@@ -34,7 +34,7 @@ def sort_file(input_file_path, output_file_path, reverse=False):
             file.write(line)
 
 
-def moveFile(source_file, destination_folder):
+def move_file(source_file, destination_folder):
     try:
         # Use the shutil.move() function to move the file
         shutil.move(source_file, destination_folder)
@@ -43,6 +43,10 @@ def moveFile(source_file, destination_folder):
         print(f"File '{source_file}' not found.")
     except Exception as e:
         print(f"An error occurred: {str(e)}")
+
+
+def remove_file(file):
+    move_file(file, '~/.Trash/')
 
 
 def get_video_metadata(video_path):

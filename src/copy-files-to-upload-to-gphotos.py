@@ -111,7 +111,7 @@ def find_and_copy_images(source_dir, destiny_dir):
 
             target_max_size = 1200
             resize_image(full_filename, full_tmp_filename, target_max_size)
-            common_functions.moveFile(full_tmp_filename, full_new_filename)
+            common_functions.move_file(full_tmp_filename, full_new_filename)
 
 
 def find_and_copy_videos(source_dir, destiny_dir, video_preset):
@@ -140,7 +140,7 @@ def find_and_copy_videos(source_dir, destiny_dir, video_preset):
                 continue
 
             resize_video(filename, full_filename, full_tmp_filename, video_preset, f"videos: {video_counter}/{total_videos}")
-            common_functions.moveFile(full_tmp_filename, full_new_filename)
+            common_functions.move_file(full_tmp_filename, full_new_filename)
 
 
 
