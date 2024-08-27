@@ -32,7 +32,6 @@
 - How to look for several file names: `find ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023/ -type f \( -name "2023-12-07 12.02.23.mp4" -o -name \)`. If you want to add them to A Better Finder Attributes just change the default application to open MP4 files and click in the filenames in Terminal.
 
 # TODO
-- Estimate date for "Fotos antiguas" and "Yo de peque"
 
 # DONE
 rename ny by ñ
@@ -60,7 +59,10 @@ investigate on how to rotate images according to their orientation, then resize 
 Create script to compress biggest videos and move them to a different folder, and then move the compressed ones to the same folder the biggest one was. Or at least a script to execute the commands to copy and/or move the biggest videos and the compressed one.
 Change check-filenames.py to check if a video is not mp4
 Move things to Trash `~/.Trash/` instead of deleting them (NOT TESTED)
-
+Estimate date for "Yo de peque"
+Estimate date for "Fotos antiguas"
+Add person names to photos in "Yo de peque" and "Fotos antiguas"
+Merge folders "Yo de peque" and "Fotos antiguas"
 
 # HOW TO USE
 
