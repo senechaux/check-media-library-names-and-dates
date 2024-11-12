@@ -6,6 +6,7 @@ import common_functions
 from PIL import Image
 from PIL.ExifTags import TAGS
 from datetime import datetime
+from progress.bar import IncrementalBar
 
 
 def write_log_exif_datetime_videos(log_filename, dir, full_filename, tag_date, tag_com_apple_quicktime_creationdate, tag_creation_time, filename_time, difference_in_days, time_difference):
@@ -35,7 +36,7 @@ def check_exif_datetime_images(dir, logs_dir, do_rename=False):
     videos_pattern = re.compile(r'^.+\.(?P<video_extension>mp4|avi|mov|mpg|m4v|webm|3gp|wmv|mkv)$')
     not_valid_files_extention = re.compile(r'^.+\.(eps|ai|mp3|itm|txt|aup|m4a|7z|xml|wav|nmea|pdf|tif|gpx|mcf|svg)$')
     other_images_extension = re.compile(r'^.+\.(bmp|png|gif)$')
-    images_counter = 0
+    bar = IncrementalBar('Checking EXIF datetime in images... ', max=int(count_of_jpg_images))
 
     for folder_name, subfolders, filenames in os.walk(dir):
         ignored_folder_names = re.compile(r'^.*(En proceso|Fotos de gente|Fotos Alicia|Camera Uploads|Capturas de pantalla|Foto dibujo caricatura Carmela|Castigos de juegos).*$')
@@ -51,9 +52,7 @@ def check_exif_datetime_images(dir, logs_dir, do_rename=False):
             if not pattern_match:
                 continue
 
-            images_counter += 1
-            if images_counter % 100 == 0:
-                print(f"{images_counter}/{count_of_jpg_images}")
+            bar.next()
 
             matched_groups = pattern_match.groupdict()
 
@@ -95,6 +94,7 @@ def check_exif_datetime_images(dir, logs_dir, do_rename=False):
                 with open(f'{logs_dir}/exif_getting_error.log', 'a') as file:
                     file.write('file: ' + filename + "\n")
                     file.write("Error on file: " + full_filename.replace(dir, '') + " - " + str(e) + "\n")
+    bar.finish()
 
 
 def check_exif_datetime_videos(dir, logs_dir, do_rename=False):
@@ -106,8 +106,9 @@ def check_exif_datetime_videos(dir, logs_dir, do_rename=False):
     hhmmss_dots = r"(?P<hour>[0-2][0-9])\.(?P<minutes>[0-5][0-9])\.(?P<seconds>[0-5][0-9])"
     videos_pattern = re.compile(r'^'+yyyymmdd_hyphens+' '+hhmmss_dots+r'( .+)?\.(mp4|mov)$')
     renamed_videos_pattern = re.compile(r'^(equal_with_different_timezone_to_change) '+yyyymmdd_hyphens+' '+hhmmss_dots+r'( .+)?\.(mp4|mov)$')
-    videos_counter = 0
     renamed_videos_counter = 0
+    bar = IncrementalBar('Checking EXIF datetime in videos... ', max=int(count_of_mp4_videos))
+
     for folder_name, subfolders, filenames in os.walk(dir):
         if ignored_folder_names.match(folder_name):
             continue
@@ -117,9 +118,8 @@ def check_exif_datetime_videos(dir, logs_dir, do_rename=False):
             pattern_match = videos_pattern.match(filename)
             if not pattern_match:
                 continue
-            videos_counter += 1
-            if videos_counter % 10 == 0:
-                print(f'{videos_counter}/{count_of_mp4_videos}')
+
+            bar.next()
 
             matched_groups = pattern_match.groupdict()
             tag_creation_time = None
@@ -167,6 +167,8 @@ def check_exif_datetime_videos(dir, logs_dir, do_rename=False):
                 if do_rename:
                     os.rename(os.path.join(folder_name, filename), os.path.join(folder_name, new_filename))
                 write_log_exif_datetime_videos(f'{logs_dir}/videos_diff_KO.log', dir, full_filename, tag_date, tag_com_apple_quicktime_creationdate, tag_creation_time, filename_time, difference_in_days, time_difference)
+
+    bar.finish()
 
 
 def main():
