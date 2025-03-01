@@ -1,7 +1,6 @@
 import os
 import re
 import argparse
-import subprocess
 import math
 import common_functions
 import shutil

@@ -1,6 +1,7 @@
 import subprocess
 import shutil
 import json
+import os
 
 
 def count_files_with_the_extension(source_dir, extension):
@@ -46,7 +47,8 @@ def move_file(source_file, destination_folder):
 
 
 def remove_file(file):
-    move_file(file, '~/.Trash/')
+    trash_dir = os.path.expanduser('~/.Trash/')
+    move_file(file, trash_dir)
 
 
 def get_video_metadata(video_path):
