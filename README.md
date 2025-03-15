@@ -7,28 +7,44 @@
 *** pending to create a script to do this step
 3. Review manually, remove useless images
 4. Run check-filenames.py and rename if needed in a second running using the argument --do_rename.
-   ```source .venv/bin/activate```
-   ```python3 check-filenames.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/202```
+   
+    ```source .venv/bin/activate```
+
+    ```python3 check-filenames.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2025```
+
 5. ******** TO DO ******** It should check if a video is not mp4. Meanwhile it can be checked doing a search with Finder for files of type Video and ensuring all of them are MP4. Use Permute to convert to mp4.
 6. Run check-exif-datetime.py and review logs in './src/logs'. 
-  ```python3 check-exif-datetime.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/202```
+  
+   ```python3 check-exif-datetime.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2025```
+
    To fix these articles, run again the script with the parametet '--do_rename', it will add the preffix 'diff_datetime' or 'exif_getting_error' to all these files making easy to locate them in Finder.
    Use 'A Better Finder Attributes' to fix metadata datetimes or 'A Bettet Finder Rename' to rename files.
+
 7. Run find-biggest-videos.py and review logs in './src/logs'. Use Handbrake to compress videos.
-  ```python3 find-biggest-videos.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/202```
+   
+   ```python3 find-biggest-videos.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2025```
+
 8. Compress videos in "biggest_videos_to_compress" and output them into "biggest_videos_compressed".
 9. Check new sizes are small enough. If they are not then use a smaller size for the reduced video.
 10. Set the correct datetime metadata using "A better finder attributes"
 11. Run move-biggest-videos.py. It renames the videos adding the suffix " reduced_size", move them to the correct folder, move the original video to "/Users/angel/Insync/ladirecciondeangel@gmail.com/Google Drive/Fotitos videos con bit rate muy alto tmp" and remove the copied videos from folder "biggest_videos_to_compress".
-  ```python3 move-biggest-videos.py```
+    
+    ```python3 move-biggest-videos.py```
+   
 12. Copy photos and videos to gphotos folder:
-  ```python3 copy-files-to-upload-to-gphotos.py --source ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/#########_YEAR_#########/ --destiny ~/Fotitos_compressed_to_upload_to_gphotos/#########_YEAR_#########/ --copy_images --copy_videos --video_preset veryfast480p```
-13. Run check-exif-datetime.py on "~/Fotitos_compressed_to_upload_to_gphotos/#########_YEAR_#########/" and review logs in './src/logs'.
-   ```python3 check-exif-datetime.py --dir ~/Fotitos_compressed_to_upload_to_gphotos/#########_YEAR_#########/```
-   To fix these articles, run again the script with the parametet '--do_rename', it will add the preffix 'diff_datetime' to all these files making easy to locate them in Finder.
-   Use 'A Better Finder Attributes' to fix metadata datetimes or 'A Bettet Finder Rename' to rename files.
+
+    ```python3 copy-files-to-upload-to-gphotos.py --source ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2025/ --destiny ~/Fotitos_compressed_to_upload_to_gphotos/2025/ --copy_images --copy_videos --video_preset veryfast480p```
+
+13. Run check-exif-datetime.py on "~/Fotitos_compressed_to_upload_to_gphotos/2025/" and review logs in './src/logs'.
+
+    ```python3 check-exif-datetime.py --dir ~/Fotitos_compressed_to_upload_to_gphotos/2025/```
+    
+    To fix these articles, run again the script with the parametet '--do_rename', it will add the preffix 'diff_datetime' to all these files making easy to locate them in Finder.
+    
+    Use 'A Better Finder Attributes' to fix metadata datetimes or 'A Bettet Finder Rename' to rename files.
 14. Run gphotos uploader
-  ```gphotos-uploader-cli push [ --debug | --vvv | --dry-run ]```
+
+    ```gphotos-uploader-cli push [ --debug | --vvv | --dry-run ]```
 
 # TIPS
 - How to look for several file names: `find ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023/ -type f \( -name "2023-12-07 12.02.23.mp4" -o -name \)`. If you want to add them to A Better Finder Attributes just change the default application to open MP4 files and click in the filenames in Terminal.
