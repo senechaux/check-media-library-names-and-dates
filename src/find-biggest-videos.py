@@ -7,7 +7,7 @@ import common_functions
 import shutil
 from datetime import datetime
 
-MIN_FILE_SIZE_IN_MB = 100
+MIN_FILE_SIZE_IN_MB = 50
 
 def find_biggest_videos(dir, logs_dir):
     biggest_videos_list = []
