@@ -159,6 +159,7 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+.DS_Store
 logs/*.log
 logs_copy_to_upload_to_gphotos/*.log
 biggest_videos_compressed/*
