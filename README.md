@@ -1,5 +1,9 @@
 # Dependencies
-`pip3 install Pillow opencv-python scikit-image`
+```
+brew install ffmpeg mediainfo handbrake gphotos-uploader-cli
+pip install -r requirements.txt
+```
+
 
 # PROCESS FOR CATALOGUING PHOTOS AND VIDEOS
 1. Check all images from Elena's phone have been uploaded to Dropbox
@@ -45,6 +49,9 @@
 14. Run gphotos uploader
 
     ```gphotos-uploader-cli push [ --debug | --vvv | --dry-run ]```
+15. Backup gphotos uploader folder contents to Google Drive
+
+    ```cp -r ~/.gphotos-uploader-cli/* ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos\ Anexos/gphotos-uploader-cli/```
 
 # TIPS
 - How to look for several file names: `find ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023/ -type f \( -name "2023-12-07 12.02.23.mp4" -o -name \)`. If you want to add them to A Better Finder Attributes just change the default application to open MP4 files and click in the filenames in Terminal.
