@@ -31,14 +31,14 @@ def get_video_list(dir, do_look_for_reduced_videos = False):
 
 def rename_videos_compressed(videos_compressed_dir, video_list):
     for filename in video_list:
-        new_filename = filename.replace(f'.{filename.split('.')[-1]}', f' reduced_size.{filename.split('.')[-1]}')
+        new_filename = filename.replace(f".{filename.split('.')[-1]}", f" reduced_size.{filename.split('.')[-1]}")
         print(f'Renaming "{videos_compressed_dir}/{filename}" to "{videos_compressed_dir}/{new_filename}"')
         os.rename(f'{videos_compressed_dir}/{filename}', f'{videos_compressed_dir}/{new_filename}')
 
 
 def move_videos_compressed(videos_compressed_dir, video_list):
     for filename in video_list:
-        filename_with_fullpath_video_filename = f'{filename.replace(' reduced_size', '')}_full_path.txt'
+        filename_with_fullpath_video_filename = f"{filename.replace(' reduced_size', '')}_full_path.txt"
         with open(f'{videos_compressed_dir}/{filename_with_fullpath_video_filename}', 'r') as file:
             fullpath_video_filename = file.read().rstrip()
         fullpath_video_folder = os.path.dirname(fullpath_video_filename)
@@ -52,14 +52,14 @@ def move_videos_compressed(videos_compressed_dir, video_list):
 
 def move_videos_original(videos_compressed_dir, dest_dir_original_biggest_videos, video_list):
     for filename in video_list:
-        filename_with_fullpath_video_filename = f'{filename.replace(' reduced_size', '')}_full_path.txt'
+        filename_with_fullpath_video_filename = f"{filename.replace(' reduced_size', '')}_full_path.txt"
         with open(f'{videos_compressed_dir}/{filename_with_fullpath_video_filename}', 'r') as file:
             fullpath_video_filename = file.read().rstrip()
-        if (os.path.exists(f'{dest_dir_original_biggest_videos}/{filename.replace(' reduced_size', '')}')
+        if (os.path.exists(f"{dest_dir_original_biggest_videos}/{filename.replace(' reduced_size', '')}")
             and not os.path.exists(fullpath_video_filename)):
             # print(f'Video already moved from "{fullpath_video_filename}" to "{dest_dir_original_biggest_videos}"')
             continue
-        if (os.path.exists(f'{dest_dir_original_biggest_videos}/{filename.replace(' reduced_size', '')}')
+        if (os.path.exists(f"{dest_dir_original_biggest_videos}/{filename.replace(' reduced_size', '')}")
             and os.path.exists(fullpath_video_filename)):
             print(f'[ERROR] - The video is duplicated in "{fullpath_video_filename}" and "{dest_dir_original_biggest_videos}"')
             continue
