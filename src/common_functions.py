@@ -46,9 +46,30 @@ def move_file(source_file, destination_folder):
         print(f"An error occurred: {str(e)}")
 
 
+def move_folder(source_folder, destination_folder):
+    try:
+        # Use the shutil.move() function to move the folder
+        shutil.move(source_folder, destination_folder)
+        print(f"Folder '{source_folder}' moved to '{destination_folder}' successfully.")
+    except FileNotFoundError:
+        print(f"Folder '{source_folder}' not found.")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+
+
 def remove_file(file):
     trash_dir = os.path.expanduser('~/.Trash/')
     move_file(file, trash_dir)
+
+
+def remove_folder(folder):
+    trash_dir = os.path.expanduser('~/.Trash/')
+    move_folder(folder, trash_dir)
+
+
+def create_directory_if_not_exists(directory_path):
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
 
 
 def get_video_metadata(video_path):

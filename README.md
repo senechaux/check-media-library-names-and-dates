@@ -14,19 +14,19 @@ pip install -r requirements.txt
    
     ```source .venv/bin/activate```
 
-    ```python3 check-filenames.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2025```
+    ```python3 check-filenames.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2026```
 
 5. ******** TO DO ******** It should check if a video is not mp4. Meanwhile it can be checked doing a search with Finder for files of type Video and ensuring all of them are MP4. Use Permute to convert to mp4.
 6. Run check-exif-datetime.py and review logs in './src/logs'. 
   
-   ```python3 check-exif-datetime.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2025```
+   ```python3 check-exif-datetime.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2026```
 
    To fix these articles, run again the script with the parametet '--do_rename', it will add the preffix 'diff_datetime' or 'exif_getting_error' to all these files making easy to locate them in Finder.
    Use 'A Better Finder Attributes' to fix metadata datetimes or 'A Bettet Finder Rename' to rename files.
 
 7. Run find-biggest-videos.py and review logs in './src/logs'. Use Handbrake to compress videos.
    
-   ```python3 find-biggest-videos.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2025```
+   ```python3 find-biggest-videos.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2026```
 
 8. Compress videos in "biggest_videos_to_compress" and output them into "biggest_videos_compressed".
 9. Check new sizes are small enough. If they are not then use a smaller size for the reduced video.
@@ -37,11 +37,11 @@ pip install -r requirements.txt
    
 12. Copy photos and videos to gphotos folder:
 
-    ```python3 copy-files-to-upload-to-gphotos.py --source ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2025/ --destiny ~/Fotitos_compressed_to_upload_to_gphotos/2025/ --copy_images --copy_videos --video_preset veryfast480p```
+    ```python3 copy-files-to-upload-to-gphotos.py --source ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2026/ --destiny ~/Fotitos_compressed_to_upload_to_gphotos/2026/ --copy_images --copy_videos --video_preset veryfast480p```
 
-13. Run check-exif-datetime.py on "~/Fotitos_compressed_to_upload_to_gphotos/2025/" and review logs in './src/logs'.
+13. Run check-exif-datetime.py on "~/Fotitos_compressed_to_upload_to_gphotos/2026/" and review logs in './src/logs'.
 
-    ```python3 check-exif-datetime.py --dir ~/Fotitos_compressed_to_upload_to_gphotos/2025/```
+    ```python3 check-exif-datetime.py --dir ~/Fotitos_compressed_to_upload_to_gphotos/2026/```
     
     To fix these articles, run again the script with the parametet '--do_rename', it will add the preffix 'diff_datetime' to all these files making easy to locate them in Finder.
     

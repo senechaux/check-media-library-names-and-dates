@@ -47,7 +47,6 @@ def move_videos_compressed(videos_compressed_dir, video_list):
             continue
         print(f'Moving "{videos_compressed_dir}/{filename}" to "{fullpath_video_folder}"')
         shutil.move(f'{videos_compressed_dir}/{filename}', fullpath_video_folder)
-        common_functions.remove_file(f'{videos_compressed_dir}/{filename_with_fullpath_video_filename}')
 
 
 def move_videos_original(videos_compressed_dir, dest_dir_original_biggest_videos, video_list):
@@ -57,7 +56,7 @@ def move_videos_original(videos_compressed_dir, dest_dir_original_biggest_videos
             fullpath_video_filename = file.read().rstrip()
         if (os.path.exists(f"{dest_dir_original_biggest_videos}/{filename.replace(' reduced_size', '')}")
             and not os.path.exists(fullpath_video_filename)):
-            # print(f'Video already moved from "{fullpath_video_filename}" to "{dest_dir_original_biggest_videos}"')
+            print(f'Video already moved from "{fullpath_video_filename}" to "{dest_dir_original_biggest_videos}"')
             continue
         if (os.path.exists(f"{dest_dir_original_biggest_videos}/{filename.replace(' reduced_size', '')}")
             and os.path.exists(fullpath_video_filename)):
@@ -71,8 +70,17 @@ def remove_videos_to_compress(videos_to_compress_dir, video_list):
     for video in video_list:
         print(f'Removing "{videos_to_compress_dir}/{video}"')
         common_functions.remove_file(f'{videos_to_compress_dir}/{video}')
-        common_functions.remove_file(f'{videos_to_compress_dir}/{video}_full_path.txt')
 
+def remove_filenames_with_fullpath(videos_to_compress_dir, videos_compressed_dir):
+    datetime_now_str = datetime.now().strftime("%Y%m%d%H%M%S")
+
+    for folder in [videos_to_compress_dir, videos_compressed_dir]:
+        new_folder = f'{folder}_{datetime_now_str}'
+        common_functions.create_directory_if_not_exists(new_folder)
+        full_path_files = [f for f in os.listdir(folder) if f.endswith('_full_path.txt')]
+        for full_path_file in full_path_files:
+            common_functions.move_file(f'{folder}/{full_path_file}', new_folder)
+        common_functions.remove_folder(new_folder)
 
 def main():
     parser = argparse.ArgumentParser(description="Rename compressed videos. Move them to the original folder. \
@@ -86,13 +94,14 @@ def main():
     rename_videos_compressed(videos_compressed_dir, not_reduced_video_list)
     print()
     reduced_video_list = get_video_list(videos_compressed_dir, True)
-    move_videos_compressed(videos_compressed_dir, reduced_video_list)
     move_videos_original(videos_compressed_dir, dest_dir_original_biggest_videos, reduced_video_list)
+    move_videos_compressed(videos_compressed_dir, reduced_video_list)
     print()
     to_compress_video_list = get_video_list(videos_to_compress_dir, False)
     remove_videos_to_compress(videos_to_compress_dir, to_compress_video_list)
     print()
-    print('Using Google Drive web move files in "/Fotitos videos con bit rate muy alto tmp" to "/Fotitos videos con bit rate muy alto"')
+    remove_filenames_with_fullpath(videos_to_compress_dir, videos_compressed_dir)
+    print('Backup to external drive. Using Google Drive web move files in "/Fotitos videos con bit rate muy alto tmp" to "/Fotitos videos con bit rate muy alto"')
 
 if __name__ == "__main__":
     main()
