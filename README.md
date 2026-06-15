@@ -11,47 +11,58 @@ pip install -r requirements.txt
 *** pending to create a script to do this step
 3. Review manually, remove useless images
 4. Run check-filenames.py and rename if needed in a second running using the argument --do_rename.
-   
-    ```source .venv/bin/activate```
 
-    ```python3 check-filenames.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2026```
+  ```   
+  source .venv/bin/activate
+
+  python3 check-filenames.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2026
+  ```
 
 5. ******** TO DO ******** It should check if a video is not mp4. Meanwhile it can be checked doing a search with Finder for files of type Video and ensuring all of them are MP4. Use Permute to convert to mp4.
 6. Run check-exif-datetime.py and review logs in './src/logs'. 
   
-   ```python3 check-exif-datetime.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2026```
+   ```
+   python3 check-exif-datetime.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2026
+   ```
 
    To fix these articles, run again the script with the parametet '--do_rename', it will add the preffix 'diff_datetime' or 'exif_getting_error' to all these files making easy to locate them in Finder.
    Use 'A Better Finder Attributes' to fix metadata datetimes or 'A Bettet Finder Rename' to rename files.
 
 7. Run find-biggest-videos.py and review logs in './src/logs'. Use Handbrake to compress videos.
    
-   ```python3 find-biggest-videos.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2026```
+   ```
+   python3 find-biggest-videos.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2026
+   ```
 
 8. Compress videos in "biggest_videos_to_compress" and output them into "biggest_videos_compressed".
 9. Check new sizes are small enough. If they are not then use a smaller size for the reduced video.
 10. Set the correct datetime metadata using "A better finder attributes"
 11. Run move-biggest-videos.py. It renames the videos adding the suffix " reduced_size", move them to the correct folder, move the original video to "/Users/angel/Insync/ladirecciondeangel@gmail.com/Google Drive/Fotitos videos con bit rate muy alto tmp" and remove the copied videos from folder "biggest_videos_to_compress".
     
-    ```python3 move-biggest-videos.py```
+    ```
+    python3 move-biggest-videos.py
+    ```
    
 12. Copy photos and videos to gphotos folder:
 
-    ```python3 copy-files-to-upload-to-gphotos.py --source ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2026/ --destiny ~/Fotitos_compressed_to_upload_to_gphotos/2026/ --copy_images --copy_videos --video_preset veryfast480p```
+    ```
+    python3 copy-files-to-upload-to-gphotos.py --source ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2026/ --destiny ~/Fotitos_compressed_to_upload_to_gphotos/2026/ --copy_images --copy_videos --video_preset veryfast480p
+    ```
 
 13. Run check-exif-datetime.py on "~/Fotitos_compressed_to_upload_to_gphotos/2026/" and review logs in './src/logs'.
 
-    ```python3 check-exif-datetime.py --dir ~/Fotitos_compressed_to_upload_to_gphotos/2026/```
+    ```
+    python3 check-exif-datetime.py --dir ~/Fotitos_compressed_to_upload_to_gphotos/2026/
+    ```
     
     To fix these articles, run again the script with the parametet '--do_rename', it will add the preffix 'diff_datetime' to all these files making easy to locate them in Finder.
     
     Use 'A Better Finder Attributes' to fix metadata datetimes or 'A Bettet Finder Rename' to rename files.
-14. Run gphotos uploader
+14. Run gphotos uploader and backup gphotos uploader folder contents to Google Drive
 
-    ```gphotos-uploader-cli push [ --debug | --vvv | --dry-run ]```
-15. Backup gphotos uploader folder contents to Google Drive
-
-    ```cp -r ~/.gphotos-uploader-cli/* ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos\ Anexos/gphotos-uploader-cli/```
+    ```
+    gphotos-uploader-cli push --debug && cp -r ~/.gphotos-uploader-cli/* ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos\ Anexos/gphotos-uploader-cli/
+    ```
 
 # TIPS
 - How to look for several file names: `find ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023/ -type f \( -name "2023-12-07 12.02.23.mp4" -o -name \)`. If you want to add them to A Better Finder Attributes just change the default application to open MP4 files and click in the filenames in Terminal.
@@ -94,7 +105,9 @@ Merge folders "Yo de peque" and "Fotos antiguas"
 ## files-and-folders-structure-dumper.py
 Dump to two files a JSON representing the structure of files and folders.
 
-```python3 files-and-folders-structure-dumper.py --dir ~/Fotitos_compressed_to_upload_to_gphotos```
+```
+python3 files-and-folders-structure-dumper.py --dir ~/Fotitos_compressed_to_upload_to_gphotos
+```
 
 ## copy-files-to-upload-to-gphotos.py
 Creates a thumbnail of the images (the larger size will be 1200px) and a compressed copy of the videos from the source directory to the destiny directory.
@@ -102,12 +115,16 @@ Creates a thumbnail of the images (the larger size will be 1200px) and a compres
   --copy_images: to copy images
   --copy_videos --video_preset veryfast480p: to compress and copy videos
 
-```python3 copy-files-to-upload-to-gphotos.py --source "/users/angel/Insync/ladirecciondeangel@gmail.com/Google Drive/Fotitos/2023/" --destiny "/users/angel/Fotitos_compressed_to_upload_to_gphotos/2023/" --copy_images --copy_videos --video_preset veryfast480p```
+```
+python3 copy-files-to-upload-to-gphotos.py --source "/users/angel/Insync/ladirecciondeangel@gmail.com/Google Drive/Fotitos/2023/" --destiny "/users/angel/Fotitos_compressed_to_upload_to_gphotos/2023/" --copy_images --copy_videos --video_preset veryfast480p
+```
 
 ## find-and-count.py
 Count how many files there are per type and year. Log all names to output files.
 
-```python3 find-and-count.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/```
+```
+python3 find-and-count.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos
+/```
 
 ## rename-files.py
 Rename files attending to regexp rules. Convert the extension to lowercase and rename 'jpeg' extensions to 'jpg'.
@@ -115,12 +132,16 @@ Rename files attending to regexp rules. Convert the extension to lowercase and r
 ### args
   --do_rename: Do rename files, instead of just logging changes
 
-```python3 rename-files.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023/```
+```
+python3 rename-files.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023
+/```
 
 ## find-biggest-videos.py
 Find and log to an output file biggest videos in a folder. Ignores videos which name contains "reduced_video" since they have been already reduced.
 
-```python3 find-biggest-videos.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023/```
+```
+python3 find-biggest-videos.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023
+/```
 
 ## compress-non-mp4-videos.py
 DO NOT USE. Not needed now.
@@ -131,7 +152,9 @@ Check all files recursively to find those that do not match the desired name str
 ### args
   --do_rename: Do rename files, instead of just logging changes
 
-```python3 check-filenames.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023/```
+```
+python3 check-filenames.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023
+/```
 
 ## check-exif-datetime.py
 Check all files recursively and check if the datetime in their name matches the datetime in Exif data
@@ -139,7 +162,9 @@ Check all files recursively and check if the datetime in their name matches the 
 ### args
   --do_rename: Do rename files, instead of just logging changes
 
-```python3 check-exif-datetime.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023/```
+```
+python3 check-exif-datetime.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2023
+/```
 
 Fix
 ===
