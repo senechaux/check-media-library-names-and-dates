@@ -15,14 +15,14 @@ pip install -r requirements.txt
   ```   
   source .venv/bin/activate
 
-  python3 check-filenames.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2026
+  python3 check-filenames.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2026 --do_rename
   ```
 
 5. ******** TO DO ******** It should check if a video is not mp4. Meanwhile it can be checked doing a search with Finder for files of type Video and ensuring all of them are MP4. Use Permute to convert to mp4.
 6. Run check-exif-datetime.py and review logs in './src/logs'. 
   
    ```
-   python3 check-exif-datetime.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2026
+   python3 check-exif-datetime.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos/2026 --do_rename
    ```
 
    To fix these articles, run again the script with the parametet '--do_rename', it will add the preffix 'diff_datetime' or 'exif_getting_error' to all these files making easy to locate them in Finder.
@@ -52,7 +52,7 @@ pip install -r requirements.txt
 13. Run check-exif-datetime.py on "~/Fotitos_compressed_to_upload_to_gphotos/2026/" and review logs in './src/logs'.
 
     ```
-    python3 check-exif-datetime.py --dir ~/Fotitos_compressed_to_upload_to_gphotos/2026/
+    python3 check-exif-datetime.py --dir ~/Fotitos_compressed_to_upload_to_gphotos/2026/ --do_rename
     ```
     
     To fix these articles, run again the script with the parametet '--do_rename', it will add the preffix 'diff_datetime' to all these files making easy to locate them in Finder.
