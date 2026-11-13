@@ -5,7 +5,7 @@
 
 ## 2. Inventario y ejecución segura
 - [ ] 2.1 Unificar recorrido, exclusiones y detección de formatos sin depender de nombres válidos.
-- [ ] 2.2 Asignar IDs/destinos por entrada y corregir recuentos y volcado local.
+- [ ] 2.2 Asignar IDs y destinos independientes por entrada del inventario.
 - [ ] 2.3 Sustituir shell interpolado y errores ocultos por resultados estructurados comprobados.
 
 ## 3. Estado y operaciones

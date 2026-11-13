@@ -2,12 +2,12 @@
 
 Mantener dos objetivos: biblioteca local revisada con compresión 720p opcional,
 y derivados para subir (1200 px / perfil 480p heredado como propuesta inicial).
-No interpretar un volcado del árbol local como evidencia de carga remota.
+No interpretar el inventario local como evidencia de carga remota.
 
 ## Decisions
 
 1. Exportar a raíz disjunta conservando rutas relativas e identidad. Descubrir
-   años/álbumes desde configuración/inventario, sin array 2000–2023. Cada receta
+   años/álbumes desde configuración/inventario. Cada receta
    identifica fuente de mayor calidad registrada, huella, decisión de fecha,
    perfil y versión. Usar original archivado cuando permita evitar volver a
    comprimir un derivado 720p; aplicar la decisión temporal común al resultado.

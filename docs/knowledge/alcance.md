@@ -16,8 +16,8 @@ sources:
 ---
 # Alcance
 
-Este paquete documenta los ocho archivos Python y el lanzador Bash presentes en
-el commit indicado. El código tiene prioridad sobre el README cuando difieren.
+Este paquete documenta los seis archivos Python que siguen en uso, tomando como
+referencia el commit indicado. El código tiene prioridad sobre el README cuando difieren.
 El objetivo del proyecto es ordenar una biblioteca local de fotos y vídeos,
 detectar problemas de nombres y fechas y preparar copias para Google Photos.[^repository]
 

@@ -11,7 +11,7 @@ Evidencia: [flujo actual](../../../docs/knowledge/flujo-actual.md) y fichas enla
 - Inventariar medios sin exigir nombres válidos; unificar exclusiones y formatos.
 - Introducir manifiesto versionado, bloqueo, huellas y resultados por operación.
 - Preparar operaciones con backups, precondiciones y recuperación explícita.
-- Corregir recuentos y volcado local, y convertir errores ocultos en resultados.
+- Convertir errores ocultos en resultados estructurados.
 
 ## Capabilities
 
@@ -25,6 +25,6 @@ compatibles durante la migración; su integración se hará por funciones segura
 ## Impact
 
 Dependencias: ninguna. Desbloquea los otros cuatro cambios. Afectará a
-`common_functions.py`, utilidades y nuevo paquete/configuración/fixtures.
+`common_functions.py` y nuevo paquete/configuración/fixtures.
 No incluir motores EXIF, codificación, sincronización remota ni limpieza global.
 No ejecutar `move-biggest-videos.main()` como parte de un adaptador.

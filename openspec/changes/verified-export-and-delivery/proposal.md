@@ -23,8 +23,7 @@ Ninguna; integra las cuatro capacidades previas.
 ## Impact
 
 Depende de `safe-execution-core`, `resumable-pipeline`, `metadata-and-naming` y
-`validated-video-compression`. Sustituirá el lanzador con años fijos por recorrido
-configurable. Fuera de alcance: borrar contenido remoto, gestionar toda la
+`validated-video-compression`. Usará un recorrido configurable de años y álbumes. Fuera de alcance: borrar contenido remoto, gestionar toda la
 biblioteca de Google Photos o implementar sincronización Dropbox/Drive.
 El adaptador gphotos-uploader-cli queda condicionado a comprobar su versión,
 autenticación y compatibilidad actuales; el modo manual permite cerrar el flujo.

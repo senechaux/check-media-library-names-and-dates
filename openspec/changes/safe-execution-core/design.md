@@ -1,6 +1,6 @@
 ## Context
 
-El sistema actual comprende ocho archivos Python y un lanzador Bash. Se propone
+El sistema actual comprende seis archivos Python. Se propone
 Python >=3.11 por `tomllib`, `argparse` para CLI y JSON para el manifiesto;
 sin base de datos ni framework adicional en la primera entrega.
 
@@ -32,9 +32,8 @@ sin base de datos ni framework adicional en la primera entrega.
    registrar evidencia. Crear backup íntegro antes de modificar medios; una
    exportación nueva no lo necesita. Verificar backup por hash. Reanudar compara
    huellas y estado de ambos lados; nunca reintenta a ciegas ni sobrescribe.
-8. Corregir denominadores y álbumes con N archivos; admitir distintas profundidades
-   en el inventario y reportarlas sin `IndexError`. El volcado se presenta como
-   evidencia local, nunca como comprobación de carga remota.
+8. Admitir distintas profundidades en el inventario sin presuponer una estructura
+   fija de año y álbum.
 
 Contrato de etapa: contexto de ejecución y entradas → `StageResult` con estado,
 operaciones propuestas, incidencias y evidencia. El esquema del manifiesto y

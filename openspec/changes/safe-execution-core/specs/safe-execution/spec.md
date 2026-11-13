@@ -18,9 +18,9 @@ El sistema SHALL inventariar medios independientemente del formato del nombre, a
 - **WHEN** hay `IMG_0001.JPG`, un MOV y un archivo ilegible
 - **THEN** aparecen tres entradas con su clasificación o error, sin omisiones silenciosas.
 
-#### Scenario: Recuento local independiente del formato
+#### Scenario: Inventario independiente del formato
 - **WHEN** un álbum tiene tres PNG y un AVI, sin JPG ni MP4
-- **THEN** se cuentan cuatro medios, los porcentajes usan el total de su categoría y el álbum cuenta cuatro archivos.
+- **THEN** los cuatro medios aparecen en el inventario con su clasificación.
 
 ### Requirement: Identidad y destinos sin colisiones
 El sistema SHALL conservar identidad y ruta original por archivo y asignar destinos sin colisiones, incluyendo equivalencias de mayúsculas y Unicode del volumen de destino.

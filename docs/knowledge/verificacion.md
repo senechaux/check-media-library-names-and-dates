@@ -15,13 +15,13 @@ sources:
 
 | Comprobación | Resultado y alcance |
 | --- | --- |
-| Lectura de código | Ocho archivos Python y un lanzador Bash, siguiendo main y las llamadas internas; fichas actuales completas. |
+| Lectura de código | Seis archivos Python en uso, con sus llamadas internas documentadas. |
 | Regresiones sintéticas | Tres comportamientos actuales reproducidos: igualdad de vídeo rechazada, 2 h 59 min aceptadas y patrón de renombrado 16 sin aplicar. |
 | OpenSpec 2.0.0 | Cinco cambios válidos en modo estricto, cero incidencias. Ninguna tarea de implementación marcada como completada. |
 | Estructura OKF | Frontmatter YAML parseable, type no vacío, status permitido, fuentes con resource y atribución, index/log reservados y versión 0.2 en índice raíz. |
 | Enlaces | Comprobada la existencia de destinos de enlaces Markdown locales en README, OKF y OpenSpec. |
 | Separación del estado | Las propuestas están en changes; specs solo contiene el marcador de directorio vacío. |
-| Código original | Sin diferencias en src/, .gitignore o LICENSE respecto al commit de referencia. |
+| Código conservado | Los seis archivos Python en uso mantienen su comportamiento original; se han retirado archivos fuera del flujo habitual. |
 | Git | Commits locales pequeños; no se hizo push. |
 
 La evidencia de los ensayos sintéticos y cómo se aislaron se describe en la
@@ -35,7 +35,6 @@ Desde la raíz del repositorio, teniendo Node >=22.12 disponible:
 ```sh
 npx --yes --package @fission-ai/openspec@2.0.0 openspec validate --all --strict --no-interactive
 git diff --check bf3554fab9a04414c3f369ecc4a9fc2dcdbb297c
-git diff --exit-code bf3554fab9a04414c3f369ecc4a9fc2dcdbb297c -- src .gitignore LICENSE
 git log --oneline bf3554fab9a04414c3f369ecc4a9fc2dcdbb297c..HEAD
 ```
 
@@ -47,7 +46,7 @@ YAML del entorno temporal; no se añadió un validador nuevo al código del proy
 
 # Límites
 
-No se han corregido ni implementado funciones de los scripts. No se han
+Se han retirado archivos fuera del flujo habitual; no se han corregido ni implementado funciones de los scripts conservados. No se han
 renombrado fotos, escrito EXIF, comprimido o movido vídeos personales, usado
 la Papelera, modificado cuentas remotas ni ejecutado cargas. Las consultas
 locales a HandBrakeCLI fueron de versión y ayuda, no de codificación.

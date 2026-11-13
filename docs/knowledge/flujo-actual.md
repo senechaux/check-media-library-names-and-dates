@@ -44,7 +44,7 @@ central de dependencias. Ningún script del repositorio llama a `gphotos-uploade
 
 La tabla sigue el procedimiento escrito; sus límites están en las fichas de
 [auditoría](auditoria-actual.md), [vídeos](videos-actual.md) y
-[exportación y utilidades](exportacion-actual.md).[^readme][^source]
+[exportación](exportacion-actual.md).[^readme][^source]
 
 # Llamadas internas
 
@@ -71,8 +71,7 @@ flowchart TD
 ```
 
 Cada `main()` se ejecuta de forma independiente; las flechas representan llamadas
-o el orden interno, no un orquestador existente. Los scripts `find-and-count.py`
-y `files-and-folders-structure-dumper.py` son utilidades independientes.[^source]
+o el orden interno, no un orquestador existente.[^source]
 
 # Estado compartido y finalización
 
