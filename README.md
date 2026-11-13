@@ -1,3 +1,10 @@
+# Documentación y planificación
+
+La [base de conocimiento en formato OKF](docs/knowledge/index.md) documenta el
+estado de los scripts. El contenido original que sigue describe el procedimiento
+manual y contiene notas históricas; las observaciones de la base de conocimiento
+distinguen ese procedimiento del comportamiento efectivo del código.
+
 # Dependencies
 ```
 brew install ffmpeg mediainfo handbrake gphotos-uploader-cli
