@@ -2,6 +2,7 @@
 
 ## 2026-11-13
 
+- **Planificación**: Redactadas cinco propuestas OpenSpec con escenarios y tareas pendientes; añadida guía de agentes y skills evaluadas.
 - **Planificación**: Inicializado OpenSpec 2.0.0 sin instalar skills; definido el comando único y cinco entregas dependientes.
 - **Creación**: Transcritas las tres capturas; propuestas equivalencias CLI y documentadas las decisiones sobre resolución vertical y FPS.
 - **Creación**: Documentados selección/sustitución de vídeos, exportación, lanzador Bash y utilidades; completada la lectura de todos los scripts.

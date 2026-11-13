@@ -10,4 +10,5 @@ okf_version: "0.2"
 - [Exportación y utilidades actuales](exportacion-actual.md) - Copias para Google Photos, lanzador Bash, recuentos y volcado de estructura.
 - [Ajustes externos y equivalencias propuestas](herramientas-externas.md) - Transcripción de las tres capturas y límites de la automatización con ExifTool y HandBrakeCLI.
 - [Plan de automatización con un comando](automatizacion.md) - Diseño propuesto del proceso reanudable, sus fases y las prioridades de implementación.
+- [Revisión e implementación con agentes](trabajo-con-agentes.md) - Orden de revisión, reparto de tareas, decisiones abiertas y skills útiles para implementar el plan.
 - [Historial](log.md) - Cambios en este paquete de conocimiento.

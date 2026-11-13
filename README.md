@@ -9,6 +9,9 @@ El [plan de automatización](docs/knowledge/automatizacion.md) propone un comand
 único con pausas y reanudación. Los cambios futuros se especifican en
 [`openspec/changes/`](openspec/changes/); todavía no están implementados.
 
+La [guía de revisión e implementación](docs/knowledge/trabajo-con-agentes.md)
+incluye el orden sugerido, decisiones pendientes y skills evaluadas.
+
 # Dependencies
 ```
 brew install ffmpeg mediainfo handbrake gphotos-uploader-cli
