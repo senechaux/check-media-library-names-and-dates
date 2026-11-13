@@ -11,6 +11,8 @@ context: |
   Preferir biblioteca estándar, ExifTool, ffprobe y HandBrakeCLI; sin servicios nuevos.
   Conservar originales y permitir reanudar operaciones sin sobrescribir archivos.
   Los cambios de fecha necesitan fuente y zona explícitas; no inferirlas por diferencia horaria.
+  El desarrollo debe incluir una cantidad razonable de tests automatizados, proporcionada al riesgo.
+  Política de tests: docs/knowledge/politica-tests.md.
 rules:
   proposal:
     - Declarar dependencias por identificador de cambio y qué queda fuera del alcance.
@@ -20,3 +22,5 @@ rules:
   tasks:
     - Dejar pendientes las tareas que aún no se han implementado.
     - Asociar verificaciones a requisitos y usar fixtures sintéticos o copias de muestra.
+    - Incluir tests de comportamiento, regresiones y fallos relevantes; evitar tests triviales o que reproduzcan la implementación.
+    - Documentar cómo ejecutar la suite rápida y las integraciones con herramientas reales; justificar comprobaciones manuales pendientes.

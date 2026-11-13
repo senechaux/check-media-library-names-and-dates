@@ -1,5 +1,9 @@
 # Historial del conocimiento
 
+## 2026-11-14
+
+- **Planificación**: Añadida la política de tests automatizados solicitada por el usuario e incorporada a las reglas de OpenSpec.
+
 ## 2026-11-13
 
 - **Limpieza**: Retirados los archivos fuera del flujo habitual y sus referencias; ajustados alcance, documentación y propuestas de implementación.
