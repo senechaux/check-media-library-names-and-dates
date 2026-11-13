@@ -5,6 +5,10 @@ estado de los scripts. El contenido original que sigue describe el procedimiento
 manual y contiene notas históricas; las observaciones de la base de conocimiento
 distinguen ese procedimiento del comportamiento efectivo del código.
 
+El [plan de automatización](docs/knowledge/automatizacion.md) propone un comando
+único con pausas y reanudación. Los cambios futuros se especifican en
+[`openspec/changes/`](openspec/changes/); todavía no están implementados.
+
 # Dependencies
 ```
 brew install ffmpeg mediainfo handbrake gphotos-uploader-cli
