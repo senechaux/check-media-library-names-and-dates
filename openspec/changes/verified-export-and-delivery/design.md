@@ -37,6 +37,8 @@ No interpretar un volcado del árbol local como evidencia de carga remota.
    que terminó el comando, no demuestra por sí solo presencia remota de cada medio.
    Guardar IDs/recibos por archivo si el adaptador los ofrece; en otro caso
    declarar esa limitación y pedir confirmación humana de la entrega.
+   Si una interrupción deja incierto el resultado remoto, no repetir la carga
+   automáticamente: reconciliar recibos/estado del cliente o pedir revisión.
 7. El uploader usa solo la exportación aprobada, nunca el archivo de originales.
    Tras éxito, copiar el estado necesario a destino configurado, comprobar la copia
    y registrar recibo local sin exponer tokens en logs/Git. Si la carga termina y

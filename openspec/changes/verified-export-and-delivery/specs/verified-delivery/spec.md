@@ -58,6 +58,10 @@ El sistema SHALL permitir entrega deshabilitada, manual o por CLI configurada ex
 - **WHEN** el usuario configura solo preparación local
 - **THEN** no se ejecuta ningún cliente remoto y el informe declara el alcance local.
 
+#### Scenario: Interrupción con resultado remoto incierto
+- **WHEN** el cliente se interrumpe sin permitir saber qué archivos se subieron
+- **THEN** la ejecución queda pendiente de reconciliación o revisión, sin repetir automáticamente una carga que pueda duplicar contenido.
+
 ### Requirement: Backup recuperable del estado de entrega
 El sistema SHALL respaldar y verificar el estado del uploader tras una entrega exitosa cuando esté habilitado, sin incluir credenciales en informes o control de versiones.
 

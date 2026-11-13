@@ -42,6 +42,9 @@ No automatizar clics evita depender de versiones/idiomas de las apps. Para no
 bloquear la primera entrega, los validadores se inyectan con el contrato de etapa;
 la integración definitiva pertenece al cambio correspondiente. Una etapa sin
 validador disponible informa de la limitación y no se considera validada.
+El orquestador puede completarse con adaptadores simulados: no depende de que
+se terminen los cambios que lo consumen. Cada cambio posterior integra su etapa;
+la prueba completa con todos los servicios reales pertenece a la última entrega.
 
 ## Migration Plan
 

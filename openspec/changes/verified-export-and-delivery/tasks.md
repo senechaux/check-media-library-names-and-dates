@@ -12,6 +12,6 @@
 
 ## 3. Verificación e integración final
 - [ ] 3.1 Verificar escenarios verified-delivery con fuentes homónimas, sin EXIF, rotadas, perfiles cambiados y resultados parciales.
-- [ ] 3.2 Simular carga fallida, ausencia de recibos y fallo de backup sin cuentas ni tráfico remoto real.
+- [ ] 3.2 Simular carga fallida, resultado remoto incierto, ausencia de recibos y fallo de backup sin cuentas ni tráfico remoto real.
 - [ ] 3.3 Verificar el recorrido completo del comando único en copias de muestra, incluidos todos los adaptadores reales, pausa y reanudación.
 - [ ] 3.4 Documentar capacidades comprobadas y limitaciones API; mantener pendientes las pruebas de cuenta real hasta tener un lote de prueba autorizado.
