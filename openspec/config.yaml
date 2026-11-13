@@ -1,0 +1,26 @@
+schema: spec-driven
+
+context: |
+  Language: Spanish
+  All artifacts must be written in Spanish.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+  Proyecto Python existente para organizar fotos y vídeos locales en macOS.
+  Estado observado y procedencia: docs/knowledge/index.md.
+  Los cambios en changes son propuestas; no representan funciones implementadas.
+  No ejecutar scripts sobre la biblioteca personal para probar cambios.
+  Preferir biblioteca estándar, ExifTool, ffprobe y HandBrakeCLI; sin servicios nuevos.
+  Conservar originales y permitir reanudar operaciones sin sobrescribir archivos.
+  Los cambios de fecha necesitan fuente y zona explícitas; no inferirlas por diferencia horaria.
+  El desarrollo debe incluir una cantidad razonable de tests automatizados, proporcionada al riesgo.
+  Política de tests: docs/knowledge/politica-tests.md.
+rules:
+  proposal:
+    - Declarar dependencias por identificador de cambio y qué queda fuera del alcance.
+  specs:
+    - Escribir requisitos observables y escenarios con WHEN y THEN.
+    - Cubrir conflictos de nombres, fallos e interrupciones cuando corresponda.
+  tasks:
+    - Dejar pendientes las tareas que aún no se han implementado.
+    - Asociar verificaciones a requisitos y usar fixtures sintéticos o copias de muestra.
+    - Incluir tests de comportamiento, regresiones y fallos relevantes; evitar tests triviales o que reproduzcan la implementación.
+    - Documentar cómo ejecutar la suite rápida y las integraciones con herramientas reales; justificar comprobaciones manuales pendientes.

@@ -1,3 +1,17 @@
+# Documentación y planificación
+
+La [base de conocimiento en formato OKF](docs/knowledge/index.md) documenta el
+estado de los scripts. El contenido original que sigue describe el procedimiento
+manual y contiene notas históricas; las observaciones de la base de conocimiento
+distinguen ese procedimiento del comportamiento efectivo del código.
+
+El [plan de automatización](docs/knowledge/automatizacion.md) propone un comando
+único con pausas y reanudación. Los cambios futuros se especifican en
+[`openspec/changes/`](openspec/changes/); todavía no están implementados.
+
+La [guía de revisión e implementación](docs/knowledge/trabajo-con-agentes.md)
+incluye el orden sugerido, decisiones pendientes y skills evaluadas.
+
 # Dependencies
 ```
 brew install ffmpeg mediainfo handbrake gphotos-uploader-cli
@@ -102,13 +116,6 @@ Merge folders "Yo de peque" and "Fotos antiguas"
 
 # HOW TO USE
 
-## files-and-folders-structure-dumper.py
-Dump to two files a JSON representing the structure of files and folders.
-
-```
-python3 files-and-folders-structure-dumper.py --dir ~/Fotitos_compressed_to_upload_to_gphotos
-```
-
 ## copy-files-to-upload-to-gphotos.py
 Creates a thumbnail of the images (the larger size will be 1200px) and a compressed copy of the videos from the source directory to the destiny directory.
 ### args
@@ -118,13 +125,6 @@ Creates a thumbnail of the images (the larger size will be 1200px) and a compres
 ```
 python3 copy-files-to-upload-to-gphotos.py --source "/users/angel/Insync/ladirecciondeangel@gmail.com/Google Drive/Fotitos/2023/" --destiny "/users/angel/Fotitos_compressed_to_upload_to_gphotos/2023/" --copy_images --copy_videos --video_preset veryfast480p
 ```
-
-## find-and-count.py
-Count how many files there are per type and year. Log all names to output files.
-
-```
-python3 find-and-count.py --dir ~/Insync/ladirecciondeangel@gmail.com/Google\ Drive/Fotitos
-/```
 
 ## rename-files.py
 Rename files attending to regexp rules. Convert the extension to lowercase and rename 'jpeg' extensions to 'jpg'.
