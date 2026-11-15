@@ -271,3 +271,17 @@ def test_renamed_working_copies_are_not_regenerated_and_keep_original_identity(c
     assert all(entry["original"].endswith("same.PNG") and entry["current"].endswith("renamed.PNG") for entry in result["files"])
     assert len({entry["file_id"] for entry in result["files"]}) == 2
     assert len({entry["backup"] for entry in result["preserved"]}) == 2
+
+
+def test_selected_unsupported_file_is_counted_as_inventory_failure(config_file, monkeypatch):
+    configure(config_file)
+    path = config_file.parent / "source/unsupported.PNG"
+    path.write_bytes(b"synthetic unsupported")
+    def unsupported(*args):
+        raise ValueError("synthetic unsupported format")
+    monkeypatch.setattr("media_library.inventory.probe_media", unsupported)
+    assert run(config_file, "--apply") == 3
+    value = report(config_file)
+    assert value["failures"][0]["stage"] == "inventory"
+    assert value["failures"][0]["file_id"] == value["files"][0]["file_id"]
+    assert "synthetic unsupported" in value["failures"][0]["reason"]

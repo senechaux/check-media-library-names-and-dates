@@ -22,6 +22,14 @@ def write_report(pipeline, code, pending):
                        "adapter": data["adapters"].get(stage, {"identity": "core", "simulated": False})})
     operations = list(store.manifest.operations.values())
     changed = sorted({op.file_id for op in operations if op.state == "COMPLETED" and op.kind in ("replace", "rename")})
+    failures = [{"file_id": key, "stage": stage, "reason": record.get("reason") or record.get("issues")}
+                for key, value in data["files"].items() if value["selected"]
+                for stage, record in value["stages"].items() if record["state"] == "FAILED"]
+    failures.extend({"file_id": key, "stage": "inventory", "reason": value["reason"]}
+                    for key, value in data["files"].items() if value["selected"] and value.get("inventory_failed"))
+    failures.extend({"stage": "inventory", "reason": issue} for issue in data["global_issues"])
+    if data.get("fatal_error"):
+        failures.append({"stage": "pipeline", "reason": data["fatal_error"]})
     report = {"run_id": store.manifest.run_id, "exit_code": code, "dry_run": data["dry_run"],
               "simulated": any(item["adapter"].get("simulated") and item["mode"] != "disabled" for item in stages),
               "stages": stages, "files": [{"file_id": entry.file_id, "original": entry.original_path,
@@ -31,9 +39,7 @@ def write_report(pipeline, code, pending):
               "omitted": [{"file_id": key, "reason": value["reason"]} for key, value in data["files"].items() if not value["selected"]],
               "pending": pending, "global_issues": data["global_issues"],
               "fatal_error": data.get("fatal_error"), "interrupted": data.get("interrupted"),
-              "failures": [{"file_id": key, "stage": stage, "reason": record.get("reason") or record.get("issues")}
-                           for key, value in data["files"].items() if value["selected"]
-                           for stage, record in value["stages"].items() if record["state"] == "FAILED"],
+              "failures": failures,
               "human_confirmations": [{"stage": stage, "file_id": key, "technical_verification": False}
                    for key, value in data["files"].items() for stage, record in value["stages"].items()
                    if record.get("evidence", {}).get("human_confirmation")],
