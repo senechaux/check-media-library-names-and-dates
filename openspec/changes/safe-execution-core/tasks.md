@@ -19,3 +19,4 @@
 - [x] 4.2 Inyectar fallos de disco/proceso/guardado y comprobar backup, bloqueo y recuperación.
 - [x] 4.3 Actualizar OKF y guía de instalación con capacidades realmente implementadas y resultados de comprobación.
 - [x] 4.4 Corregir bloqueo por identidad efectiva del directorio, rechazar cambios de origen y verificar alias de mayúsculas/Unicode y directorios independientes.
+- [x] 4.5 Acreditar propiedad de publicación por identidad del temporal, conservar rechazos de rename y verificar colisiones idénticas e interrupciones antes/después de publicar y limpiar el enlace local.

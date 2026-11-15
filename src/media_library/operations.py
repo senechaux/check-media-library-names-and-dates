@@ -179,7 +179,7 @@ class SafeExecutor:
             intact = output and (not op.backup or backup)
             explanation = "Operación completada" if intact else "La salida o el backup completados cambiaron; replantear"
         else:
-            published = op.state in ("PUBLISHING", "PUBLISHED", "FAILED") and output and not op.evidence.get("publication_rejected")
+            published = op.state in ("PUBLISHING", "PUBLISHED", "FAILED") and self._owns_publication(op)
             if published and (op.kind not in ("rename", "substitute") or not source_exists or source_matches):
                 actions.append("continue")
             elif source_matches and candidate:
@@ -188,6 +188,21 @@ class SafeExecutor:
                 actions.append("restore")
             explanation = "Comparación por huellas; elegir acción explícita" if actions else "Conflicto o contenido externo: replantear sin modificarlo"
         return Recovery(operation_id, tuple(actions), source_matches, output, backup, explanation)
+
+    def _owns_publication(self, op):
+        if op.evidence.get("publication_rejected") or not same_content(op.destination, op.output_sha256):
+            return False
+        try:
+            identity = op.evidence.get("publication_identity")
+            if identity:
+                actual = fingerprint(op.destination)
+                return all(actual[key] == identity[key] for key in ("dev", "ino"))
+            # Recuperación de hardlinks anteriores a publication_identity. Una
+            # mera coincidencia de bytes nunca acredita quién publicó el destino.
+            part = Path(op.local_part)
+            return not part.is_symlink() and part.samefile(op.destination)
+        except (OSError, ConflictError):
+            return False
 
     def _complete(self, op):
         if not same_content(op.destination, op.output_sha256):
@@ -226,7 +241,7 @@ class SafeExecutor:
         recovery = self.inspect(operation_id)
         if "continue" not in recovery.actions:
             raise ConflictError(recovery.explanation)
-        published_here = recovery.output_matches and op.state in ("PUBLISHING", "PUBLISHED", "FAILED") and not op.evidence.get("publication_rejected")
+        published_here = op.state in ("PUBLISHING", "PUBLISHED", "FAILED") and self._owns_publication(op)
         try:
             # Publicación ya acreditada: confirmar, sin repetir la transformación.
             if published_here:
@@ -268,6 +283,11 @@ class SafeExecutor:
             check_fingerprint(op.source, op.expected)
             if op.backup and not same_content(op.backup, backup_hash(op)):
                 raise ConflictError("Backup cambiado antes de publicar")
+            part = fingerprint(op.local_part)
+            if part["sha256"] != op.output_sha256:
+                raise ConflictError("Temporal local cambiado antes de publicar")
+            op.evidence["publication_identity"] = {key: part[key] for key in ("dev", "ino")}
+            op.evidence.pop("publication_rejected", None)
             op.state = "PUBLISHING"
             self.store.commit("publish_intent", op)
             assert_destination(op.destination, allow_exact=op.kind == "replace" or bool(previous_destination))
@@ -293,7 +313,7 @@ class SafeExecutor:
                     self.store.commit("source_retired", op)
             return self._complete(op)
         except (OSError, ConfigError, ConflictError, ToolError, AttributeCapabilityError) as exc:
-            if op.kind in ("substitute", "export") and not published_here:
+            if not published_here:
                 op.evidence["publication_rejected"] = True
             op.error, op.state = str(exc), "FAILED"
             self.store.commit("operation_failed", op, state=State.FAILED)

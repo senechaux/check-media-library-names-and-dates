@@ -56,7 +56,24 @@ nuevas de reanudación del propietario antiguo y apertura de otra ejecución.
 
 # Correcciones todavía en curso
 
-Propiedad de publicación de rename, autorización
+Autorización
 de reintento, inventario de backup y sincronización A/V se verifican por separado.
+
+# 3. Propiedad de publicación (P1)
+
+Fallaban tres regresiones: rename rechazado con bytes idénticos y colisión tras
+publish_intent de rename/substitute. La reanudación podía retirar el origen antes
+de detectar que el destino era ajeno. Ahora todos los rechazos quedan registrados
+y la intención persiste dispositivo/inode del temporal local antes de publicar.
+El hash acredita contenido; la identidad acredita la publicación. Los hardlinks
+antiguos pueden recuperarse si el enlace local sigue acreditando el mismo inode;
+un reemplazo antiguo sin evidencia suficiente exige revisión.
+
+Se prueban colisiones idénticas de rename/substitute/export, retirada explícita de
+la colisión por el fixture, publicación propia interrumpida antes de confirmación
+y recuperación después de retirar el enlace local. Candidatos y backups se conservan.
+Pasaron 64 pruebas afectadas, la suite rápida de 220 casos y después las dos
+variantes de rechazo actual/antiguo. Pasaron además 13 integraciones de interrupción
+de metadata y publicación de vídeo entre volúmenes local/HFS+ sintéticos.
 
 [^tests]: [Regresiones ejecutables](../../tests/).

@@ -94,6 +94,14 @@ en la evidencia, se reaplican al temporal local de publicación y se verifican
 en la ruta final. La creación requiere macOS/birthtime/SetFile y precisión de
 segundos; no amplía la garantía a todos los atributos del filesystem.
 
+`evidence.publication_identity` conserva dispositivo/inode del temporal local en
+publish_intent, antes de link/replace. La recuperación pendiente exige esa identidad
+en destino y hash correcto, o un hardlink local propio en estados anteriores.
+`publication_rejected` se conserva también para rename; solo una nueva intención
+con temporal acreditado puede retirarlo. Sin prueba de propiedad no se adopta un
+destino idéntico ni se retira el origen. Una publicación anterior sin enlace ni
+identidad suficiente conserva una pausa/conflicto para revisión.
+
 Estados por operación: `PLANNED`, `STARTED`, `BACKED_UP`, `PUBLISHING`,
 `PUBLISHED`, `COMPLETED`, `FAILED`, `RESTORING`, `RESTORED`. Una operación
 completada no completa toda la ejecución: el orquestador decide el estado

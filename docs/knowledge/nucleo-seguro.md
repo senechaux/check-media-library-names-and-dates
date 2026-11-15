@@ -76,6 +76,11 @@ incluida `substitute`: publica el derivado con backup y retira después su origi
 La entrega tiene protocolo optativo y backup, con transporte remoto simulado en
 pruebas y compatibilidad de gphotos pendiente. `export` sigue siendo la primitiva
 que publica candidatos; renovar uno propio conserva el destino anterior por hash.
+La recuperación de una publicación pendiente exige propiedad además de contenido:
+la intención registra el dispositivo/inode del temporal local. Un rechazo de
+rename no se transforma en éxito porque un destino ajeno tenga bytes iguales.
+Los estados antiguos sin identidad solo se recuperan automáticamente si el enlace
+local acredita propiedad; en otro caso requieren revisión.
 Las firmas de imagen clasifican contenido, sin certificar que una imagen completa
 sea decodificable: esa validación corresponde al consumidor de `prepare`.
 

@@ -137,6 +137,69 @@ def test_substitute_does_not_adopt_a_colliding_file_with_identical_bytes(executi
     assert loaded.execute(op.operation_id).state == "COMPLETED"
 
 
+@pytest.mark.parametrize('legacy',[False,True])
+def test_rename_rejection_never_adopts_an_identical_foreign_destination(execution,legacy):
+    executor,file_id=execution
+    source=Path(executor.store.entry(file_id).current_path);original=source.read_bytes()
+    op=executor.plan(file_id,'rename',destination=source.with_name('renamed.PNG'))
+    target=Path(op.destination);target.write_bytes(original);foreign_inode=target.stat().st_ino
+    assert executor.execute(op.operation_id).state=='FAILED'
+    if legacy:
+        old=executor.store.manifest.operations[op.operation_id]
+        old.evidence.pop('publication_rejected',None)
+        executor.store.commit('legacy_fixture',old)
+    loaded=reload_executor(executor)
+    assert loaded.execute(op.operation_id).state=='FAILED'
+    assert source.read_bytes()==original and target.stat().st_ino==foreign_inode
+    assert loaded.store.manifest.operations[op.operation_id].evidence['publication_rejected']
+    target.unlink()  # El fixture simula revisión y retirada explícita de la colisión.
+    assert loaded.execute(op.operation_id).state=='COMPLETED' and not source.exists()
+
+
+@pytest.mark.parametrize('kind',['rename','substitute','export'])
+def test_publish_intent_and_matching_hash_do_not_prove_ownership(execution,monkeypatch,kind):
+    executor,file_id=execution
+    source=Path(executor.store.entry(file_id).current_path);original=source.read_bytes()
+    artifact=None if kind=='rename' else prepared(executor,file_id)
+    target=executor.config.export/'output.PNG' if kind=='export' else source.with_name('renamed.PNG')
+    op=executor.plan(file_id,kind,artifact=artifact,destination=target)
+    commit=executor.store.commit
+    def interrupt(event,*args,**kwargs):
+        commit(event,*args,**kwargs)
+        if event=='publish_intent':
+            target.write_bytes(original if kind=='rename' else OUTPUT)
+            raise KeyboardInterrupt
+    monkeypatch.setattr(executor.store,'commit',interrupt)
+    with pytest.raises(KeyboardInterrupt):executor.execute(op.operation_id)
+    loaded=reload_executor(executor)
+    assert loaded.execute(op.operation_id).state=='FAILED'
+    assert source.read_bytes()==original
+    assert target.read_bytes()==(original if kind=='rename' else OUTPUT)
+
+
+@pytest.mark.parametrize('boundary',['after_link','after_part_cleanup'])
+def test_own_rename_is_recoverable_before_ack_and_after_part_removal(execution,monkeypatch,boundary):
+    executor,file_id=execution
+    source=Path(executor.store.entry(file_id).current_path);original=source.read_bytes()
+    op=executor.plan(file_id,'rename',destination=source.with_name('renamed.PNG'))
+    from media_library import operations
+    if boundary=='after_link':
+        link=operations.os.link
+        def interrupted_link(src,dst,**kwargs):
+            link(src,dst,**kwargs)
+            if str(dst)==op.destination:raise KeyboardInterrupt
+        monkeypatch.setattr(operations.os,'link',interrupted_link)
+    else:
+        cleanup=executor._cleanup_part
+        def interrupted_cleanup(operation):
+            cleanup(operation);raise KeyboardInterrupt
+        monkeypatch.setattr(executor,'_cleanup_part',interrupted_cleanup)
+    with pytest.raises(KeyboardInterrupt):executor.execute(op.operation_id)
+    loaded=reload_executor(executor)
+    assert loaded.execute(op.operation_id).state=='COMPLETED'
+    assert not source.exists() and Path(op.destination).read_bytes()==original
+
+
 def test_external_change_after_plan_never_touches_new_content(execution):
     executor, file_id = execution
     op = executor.plan(file_id, "replace", artifact=prepared(executor, file_id))
