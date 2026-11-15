@@ -1,7 +1,7 @@
 import os
 import re
 import argparse
-import subprocess
+from media_library.process import run_tool
 import math
 import common_functions
 import shutil
@@ -29,8 +29,8 @@ def find_biggest_videos(dir, logs_dir):
             file_size_mb = math.floor(file_size / 1000 / 1000)
             if file_size_mb < MIN_FILE_SIZE_IN_MB:
                 continue
-            mediainfo_command = 'mediainfo --Inform="Video;%BitRate% | %Duration% | %Width%x%Height%" "'+full_filename+'"'
-            result = subprocess.run(mediainfo_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            mediainfo_command = ["mediainfo", "--Inform=Video;%BitRate% | %Duration% | %Width%x%Height%", full_filename]
+            result = run_tool(mediainfo_command).check()
             bitrate = 0
             duration_milliseconds = 0
             duration_minutes = 0

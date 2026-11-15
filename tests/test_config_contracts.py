@@ -23,7 +23,7 @@ def test_config_is_relative_to_toml_and_preflight_creates_nothing(config_file, t
     assert not first.export.exists()
 
 
-@pytest.mark.parametrize("target", ["source", "work", "work/inside"])
+@pytest.mark.parametrize("target", ["source", "work", "work/inside", "WORK"])
 def test_overlap_and_symlink_are_rejected(config_file, tmp_path, target):
     (tmp_path / "alias").symlink_to(tmp_path / target, target_is_directory=True)
     config_file.write_text(config_file.read_text().replace('export = "export"', 'export = "alias"'))

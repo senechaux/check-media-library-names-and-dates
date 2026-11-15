@@ -1,20 +1,14 @@
-import subprocess
 import shutil
-import json
 import os
+from pathlib import Path
+
+from media_library.filesystem import assert_destination
+from media_library.legacy import count_extension, video_tags
 
 
 def count_files_with_the_extension(source_dir, extension):
-    count_command = f"find '{source_dir}' -type f -iname '*.{extension}' | wc -l"
-    print(count_command)
-    result = subprocess.run(count_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    if result.returncode == 0:
-        return result.stdout.replace("\n", "").replace(" ", "")
-    else:
-        error = result.stderr
-        print("Error executing count_command:")
-        print(error)
-        return 0
+    # Se conserva texto en éxito para los llamadores históricos; un fallo ya no es cero.
+    return str(count_extension(source_dir, extension))
 
 
 def convert_milliseconds(milliseconds):
@@ -36,35 +30,25 @@ def sort_file(input_file_path, output_file_path, reverse=False):
 
 
 def move_file(source_file, destination_folder):
-    try:
-        # Use the shutil.move() function to move the file
-        shutil.move(source_file, destination_folder)
-        print(f"File '{source_file}' moved to '{destination_folder}' successfully.")
-    except FileNotFoundError:
-        print(f"File '{source_file}' not found.")
-    except Exception as e:
-        print(f"An error occurred: {str(e)}")
+    destination = Path(destination_folder)
+    if destination.is_dir():
+        destination = destination / Path(source_file).name
+    assert_destination(destination)
+    return shutil.move(source_file, destination)
 
 
 def move_folder(source_folder, destination_folder):
-    try:
-        # Use the shutil.move() function to move the folder
-        shutil.move(source_folder, destination_folder)
-        print(f"Folder '{source_folder}' moved to '{destination_folder}' successfully.")
-    except FileNotFoundError:
-        print(f"Folder '{source_folder}' not found.")
-    except Exception as e:
-        print(f"An error occurred: {str(e)}")
+    return move_file(source_folder, destination_folder)
 
 
 def remove_file(file):
     trash_dir = os.path.expanduser('~/.Trash/')
-    move_file(file, trash_dir)
+    return move_file(file, trash_dir)
 
 
 def remove_folder(folder):
     trash_dir = os.path.expanduser('~/.Trash/')
-    move_folder(folder, trash_dir)
+    return move_folder(folder, trash_dir)
 
 
 def create_directory_if_not_exists(directory_path):
@@ -73,12 +57,4 @@ def create_directory_if_not_exists(directory_path):
 
 
 def get_video_metadata(video_path):
-    cmd = ["ffprobe", "-v", "error", "-show_entries", "format_tags", "-print_format", "json", video_path]
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    
-    if result.returncode == 0:
-        metadata = json.loads(result.stdout)["format"]["tags"]
-        return metadata
-    else:
-        print("Error retrieving metadata.")
-        return None
+    return video_tags(video_path)

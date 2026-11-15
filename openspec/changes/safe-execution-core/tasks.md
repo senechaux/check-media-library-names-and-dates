@@ -4,14 +4,14 @@
 - [x] 1.3 Implementar preflight de rutas resueltas, permisos, capacidades de herramientas y espacio.
 
 ## 2. Inventario y ejecución segura
-- [ ] 2.1 Unificar recorrido, exclusiones y detección de formatos sin depender de nombres válidos.
-- [ ] 2.2 Asignar IDs y destinos independientes por entrada del inventario.
-- [ ] 2.3 Sustituir shell interpolado y errores ocultos por resultados estructurados comprobados.
+- [x] 2.1 Unificar recorrido, exclusiones y detección de formatos sin depender de nombres válidos.
+- [x] 2.2 Asignar IDs y destinos independientes por entrada del inventario.
+- [x] 2.3 Sustituir shell interpolado y errores ocultos por resultados estructurados comprobados.
 
 ## 3. Estado y operaciones
 - [ ] 3.1 Implementar manifiesto atómico, journal y bloqueo por origen con recuperación explícita de bloqueos obsoletos.
 - [ ] 3.2 Implementar huellas, backups verificados y precondiciones sin sobrescrituras.
-- [ ] 3.3 Adaptar funciones reutilizables y conservar entradas antiguas sin invocar movimientos inseguros desde el nuevo flujo.
+- [x] 3.3 Adaptar funciones reutilizables y conservar entradas antiguas sin invocar movimientos inseguros desde el nuevo flujo.
 
 ## 4. Verificación
 - [x] 4.0 Configurar pytest como dependencia de desarrollo, suite rápida e integraciones separadas según docs/knowledge/politica-tests.md; documentar sus comandos.

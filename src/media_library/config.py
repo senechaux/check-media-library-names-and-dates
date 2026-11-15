@@ -8,6 +8,7 @@ import math
 import os
 import shutil
 import tomllib
+import unicodedata
 
 from .process import run_tool
 
@@ -120,7 +121,9 @@ def validate_paths(config):
         raise ConfigError("Las rutas han cambiado desde su resolución")
     for i, path in enumerate(paths):
         for other in paths[i + 1:]:
-            if path.is_relative_to(other) or other.is_relative_to(path):
+            left = Path(unicodedata.normalize("NFD", str(path)).casefold())
+            right = Path(unicodedata.normalize("NFD", str(other)).casefold())
+            if left.is_relative_to(right) or right.is_relative_to(left):
                 raise ConfigError(f"Rutas solapadas: {path} y {other}")
     if not config.source.is_dir() or not os.access(config.source, os.R_OK | os.X_OK):
         raise ConfigError("El origen no existe o no es legible")
