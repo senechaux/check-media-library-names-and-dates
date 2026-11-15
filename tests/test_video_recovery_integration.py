@@ -45,14 +45,23 @@ def test_manual_output_is_revalidated_before_safe_installation(config_file, vide
     record = report["files"][0]["stages"]["normalize"]
     pause = record["pause"]
     output = Path(next(iter(pause["outputs"].values())))
+    driver = VideoDriver(config)
+    plan = pause["video_plan"]
+    preset = output.parent / "manual-preset.json"
+    driver.write_preset(preset, plan)
+    for command in driver.produce(next(iter(pause["inputs"].values())), output, plan, preset): driver.call(command)
     if corrupt:
-        output.write_bytes(b"corrupt synthetic video")
-    else:
-        driver = VideoDriver(config)
-        plan = pause["video_plan"]
-        preset = output.parent / "manual-preset.json"
-        driver.write_preset(preset, plan)
-        for command in driver.produce(next(iter(pause["inputs"].values())), output, plan, preset): driver.call(command)
+        # Contenedor y cabeceras válidos, pero un paquete de vídeo roto: prueba
+        # real de decodificación, sin sustituirla por un error de formato/mocks.
+        packets = json.loads(driver.call([driver.ffprobe, "-v", "error", "-select_streams", "v:0", "-show_packets",
+                                           "-show_entries", "packet=pos,size", "-of", "json", str(output)]).stdout)["packets"]
+        packet = packets[len(packets)//2]
+        data = bytearray(output.read_bytes())
+        start, size = int(packet["pos"]), int(packet["size"])
+        data[start+4:start+size] = b"\xff" * (size-4)
+        output.write_bytes(data)
+        assert driver.inspect(output)["streams"][0]["codec_name"] == "h264"
+        assert output.stat().st_size < source.stat().st_size
     code, resumed = run_real(config_file, "--resume", report["run_id"])
     assert code == (3 if corrupt else 0), resumed
     if corrupt:
