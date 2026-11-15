@@ -12,7 +12,7 @@ import uuid
 from .filesystem import ConflictError, check_fingerprint, durable_copy, fingerprint, same_content
 from .inventory import entry_paths, inventory
 from .models import StageResult, State
-from .operations import SafeExecutor
+from .operations import SafeExecutor, backup_hash
 from .pipeline_settings import FILE_STAGES, STAGES, parse_settings
 from .stages import StageContext, default_adapters
 from .state import PersistenceError, atomic_json
@@ -154,6 +154,9 @@ class Pipeline:
 
     def prepare_pause(self, context):
         record = context.record
+        adapter = self.adapters[context.stage]
+        if hasattr(adapter,"prepare_manual"):
+            adapter.prepare_manual(context)
         if "pause" not in record:
             instructions = self.adapters[context.stage].instructions(context)
             record["pause"] = {"pause_id": uuid.uuid4().hex, "stage": context.stage,
@@ -165,8 +168,9 @@ class Pipeline:
             if context.file_id:
                 temporary, _, _ = entry_paths(self.store.config, self.store.manifest.run_id, context.entry)
                 folder = temporary / "manual" / context.stage
-                source = folder / ("input" + Path(context.entry.current_path).suffix)
-                output = folder / ("output" + (".mp4" if context.stage in ("normalize", "compression") else Path(context.entry.current_path).suffix))
+                input_source = instructions.get("input_source",context.entry.current_path)
+                source = folder / ("input" + Path(input_source).suffix)
+                output = folder / ("output" + instructions.get("output_suffix", ".mp4" if context.stage in ("normalize", "compression") else Path(context.entry.current_path).suffix))
                 if context.stage not in COPY_STAGES:
                     source = Path(context.entry.current_path)
                     if context.stage == "installation":
@@ -178,16 +182,18 @@ class Pipeline:
                         exports = [op for op in self.store.manifest.operations.values() if op.file_id == context.file_id and op.kind == "export" and op.state == "COMPLETED"]
                         if exports:
                             source = Path(exports[-1].destination)
+                        source=Path(instructions.get("input_source",source))
                 record["pause"]["inputs"] = {context.file_id: str(source)}
                 record["pause"]["outputs"] = {} if context.stage in ("audit", "delivery") else {context.file_id: str(output)}
                 if context.stage in COPY_STAGES:
-                    record["copy_sha256"] = fingerprint(context.entry.current_path)["sha256"]
+                    record["copy_source"] = str(input_source)
+                    record["copy_sha256"] = fingerprint(input_source)["sha256"]
             self.save(state=State.WAITING_USER)  # Intención y rutas antes de preparar copias.
         if context.file_id and context.stage in COPY_STAGES:
             path = Path(record["pause"]["inputs"][context.file_id])
             if not record.get("copy_ready"):
                 if not path.exists():
-                    durable_copy(context.entry.current_path, path, record["copy_sha256"], reserve=self.store.config.reserve_bytes)
+                    durable_copy(record.get("copy_source",context.entry.current_path), path, record["copy_sha256"], reserve=self.store.config.reserve_bytes)
                 elif not same_content(path, record["copy_sha256"]):
                     raise ConflictError("Copia de trabajo incompleta o cambiada antes de confirmarse")
                 record["copy_ready"] = True
@@ -274,7 +280,8 @@ class Pipeline:
                 decisions = dict(word.split("=", 1) for word in words[1:] if "=" in word)
                 allowed = ("authority", "timezone", "output", "fold", "offset", "source_tag", "date", "remove_historical",
                            "discard_description", "set_file_modify_date", "set_file_create_date", "allow_create_date_fallback", "quicktime_semantics",
-                           "historical_policy", "allow_remux_growth", "quality_reviewed")
+                           "historical_policy", "allow_remux_growth", "quality_reviewed", "export_quality_reviewed",
+                           "delivery_confirmed","delivery_resolution")
                 if not decisions or any(key not in allowed or not value for key, value in decisions.items()):
                     self.console.write("Decisión inválida")
                     continue
@@ -285,6 +292,7 @@ class Pipeline:
                     self.console.write("Decisión inválida: " + str(exc))
                     continue
                 record.setdefault("decisions", {}).update(decisions)
+                record["decision_revision"]=record.get("decision_revision",0)+1
                 record["pause"]["decisions"] = record["decisions"]
                 self.save(state=State.WAITING_USER)
             elif words and words[0].casefold() in ("comprobar", "check"):
@@ -309,11 +317,12 @@ class Pipeline:
                 if any(self.executor.inspect(op.operation_id).output_matches and "continue" in self.executor.inspect(op.operation_id).actions for op in pending):
                     continue  # La etapa recuperará la publicación antes de comprobar su nueva huella.
                 for index, op in enumerate(operations):
-                    if op.backup and op.state == "COMPLETED" and not same_content(op.backup, op.expected["sha256"]):
+                    if op.backup and op.state == "COMPLETED" and not same_content(op.backup, backup_hash(op)):
                         raise ConflictError("Backup completado alterado")
                     later = any((other.destination == op.destination or (other.kind in ("rename", "substitute") and other.source == op.destination))
                                 and other.state == "COMPLETED" for other in operations[index + 1:])
-                    if op.state == "COMPLETED" and not later and not same_content(op.destination, op.output_sha256):
+                    repairable = op.kind=="export" and getattr(self.adapters["export"],"handles_export_repair",False) and op.evidence.get("validation",{}).get("export_recipe")
+                    if op.state == "COMPLETED" and not later and not repairable and not same_content(op.destination, op.output_sha256):
                         raise ConflictError("Salida completada alterada")
                 expected = value["baseline"]
                 if any(op.kind in ("replace", "rename", "substitute") and op.state == "COMPLETED" for op in operations):
@@ -430,6 +439,9 @@ class Pipeline:
             metadata = self.adapters["metadata"]
             if self.mode("metadata") != "disabled" and hasattr(metadata, "finalize"):
                 metadata.finalize(self, recover_only=True)
+            export_adapter=self.adapters["export"]
+            if self.resuming and hasattr(export_adapter,"revalidate_completed"):
+                export_adapter.revalidate_completed(self)
             self.check_sources()
             for stage in FILE_STAGES:
                 for file_id, value in self.data["files"].items():

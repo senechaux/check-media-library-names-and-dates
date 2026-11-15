@@ -21,6 +21,8 @@ def write_report(pipeline, code, pending):
         stages.append({"stage": stage, "mode": pipeline.mode(stage), "results": counts,
                        "adapter": data["adapters"].get(stage, {"identity": "core", "simulated": False})})
     operations = list(store.manifest.operations.values())
+    job=data.get("delivery_job",{})
+    delivery_summary={key:job[key] for key in ("state","job_id","attempts","command_succeeded","returncode","evidence_kind","remote_presence_verified","backup","adopted_from_run") if key in job}
     changed = sorted({op.file_id for op in operations if op.state == "COMPLETED" and op.kind in ("replace", "rename", "substitute")})
     failures = [{"file_id": key, "stage": stage, "reason": record.get("reason") or record.get("issues")}
                 for key, value in data["files"].items() if value["selected"]
@@ -40,10 +42,12 @@ def write_report(pipeline, code, pending):
               "pending": pending, "global_issues": data["global_issues"],
               "fatal_error": data.get("fatal_error"), "interrupted": data.get("interrupted"),
               "failures": failures,
+              "coverage":data.get("coverage"),"delivery":delivery_summary,
+              "remote_interaction_simulated":job.get("client",{}).get("simulated_client",False),
               "human_confirmations": [{"stage": stage, "file_id": key, "technical_verification": False}
                    for key, value in data["files"].items() for stage, record in value["stages"].items()
                    if record.get("evidence", {}).get("human_confirmation")],
-              "remote_delivery": "disabled" if pipeline.mode("delivery") == "disabled" else "No se realiza carga remota desde este programa; consultar declaraciones humanas o adaptador simulado",
+              "remote_delivery": "disabled" if pipeline.mode("delivery") == "disabled" else (job.get("evidence_kind") or job.get("state") or "Pendiente; sin entrega acreditada"),
               "resume_command": shlex.join(command),
               "paths": {name: str(store.root / name) for name in ("manifest.json", "journal.jsonl", "plan.json", "report.json")
                         if name != "plan.json" or (store.root / name).exists()}}
