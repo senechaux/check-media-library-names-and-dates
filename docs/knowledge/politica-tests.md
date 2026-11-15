@@ -66,7 +66,10 @@ señales reales, fallos y reanudación con adaptadores simulados. Fechas y nombr
 añaden pruebas con ExifTool real, DST, contenido/metadatos ajenos, atributos del
 filesystem, colisiones, ciclos e interrupciones. Vídeo añade perfiles reales,
 geometría/timing, audio, remux, pausas, colisiones y recuperación entre un volumen
-local y otro HFS+ sintético. Entrega sigue pendiente. La calidad visual del RF
+local y otro HFS+ sintético. Exportación prueba JPEG/ICC/orientación, recetas,
+vigencia y procedencia con herramientas reales. Entrega prueba alcance, recibos,
+incertidumbre, no repetición y backup con un cliente local simulado; no acredita
+autenticación ni compatibilidad remota de gphotos. La calidad visual del RF
 propuesto requiere revisión humana; la compatibilidad con las apps/Apple Photos requiere el ensayo
 humano indicado en [fechas y nombres](fechas-nombres.md).
 

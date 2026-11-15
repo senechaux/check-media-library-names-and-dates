@@ -1,7 +1,7 @@
 ---
 type: Reference
 title: Verificación del núcleo y servicios de medios
-description: Pruebas del pipeline, fechas y vídeo real con medios sintéticos y revisiones humanas pendientes.
+description: Pruebas locales de las cinco propuestas, transporte remoto simulado y revisiones pendientes.
 tags: [verificacion, tests, seguridad, documentacion]
 status: draft
 x_analysis_date: "2026-11-15"
@@ -23,14 +23,16 @@ sources:
     resource: fechas-nombres.md
   - id: video
     resource: video-validado.md
+  - id: export
+    resource: exportacion-entrega.md
 ---
 # Comprobaciones del 2026-11-15
 
 | Comprobación | Resultado y alcance |
 | --- | --- |
 | Instalación | Venv temporal con Python 3.12.15 y pytest 9.2.0; importación desde otra carpeta y `pip check` correctos. Wheel construido con dependencias de build aisladas; preset JSON importable desde el wheel fuera del repositorio. |
-| Suite rápida | 173 pruebas pasadas con `python -m pytest`: 139 existentes y 34 nuevas de planificación de vídeo, publicación recuperable y grupos ExifTool; las 45 integraciones se excluyen por marca. |
-| Herramientas reales | 45 integraciones pasadas con `python -m pytest -m integration`: 20 previas y 25 de vídeo, con ExifTool 13.40, FFmpeg/ffprobe 9.0.2 y HandBrake 1.11.2; ninguna omitida en esta máquina. |
+| Suite rápida | 206 pruebas pasadas con `python -m pytest`: las 173 anteriores y 33 de recetas/procedencia, publicación, entrega y regresiones; las 61 integraciones se excluyen por marca. |
+| Integraciones locales | 61 pasadas con `python -m pytest -m integration`: 45 previas y 16 nuevas. Herramientas reales: Pillow 12.3.0, ExifTool 13.40, FFmpeg/ffprobe 9.0.2 y HandBrake 1.11.2. En entrega, transporte remoto simulado; ninguna omisión. |
 | Configuración | Rutas relativas al TOML, solapamientos por symlinks/mayúsculas, permisos, capacidades y estimación de espacio agregado por volumen. Preflight sin crear destinos. |
 | Inventario y procesos | Profundidades variadas, formatos independientes del nombre, mismo basename/bytes con IDs distintos, Unicode, nombres especiales literales, ilegibles, FIFOs, symlinks, timeout, no cero y parcial sin publicar. |
 | Backups y recuperación | Hash, conflictos de destino/backup/temporal, cambios externos antes y después del backup, falta de espacio y fallo de copia parcial sin tocar el original. |
@@ -46,7 +48,11 @@ sources:
 | Vídeo | Horizontal 1920×1080 →1280×720, vertical 1080×1920 →720×1280, matriz rotada, SAR 4:3, 24/60 FPS PFR y CFR 30; pistas silenciosas/audio real, MP4 y MOV, remux de paquetes íntegros y fechas releídas. |
 | Seguridad de vídeo | Manual correcto/corrupto revalidado, revisión visual como declaración separada, HDR/múltiples pistas pendientes, resultado realmente mayor y ahorro mínimo no alcanzado, dos álbumes con una colisión y temporales independientes. |
 | Otro volumen | Imagen HFS+ sintética de 64 MB montada en temporal, con st_dev distinto del origen. Workspace y archivo en ella; ocho interrupciones hasta limpieza, con original/salida/backup íntegros y una sola codificación al reanudar. |
-| OpenSpec 2.0.0 | Núcleo, pipeline, metadata y vídeo válidos en modo estricto. Metadata: ensayo humano 3.3 pendiente; vídeo: muestra visual 3.4 pendiente. Ambos 10/11 tareas verificadas; ningún cambio archivado. |
+| Exportación | JPEG orientados 1/6/8, ICC y dimensiones EXIF, sin EXIF, años/álbumes homónimos, recetas cambiadas, destino ajeno y propio parcial, modo manual por ID. Vídeo vertical con audio desde original archivado y fuente compatible copiada sin recodificar. |
+| Vigencia y procedencia | Revalidación por receta/hash; renovación conserva el destino anterior. Segunda ejecución sin render/codificación. Nuevas correcciones de metadata y otra raíz de export mantienen el vínculo con el original, sin escrituras CopyN innecesarias. |
+| Entrega simulada | Cliente Python local sin red: alcance completo, zero sin recibos, recibos parciales/incorrectos, fallo, interrupción incierta, protección entre ejecuciones/cambio de comando y backup posterior sin repetir submit. Secretos sintéticos ausentes de manifiesto, journal e informes; permisos privados comprobados. |
+| Recorrido completo | Todos los adaptadores locales reales con transporte remoto simulado: importación humana, metadata, vídeo, instalación, exportación, auditoría, entrega y backup. Pausas separadas de revisión visual 720p/carga bloquean entrega hasta declaración; no se atribuye calidad humana al test. |
+| OpenSpec 2.0.0 | Las cinco propuestas válidas en modo estricto. Pendientes humanos metadata 3.3/vídeo 3.4; exportación 2.3 de adaptador/autenticación real. Ningún cambio archivado. |
 | Documentación | Frontmatter OKF parseable, índices/log reservados, versión 0.2 y destinos de enlaces Markdown locales existentes. |
 | Git | Commits descriptivos en `changes-by-codex`, con push tras cada commit; upstream configurado, sin force push. |
 
@@ -65,7 +71,7 @@ de contenido sintético y los renombrados se asocian sin adivinar por basename.[
 Las 18 integraciones nuevas de metadata ejercitan herramientas reales: 5 casos
 del escritor/atributos y 13 del pipeline. Comprueban ambas direcciones, copias
 corregidas manualmente y revalidadas, decisiones persistentes, prefijos,
-idempotencia y recuperación. Los 8 tests rápidos de contrato ExifTool usan datos/fallos simulados;
+idempotencia y recuperación. Los 9 tests rápidos de contrato ExifTool usan datos/fallos simulados;
 no se cuentan como prueba de compatibilidad real.[^dates]
 
 Los 25 casos nuevos de vídeo son 9 de perfil/pipeline y 16 de pausas/fallos y
@@ -75,6 +81,15 @@ inspeccionarlo y la decodificación impide publicar, aunque el candidato sea men
 La revisión visual declarada por los tests prueba solo el protocolo, no calidad.
 El AAC predeterminado de FFmpeg pasó; el ca_aac de Apple falló al inicializar en
 este entorno y no se presenta como integración compatible.[^video]
+
+Los 16 casos nuevos de integración son 4 de JPEG, 6 de exportación y 6 del
+recorrido/entrega. Los 18 contratos rápidos de entrega usan transporte y validador
+de medios simulados para aislar fallos. No prueban compatibilidad con Google
+Photos. Las integraciones del recorrido sí usan medios/validadores/codificadores
+reales, con un stub local de cliente remoto identificado como tal.[^export]
+Tras reforzar la conservación de la revisión de decisiones durante una reparación,
+se repitieron la suite rápida completa, los 18 contratos de entrega y la integración
+de reparación afectada: una resolución de reintento consumida sigue consumida.
 
 Las interrupciones parametrizadas cubren intención, backup, intención de
 publicación, publicación y confirmación para replace/rename/export cuando
@@ -90,7 +105,7 @@ Desde la raíz, con Python >=3.11 y las herramientas opcionales en PATH:
 ```sh
 python3 -m venv .venv-core
 . .venv-core/bin/activate
-python -m pip install -e '.[dev]'
+python -m pip install -e '.[dev,images]'
 python -m pytest
 python -m pytest -m integration
 python -m pip check
@@ -98,10 +113,11 @@ npx --yes --package @fission-ai/openspec@2.0.0 openspec validate safe-execution-
 npx --yes --package @fission-ai/openspec@2.0.0 openspec validate resumable-pipeline --strict --no-interactive
 npx --yes --package @fission-ai/openspec@2.0.0 openspec validate metadata-and-naming --strict --no-interactive
 npx --yes --package @fission-ai/openspec@2.0.0 openspec validate validated-video-compression --strict --no-interactive
+npx --yes --package @fission-ai/openspec@2.0.0 openspec validate verified-export-and-delivery --strict --no-interactive
 git diff --check
 ```
 
-Las integraciones se omiten con motivo si falta ExifTool, FFmpeg, ffprobe o HandBrakeCLI;
+Las integraciones se omiten con motivo si falta Pillow, ExifTool, FFmpeg, ffprobe o HandBrakeCLI;
 una omisión no acredita compatibilidad. La sesión utilizó OpenSpec 2.0.0 desde
 la caché npm local y un entorno Python en `/private/tmp`, sin instalar herramientas
 globales. ExifTool 13.40 se extrajo del repositorio oficial en `/private/tmp`;
@@ -111,7 +127,7 @@ Las ocho pruebas entre volúmenes requieren `MEDIA_LIBRARY_TEST_VOLUME` apuntand
 a un volumen temporal aislado con dispositivo distinto; sin él se omiten con
 motivo y no acreditan esa recuperación. En esta sesión se creó/montó una imagen
 HFS+ sintética bajo `/private/tmp` y se indicó su punto de montaje al ejecutar
-las 45 integraciones. No usar una ruta que contenga medios personales.
+las 61 integraciones. No usar una ruta que contenga medios personales.
 La estructura OKF y los enlaces se revisaron mediante una comprobación
 puntual con el parser YAML local; no se añadió un validador al producto.
 
@@ -140,9 +156,26 @@ humano. La ficha de fechas detalla las copias, datos y evidencia a registrar.
 La orientación y el perfil de vídeo tienen validación técnica real. La muestra
 visual RF 22 sigue pendiente en vídeo 3.4; su ficha describe cómo revisar detalle,
 movimiento y sincronía antes de aprobar un lote. HDR/pistas avanzadas conservan
-pausa sin política. Exportación/entrega sigue sin implementar. No se presentan
+pausa sin política. Exportación local, auditoría, protocolo y backup ya están
+implementados. gphotos-uploader-cli 6.0.0 se evaluó por código/versionado y su
+versión se consultó con directorio temporal vacío; no se autenticó ni ejecutó push.
+La tarea 2.3 de su adaptación y compatibilidad real sigue pendiente, con procedimiento
+en la ficha de entrega. No se presentan
 servicios simulados ni declaraciones humanas como validaciones reales superadas.
 Los documentos siguen en `draft`, sin atribuir una aprobación humana.[^scope]
+
+# Estado de las cinco propuestas
+
+| Propuesta | Implementación/verificación | Pendiente humano o remoto |
+| --- | --- | --- |
+| safe-execution-core | 13/13: configuración, inventario, journal/bloqueo, backups y operaciones recuperables. | Sin tarea de implementación pendiente; límites de filesystem/bloqueo documentados. |
+| resumable-pipeline | 11/11: comando, alcance, aprobación, pausas, señales, reanudación e informes. | Las acciones humanas se declaran; no equivalen a pruebas técnicas. |
+| metadata-and-naming | 10/11: fechas, zona/DST, decisiones, ExifTool selectivo y nombres recuperables. | 3.3 Attributes/Rename/Apple Photos; sin equivalencia Brute Force demostrada. |
+| validated-video-compression | 10/11: selección, normalización, perfil, validación técnica y publicación segura. | 3.4 muestra visual RF 22; HDR/pistas avanzadas sin política permanecen bloqueados. |
+| verified-export-and-delivery | 11/12: recetas, derivados/vigencia, cobertura, manual/CLI por protocolo y backup; transporte remoto simulado. | 2.3 adaptador/auth real de gphotos y ensayo de cuenta/lote autorizado. Revisión visual de nuevos derivados de carga declarada antes de publicar. |
+
+Todas siguen en changes para revisión; ninguna se ha archivado. No se han usado
+cuentas ni credenciales reales, biblioteca personal ni cargas remotas.
 
 [^tests]: [Suite del núcleo](../../tests/).
 [^core]: [Núcleo seguro implementado](nucleo-seguro.md).
@@ -151,3 +184,4 @@ Los documentos siguen en `draft`, sin atribuir una aprobación humana.[^scope]
 [^pipeline]: [Proceso reanudable implementado](pipeline-reanudable.md).
 [^dates]: [Servicio de fechas, evidencia real y ensayo humano pendiente](fechas-nombres.md).
 [^video]: [Vídeo real, evidencia y revisión visual pendiente](video-validado.md).
+[^export]: [Exportación local, entrega simulada y pruebas remotas pendientes](exportacion-entrega.md).

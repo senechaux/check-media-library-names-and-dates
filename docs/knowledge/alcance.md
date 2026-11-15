@@ -24,8 +24,10 @@ El núcleo está implementado y verificado, pendiente de revisión sin archivar;
 [fechas y nombres](fechas-nombres.md) ya usa ExifTool y validadores reales;
 `metadata-and-naming` conserva pendiente el ensayo humano de su tarea 3.3.
 [Vídeo validado](video-validado.md) integra normalización y compresión reales,
-con revisión visual 3.4 pendiente. Solo exportación/entrega integral sigue sin
-implementar. Ningún cambio se ha archivado; los servicios simulados solo se usan en tests.
+con revisión visual 3.4 pendiente. [Exportación y entrega](exportacion-entrega.md)
+implementa recetas, derivados y auditoría reales, más protocolo de entrega y backup
+probados con transporte simulado. Su adaptador/autenticación real de gphotos 2.3
+sigue pendiente. Ningún cambio se ha archivado; no se han usado cuentas ni cargas reales.
 
 Este paquete documenta los seis archivos Python que siguen en uso, tomando como
 referencia el commit indicado. El código tiene prioridad sobre el README cuando difieren.

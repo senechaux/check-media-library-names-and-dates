@@ -4,12 +4,13 @@ El paquete `media_library` incorpora TOML validado, inventario, procesos comprob
 bloqueo, backups y publicación recuperable por evidencia.
 Los scripts históricos siguen en `src/`. `run` ya controla etapas, pausas y
 reanudación. Fechas, nombres, normalización MP4 y compresión ya tienen servicios
-y validadores reales. Exportación integral y entrega siguen pendientes.
+y validadores reales. Exportación y auditoría local también son reales; la entrega
+es optativa, con declaraciones/recibos diferenciados y recuperación de su estado.
 
 ```sh
 python3 -m venv .venv-core
 . .venv-core/bin/activate
-python -m pip install -e '.[dev]'
+python -m pip install -e '.[dev,images]'
 python -m pytest
 python -m pytest -m integration
 ```
@@ -53,7 +54,8 @@ cambiar el alcance o ajustes requiere un plan nuevo.
 El ejemplo habilita pausas manuales y deshabilita entrega. `metadata` ya lee y
 compara fuentes reales, escribe fechas selectivas con ExifTool y renombra con
 backups y recuperación. Normalización y compresión usan HandBrake/FFmpeg reales;
-exportación y auditoría integral siguen sin sus servicios y confirmar no los completa. Los adaptadores
+exportación y auditoría comprueban receta, huellas y cobertura. La entrega exige
+un alcance auditado y evidencia explícita; un cero del cliente no acredita cada medio remoto. Los adaptadores
 simulados solo están en tests. Las fechas se publican mediante operaciones del
 núcleo; instalación no repite una corrección ya aplicada.
 
@@ -83,8 +85,9 @@ resume; no desplaza bloqueos activos. No borrar el archivo de bloqueo.
 
 Los informes `plan.json` y `report.json`, el manifiesto y el journal están en
 `workspace/run-id/`. La consola muestra sus rutas y la siguiente orden. Una
-declaración de carga web se distingue de una verificación API; el comando no
-realiza cargas remotas. Véanse la [guía real del proceso](docs/knowledge/pipeline-reanudable.md)
+declaración humana y los recibos del cliente se distinguen de una verificación
+API independiente. Las cargas solo son posibles con CLI configurada y opt-in;
+el desarrollo usa transporte simulado. Véanse la [guía real del proceso](docs/knowledge/pipeline-reanudable.md)
 y los [puntos de integración](docs/pipeline-adapters.md), incluidos los tres recorridos
 de alcance automático limitado, corrección manual simulada y reanudación sin terminal.
 
@@ -165,6 +168,39 @@ una política explícita. Solo se limpian temporales propios de publicaciones co
 Véase [vídeo validado](docs/knowledge/video-validado.md) para configuración,
 modo manual, recuperación, límites comprobados y protocolo de revisión visual.
 
+# Exportación y entrega optativa
+
+La [guía de exportación y entrega](docs/knowledge/exportacion-entrega.md) describe
+el recorrido local completo. JPEG RGB/L usa Pillow (probado 12.3.0), orientación
+EXIF aplicada, lado mayor <=1200 y perfil ICC preservado sin conversión de color.
+Vídeo reutiliza HandBrake/FFmpeg/ExifTool con upload-480p30, geometría según
+orientación, SAR 1:1, fechas y validadores comunes. Usa el original archivado
+verificado cuando corresponde y no vuelve a codificar recetas vigentes.
+
+Habilitar export/audit en auto y mantener delivery disabled prepara solo medios
+locales. El ejemplo TOML incluye `[export]` y `[delivery]`. Para entrega manual,
+configurar ambos modos de delivery como manual; el programa presenta únicamente
+el scope auditado y espera `decidir delivery_confirmed=true` y `comprobar` tras
+la acción externa. EOF no confirma.
+
+Vídeo de carga nuevo pausa con `video_quality_reviewed=false`; después de revisar
+su muestra, `decidir export_quality_reviewed=true` y `comprobar` registra esa
+declaración. Sigue vigente el bloqueo de revisión 720p anterior. Los tests de
+declaraciones humanas no acreditan calidad visual real.
+
+El [protocolo configured-cli](docs/delivery-protocol.md) requiere opt-in, cliente
+capaz de limitarse al manifiesto, preflight y alias de destino explícitos. Se ha
+probado con un cliente local simulado. **No hay un adaptador de gphotos validado
+con una cuenta real**: su versión 6.0.0 se inspeccionó sin autenticar ni subir.
+Sin recibos completos, el éxito del comando pide confirmación humana; ante un
+resultado incierto no se repite automáticamente, tampoco desde otra ejecución
+equivalente o cambiando el comando. Reconciliar antes de autorizar un intento.
+
+El estado del uploader puede respaldarse en directorios privados disjuntos.
+Si el backup falla tras acreditar entrega, reanudar continúa el backup sin volver
+a enviar. No se registran contenidos del estado ni stdout/stderr del cliente.
+Mantener credenciales fuera del TOML, argumentos y Git.
+
 # Documentación y planificación
 
 La [base de conocimiento en formato OKF](docs/knowledge/index.md) documenta el
@@ -176,10 +212,13 @@ El [plan de automatización](docs/knowledge/automatizacion.md) propone un comand
 único con pausas y reanudación. Los cambios futuros se especifican en
 [`openspec/changes/`](openspec/changes/). `safe-execution-core` y `resumable-pipeline`
 están implementados y verificados, pendientes de revisión sin archivar;
-la propuesta de exportación/entrega sigue pendiente. `metadata-and-naming`
-tiene implementado lo verificable, con su ensayo humano todavía pendiente.
+`metadata-and-naming` tiene implementado lo verificable, con su ensayo humano pendiente.
 `validated-video-compression` tiene 10/11 tareas verificadas; resta la revisión
 visual 3.4. Ningún cambio se ha archivado.
+`verified-export-and-delivery` tiene implementado lo verificable local y el
+protocolo de entrega; su tarea 2.3 de adaptador/autenticación real sigue pendiente.
+La [verificación de las cinco propuestas](docs/knowledge/verificacion.md) enumera
+pruebas locales, revisiones humanas y ensayos remotos pendientes.
 
 La [guía de revisión e implementación](docs/knowledge/trabajo-con-agentes.md)
 incluye el orden sugerido, decisiones pendientes y skills evaluadas.

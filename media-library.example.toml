@@ -28,9 +28,9 @@ metadata = "manual"    # Servicio real: compara y valida copias; auto escribe/re
 normalize = "manual"   # Real: MP4 por remux o una única recodificación combinada.
 compression = "manual" # Real: HandBrake + validación técnica y fechas.
 installation = "auto"  # Real, solo instala candidatos previamente validados.
-export = "manual"      # Servicio pendiente.
-audit = "manual"       # Servicio pendiente.
-delivery = "disabled"  # manual registra declaración humana; no realiza cargas.
+export = "auto"        # Real: receta, fuente registrada, derivado y vigencia; revisión visual de vídeo separada.
+audit = "auto"         # Real: cobertura local y validación antes de entregar.
+delivery = "disabled"  # Local. manual exige declaración; auto solo con CLI configurada y opt-in.
 
 [dates]
 policy = "review" # filename-to-metadata | metadata-to-filename, solo tras revisión explícita.
@@ -67,3 +67,26 @@ quality_reviewed = false  # La validación técnica no acredita calidad visual.
 # [tools.ffmpeg]
 # executable = "ffmpeg"
 # version_args = ["-version"]
+
+[export]
+images = true
+videos = true
+image_max_side = 1200
+image_quality = 90
+color_policy = "preserve-icc"
+video_profile = "upload-480p30"
+video_quality = 22
+video_frame_rate_mode = "pfr"
+video_quality_reviewed = false # No publicar recodificación de carga sin revisión visual declarada.
+require_capture_date = true
+use_archived_original = true
+
+[delivery]
+mode = "disabled" # manual requiere pipeline.modes.delivery="manual".
+target = "manual" # Alias no secreto; no es autenticación.
+require_capture_date = true
+# Para backup del estado tras entregar, configurar AMBAS rutas disjuntas:
+# state_dir = "sample/uploader-state"
+# backup_dir = "sample/uploader-state-backup"
+# configured-cli exige pipeline.modes.delivery="auto", allow_cli=true y un
+# adaptador con protocolo de alcance; véase docs/delivery-protocol.md.

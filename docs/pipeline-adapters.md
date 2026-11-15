@@ -24,8 +24,8 @@ importación es una barrera global humana antes del inventario.
 | Normalización de vídeo | `VideoAdapter` real: remux compatible o recodificación combinada, ffprobe/FFmpeg/ExifTool | Políticas HDR/pistas avanzadas pendientes |
 | Compresión | `VideoAdapter` real: perfil reproducible, HandBrake, validación técnica, fechas y ahorro | Calidad visual requiere declaración humana |
 | Instalación | `InstallationAdapter` real: candidato → replace o substitute, backup y recuperación; metadata ya aplicada no se repite; revisión visual separada para vídeo | Limpieza por operación completa |
-| Exportación/auditoría | `UnavailableAdapter`, sin acreditar derivados | `verified-export-and-delivery` |
-| Entrega manual | Declaración humana diferenciada de prueba API; no ejecuta cargas | `verified-export-and-delivery` |
+| Exportación/auditoría | `ExportAdapter` y `AuditAdapter`: receta, fuente registrada, validación, vigencia y cobertura global | Formatos/políticas no cubiertos conservan pausa |
+| Entrega | `DeliveryAdapter`: disabled/manual o protocolo CLI con opt-in, alcance, reconciliación y backup | Autenticación real de gphotos pendiente; transporte simulado en tests |
 
 Los adaptadores simulados están **solo en tests** y se inyectan por Python con
 `main(..., adapters={etapa: adaptador})` o `Pipeline(..., adapters=...)`. No hay
@@ -81,8 +81,8 @@ Usar `WAITING_USER` para evidencia ausente/conflictos que requieren decisión y
 `FAILED` para fallo operativo con diagnóstico. `COMPLETED` requiere evidencia,
 sin incidencias. Una etapa sin cambio puede acreditar `{'unchanged': True, ...}`.
 Las identidades y toda la configuración efectiva se congelan; un cambio exige
-nueva planificación. La revisión final con todos los servicios reales sigue
-perteneciendo a `verified-export-and-delivery`.
+nueva planificación. La auditoría local final ahora es real y su cobertura global
+debe estar completa antes de iniciar entrega.
 
 ## Trabajo externo y asociación
 
@@ -121,3 +121,27 @@ ExifTool/FFmpeg reales con medios sintéticos; no dependen de los servicios simu
 Las pruebas `test_video_integration.py` y `test_video_recovery_integration.py`
 añaden HandBrake y AAC de FFmpeg reales, modo manual y recuperación entre volúmenes
 sintéticos. Declarar revisión visual en esos tests solo prueba el protocolo.
+
+ExportAdapter usa Artifact/StageResult y operaciones export, también al renovar
+un derivado propio con huella del destino anterior y backup. La receta conserva
+identidad lógica y fuente de mayor calidad de la cadena registrada entre ejecuciones.
+No se acredita un destino por existir. `revalidate_completed(pipeline)` se ejecuta
+al reanudar antes de comprobar fuentes: invalida export/audit/delivery si cambió
+un derivado propio, para repararlo con evidencia sin forzar mutaciones del original.
+
+`prepare_manual(context)` es un hook opcional de preparación de pausa, posterior
+a la aprobación. DeliveryAdapter lo usa para copias del alcance auditado. Las
+instrucciones de export pueden declarar input_source/output_suffix: la copia manual
+usa la fuente archivada verificada, conservando ID y la decisión temporal previa.
+`instructions` sigue siendo de solo lectura.
+
+AuditAdapter.finalize registra coverage para exportados/excluidos/pendientes de
+todo el alcance. DeliveryAdapter exige esa cobertura y guarda delivery_job en el
+mismo journal antes del cliente y antes del backup. Sus decisiones son
+delivery_confirmed y delivery_resolution; se consumen por revisión para evitar
+reintentos implícitos. Export añade export_quality_reviewed, separado del perfil
+de archivo. Véase el [protocolo de cliente](delivery-protocol.md).
+
+Los tests de exportación usan Pillow, ExifTool, HandBrake y FFmpeg reales. El
+recorrido final usa esos adaptadores locales reales con transporte remoto simulado;
+no demuestra autenticación ni compatibilidad de una cuenta de Google Photos.

@@ -26,8 +26,9 @@ consultan con argumentos de versión/ayuda de solo lectura; la configuración es
 local y de confianza. Las estimaciones del preflight se suman por volumen y las
 copias vuelven a comprobar espacio antes de escribir. El preflight no crea
 destinos. `media_library run` ya orquesta etapas sobre el núcleo; los servicios
-EXIF/QuickTime y vídeo ya tienen servicios reales; exportación integral y entrega
-remota siguen pendientes. La tabla
+EXIF/QuickTime, vídeo, exportación y auditoría tienen servicios reales. La entrega
+usa un protocolo de cliente con transporte simulado en pruebas y compatibilidad
+específica de gphotos pendiente. La tabla
 opcional `pipeline` congela alcance/modos; sin ella se conserva la representación
 de configuración de los manifiestos anteriores. `[dates]` también es opcional y
 se omite de la representación efectiva cuando está vacía; una vez configurada
@@ -129,3 +130,23 @@ El esquema sigue siendo 1: `substitute` es un tipo de operación nuevo y exige e
 versión del ejecutor; una versión anterior lo rechazará al intentar ejecutarlo.
 Las identidades de adaptadores quedan congeladas; ejecuciones con adaptadores
 anteriores no se reinterpretan automáticamente al actualizar el programa.
+
+`export_settings` representa la tabla TOML `[export]` y `delivery` la tabla del
+mismo nombre; se omiten de configuración efectiva cuando no se declararon, como
+las opciones anteriores. La receta no depende del ID nuevo de inventario: enlaza
+identidad lógica, procedencia, hashes, fecha, perfil y versiones. Se sigue la
+cadena de operaciones/entradas previas del mismo origen y archivo, incluso al
+elegir una raíz de exportación distinta.
+
+Renovar un exportado propio conserva `evidence.previous_destination` con su stat
+y hash; el backup corresponde a ese derivado anterior, no al original fuente.
+`backup_hash` distingue ambas garantías. El ejecutor compara origen y destino
+anterior antes de publicar, preserva la copia verificada y usa sustitución atómica
+local. Un destino sin propiedad acreditada por el servicio no admite esa vía.
+
+`coverage` y `delivery_job` viven en checkpoints del mismo journal. La entrega
+persiste SUBMITTING antes del cliente y DELIVERED antes de copiar su estado.
+Alcance/identidad/hash/alias ligan la evidencia; una entrega incierta no se repite
+automáticamente, tampoco cambiando el comando desde otra ejecución. El estado
+del cliente se copia a directorios privados con recibo por árbol; no se registran
+sus contenidos ni stdout/stderr. Véase el [protocolo](delivery-protocol.md).

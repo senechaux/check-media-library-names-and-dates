@@ -7,6 +7,7 @@ okf_version: "0.2"
 - [Proceso reanudable implementado](pipeline-reanudable.md) - Comando run, alcance, aprobación, pausas, recuperación y límites de integración.
 - [Fechas y nombres implementados](fechas-nombres.md) - Fechas, decisiones explícitas, ExifTool selectivo, renombrados y ensayo humano pendiente.
 - [Vídeo validado](video-validado.md) - Normalización MP4, compresión real, validación, publicación recuperable y revisión visual pendiente.
+- [Exportación y entrega verificables](exportacion-entrega.md) - Recetas, fuentes registradas, cobertura local, entrega optativa y pruebas remotas pendientes.
 - [Política de tests del desarrollo](politica-tests.md) - Pruebas automatizadas proporcionadas al riesgo y mantenibles para los cambios previstos.
 
 - [Alcance y procedencia](alcance.md) - Cómo interpretar esta documentación y distinguir observaciones de propuestas.

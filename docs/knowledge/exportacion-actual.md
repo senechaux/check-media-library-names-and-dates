@@ -9,6 +9,13 @@ sources:
   - id: export
     resource: https://github.com/senechaux/check-media-library-names-and-dates/blob/bf3554fab9a04414c3f369ecc4a9fc2dcdbb297c/src/copy-files-to-upload-to-gphotos.py
 ---
+# Procedencia y servicio nuevo
+
+Esta ficha conserva el comportamiento de los scripts históricos del commit
+indicado. El paquete ofrece ahora [exportación y entrega verificables](exportacion-entrega.md)
+con recetas, fuentes archivadas, validadores y estado reanudable. Para esas
+garantías se usa `python -m media_library run`; no se ejecuta el exportador antiguo.
+
 # copy-files-to-upload-to-gphotos.py
 
 El núcleo nuevo no automatiza este exportador. Desde el 2026-11-15 sus helpers

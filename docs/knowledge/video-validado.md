@@ -21,9 +21,10 @@ sources:
 
 `normalize` y `compression` usan servicios reales con ffprobe, HandBrakeCLI,
 FFmpeg y ExifTool. `installation` publica mediante el [núcleo seguro](nucleo-seguro.md),
-con original archivado y recuperación por journal. Exportación, auditoría integral
-y entrega conservan sus adaptadores pendientes. No se ha archivado ningún cambio.
-El recorrido usa medios locales; no carga archivos ni sincroniza cuentas.
+con original archivado y recuperación por journal. [Exportación y auditoría](exportacion-entrega.md)
+ya usan servicios reales. La entrega optativa requiere declaración o un cliente
+configurado con alcance; en pruebas su transporte es simulado. No se ha archivado
+ningún cambio ni usado una cuenta real.
 
 El plan registra tamaño, umbral, bitrate diagnóstico, contenedor real y marca,
 acción, etapa responsable, destino, geometría, perfil y huella de opciones/preset.
@@ -163,7 +164,8 @@ RF 22, AAC de FFmpeg y el vertical cuadrado difieren de ajustes no visibles o de
 vertical anamórfico 405×720 de la captura; no se afirma equivalencia exacta.
 
 La tarea 3.3 de metadata sigue pendiente y no se afirma equivalencia con Apple
-Photos Brute Force. Exportación/entrega pertenecen a la propuesta posterior.
+Photos Brute Force. Exportación/entrega ya tiene implementación local y protocolo,
+con adaptador/autenticación real de gphotos pendiente en su tarea 2.3.
 Véase [verificación](verificacion.md) para resultados reproducibles.
 
 [^planning]: [Planificador de vídeo](../../src/media_library/video_plan.py).

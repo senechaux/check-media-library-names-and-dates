@@ -30,6 +30,8 @@ El TOML elige alcance por patrones de ruta relativa y modos por etapa; las
 deshabilitadas figuran como tales. Cada archivo necesita completar sus etapas
 anteriores habilitadas para avanzar. Un archivo pendiente no bloquea otros
 independientes, pero tampoco puede llegar a instalación o entrega.
+La entrega real añade una barrera global: si falta un derivado elegible del
+alcance, no se inicia la carga de los que ya terminaron.
 
 El plan muestra IDs, rutas, etapas, herramienta, ajustes, candidatos/destinos y
 backups previstos antes de pedir una aprobación del lote. `--apply` sustituye
@@ -42,7 +44,8 @@ zonas, DST y precisión, sin atribuir esa implementación al cambio del orquesta
 
 Instalar con `python -m pip install -e '.[dev]'` en un venv y copiar el TOML de
 ejemplo a la configuración local. No usar las tablas de fechas/perfiles del plan
-futuro como si ya fueran configuración aceptada; `[dates]` y `[video]` están implementados
+futuro como si ya fueran configuración aceptada; `[dates]`, `[video]`, `[export]`
+y `[delivery]` están implementados
 con las claves del ejemplo actual, que es la fuente
 de opciones disponibles.
 
@@ -92,8 +95,12 @@ En terminal se espera con lectura bloqueante. Opciones:
   Por sí sola una decisión no prueba que los campos ya se hayan corregido.
 
 Una confirmación web se registra como **declaración humana**, con
-`technical_verification=false`. El programa no carga archivos ni comprueba APIs.
-`--apply` no sustituye esa declaración. `--resume` exige configuración y adaptadores
+`technical_verification=false`. El servicio de [entrega](exportacion-entrega.md)
+usa el alcance auditado: manual requiere `delivery_confirmed=true` explícito y
+CLI exige opt-in/protocolo/preflight. Cero no demuestra presencia remota; los
+recibos del cliente se distinguen de una auditoría API independiente. En pruebas
+el transporte remoto es simulado. `--apply` no sustituye declaraciones.
+`--resume` exige configuración y adaptadores
 iguales a los congelados; cambios externos del original exigen un nuevo plan
 para ese archivo, preservando las evidencias del resto.
 
@@ -116,16 +123,17 @@ estado duradero y se muestra el fallo y la ruta de recuperación.
 Son reales el control de etapas, las pausas, planificación, estado, inventario,
 instalación segura e informes. Son declaraciones humanas la revisión de importación
 y la entrega web. Metadata usa lectura/selección/ExifTool/renombrado reales;
-normalización y compresión ya tienen servicios y validadores reales. Solo
-exportación y auditoría integral usan adaptadores pendientes y no se completan
-por confirmar. Los adaptadores que
+normalización, compresión, exportación y auditoría local tienen servicios y
+validadores reales. Entrega tiene máquina de estados y backup; el adaptador
+específico/autenticación real de gphotos sigue pendiente. Los adaptadores que
 simulan servicios solo se inyectan en tests; el informe los identifica.[^adapters]
 
 La suite demuestra el recorrido completo con servicios simulados y operaciones
 reales sobre temporales. Las integraciones adicionales de metadata sí acreditan
 ExifTool en los formatos documentados. El [servicio de vídeo](video-validado.md)
 acredita técnicamente el perfil y la recuperación entre volúmenes sintéticos;
-la calidad visual requiere revisión humana. Entrega remota integral sigue pendiente.
+la calidad visual requiere revisión humana. El recorrido local completo se ha
+verificado con transporte remoto simulado; no hay prueba de cuenta o carga real.
 Se conservan los
 límites de bloqueo y filesystem del núcleo; equivalencia con Apple Photos pendiente.
 No se ha utilizado biblioteca personal ni realizado carga remota.[^tests]

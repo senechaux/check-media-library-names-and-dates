@@ -27,7 +27,8 @@ La etapa `metadata` del comando `run` usa ahora un servicio real para leer fecha
 compararlas, resolver decisiones explícitas, escribir campos seleccionados y
 renombrar. Reutiliza StageResult, copias verificadas, backups, bloqueo, manifiesto
 y journal. [Normalización y compresión](video-validado.md) ya reutilizan sus fechas
-seleccionadas y validadores; exportación y auditoría integral siguen pendientes.
+seleccionadas y validadores; [exportación y auditoría](exportacion-entrega.md)
+también son reales y aplican la misma decisión al derivado de mayor calidad.
 `metadata-and-naming` permanece sin archivar y con
 la tarea 3.3 pendiente de ensayo humano con las apps.[^service]
 

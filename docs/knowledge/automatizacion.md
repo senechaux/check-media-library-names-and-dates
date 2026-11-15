@@ -19,7 +19,9 @@ El [proceso reanudable](pipeline-reanudable.md) ya implementa el comando y el
 control de etapas. [Fechas y nombres](fechas-nombres.md) ya integra ExifTool y
 validadores reales, con el ensayo humano de compatibilidad pendiente.
 [Vídeo validado](video-validado.md) integra normalización y compresión reales,
-pendiente de muestra visual. Exportación y entrega integral siguen siendo propuestas.
+pendiente de muestra visual. [Exportación/entrega](exportacion-entrega.md) ya
+implementa el recorrido local y un protocolo de cliente; compatibilidad remota
+y autenticación específica de gphotos siguen pendientes.
 
 Tras instalar el proyecto y sus herramientas, ejecutar desde cualquier carpeta:
 
@@ -27,10 +29,11 @@ Tras instalar el proyecto y sus herramientas, ejecutar desde cualquier carpeta:
 python3 -m media_library run --config /ruta/media-library.toml
 ```
 
-**El comando ya existe; el recorrido con todos los servicios reales aún no.**
+**El recorrido local ya está implementado; el transporte remoto se prueba simulado.**
 El `pyproject.toml` permite instalarlo en el entorno virtual. Usar `argparse`, `pathlib`,
 `tomllib`, `dataclasses`, `zoneinfo` y JSON de la biblioteca estándar es
-suficiente; no se necesita una plataforma de tareas ni una interfaz web.
+suficiente para el control; JPEG añade Pillow como extra images. No se necesita
+una plataforma de tareas ni una interfaz web.
 
 El modo interactivo mostrará el plan de cambios y pedirá una aprobación del
 lote antes de escribir. `--dry-run` generará solo inventario, plan e informes.
@@ -38,12 +41,11 @@ lote antes de escribir. `--dry-run` generará solo inventario, plan e informes.
 confirmación pendiente de trabajo manual. `--resume <run-id>` recuperará una
 ejecución interrumpida y volverá a verificar sus precondiciones.
 
-# Configuración propuesta
+# Configuración actual
 
-El ejemplo siguiente conserva el diseño de los servicios futuros; las tablas
-export/external todavía no son opciones del comando actual.
-`[dates]` y `[video]` sí están implementadas con las claves mostradas aquí.
-Usar `media-library.example.toml` y la ficha del proceso para el TOML aceptado hoy.
+El ejemplo siguiente usa opciones implementadas. `media-library.example.toml`
+y las fichas de cada servicio documentan las opciones aceptadas; no existe una
+tabla external genérica. La CLI de entrega exige el protocolo documentado.
 Un único TOML local, fuera de Git si contiene rutas personales:
 
 ```toml
@@ -52,6 +54,16 @@ source = "/ruta/biblioteca/2026"
 workspace = "/ruta/trabajo-media"
 archive = "/ruta/originales-conservados"
 export = "/ruta/exportacion/2026"
+
+[pipeline.modes]
+import_review = "manual"
+metadata = "auto"
+normalize = "auto"
+compression = "auto"
+installation = "auto"
+export = "auto"
+audit = "auto"
+delivery = "disabled"
 
 [dates]
 timezone = "Europe/Madrid" # Elección explícita del usuario, no deducida de viajes.
@@ -64,15 +76,14 @@ frame_rate_mode = "pfr"           # cfr es una opción distinta.
 quality_reviewed = false         # Requiere revisión humana antes de instalar.
 
 [export]
-enabled = true
+images = true
+videos = true
 image_max_side = 1200
 video_profile = "upload-480p30"
+video_quality_reviewed = false
 
-[external]
-metadata = "auto"                # auto | manual
-rename = "auto"                  # auto | manual
-compression = "auto"             # auto | manual
-upload = "manual"                # disabled | manual | configured-cli
+[delivery]
+mode = "disabled" # Para manual, cambiar también pipeline.modes.delivery.
 ```
 
 El preflight validará rutas existentes, permisos, espacio estimado para temporales
@@ -141,7 +152,7 @@ Códigos implementados: 0 completado, 2 intervención pendiente, 3 fallo operati
 | 2 | `resumable-pipeline` | Implementado y verificado sin archivar: comando, plan/aprobación, pausas, reanudación e informes; servicios posteriores simulados solo en tests | 1 |
 | 3 | `metadata-and-naming` | Implementado y probado con ExifTool real: fechas EXIF/QuickTime, zona/DST, ambas direcciones, renombrado recuperable y alternativa manual; ensayo humano 3.3 pendiente, sin archivar | 1 y 2 para integración |
 | 4 | `validated-video-compression` | Implementado y probado con herramientas reales: normalización MP4, perfil y sustitución recuperable; revisión visual 3.4 pendiente, sin archivar | 1, 3 y 2 para integración |
-| 5 | `verified-export-and-delivery` | Derivados, auditoría final, carga opcional y backup del estado | 1–4 |
+| 5 | `verified-export-and-delivery` | Derivados, auditoría global, entrega por protocolo y backup implementados/probados con transporte simulado; tarea 2.3 de gphotos real pendiente, sin archivar | 1–4 |
 
 OpenSpec separa propuestas, diseño, requisitos y tareas; su archivo incorpora
 los requisitos al estado implementado. Se ha elegido esa separación para que

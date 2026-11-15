@@ -2,6 +2,11 @@
 
 ## 2026-11-15
 
+- **Exportación verificable**: Recetas por identidad/procedencia, fuente original registrada entre ejecuciones, JPEG orientados/ICC, vídeo de carga con codificación y validadores comunes, vigencia, renovación conservando versiones anteriores y auditoría global del alcance.
+- **Entrega y recuperación**: Modos local/manual y protocolo CLI con opt-in, snapshot de exportados, recibos diferenciados de comando/declaración, incertidumbre sin reintentos automáticos y backup privado verificado. Transporte remoto probado solo con cliente Python simulado; sin cuentas, credenciales ni cargas reales.
+- **Evidencia conjunta**: 206 pruebas rápidas y 61 integraciones locales pasadas sin omisiones, incluidas 16 nuevas con herramientas reales y transporte simulado. Corregidas regresiones CopyN/procedencia y conservación de resoluciones consumidas tras reparar exportados; revisiones humanas siguen bloqueando instalación/exportación. Actualizados README, TOML, contratos y OKF; commits con push tras cada uno.
+- **Pendientes de las cinco propuestas**: Núcleo 13/13 y pipeline 11/11; metadata 10/11 (3.3 humana), vídeo 10/11 (3.4 visual), exportación/entrega 11/12 (2.3 adaptador/autenticación real de gphotos). Versión 6.0.0 inspeccionada con configuración temporal vacía, sin auth/push. Ningún cambio archivado.
+
 - **Vídeo implementado y verificable**: Normalización MP4 por remux o recodificación combinada, perfil reproducible, geometría visual con SAR/rotación, PFR/CFR, fechas comunes y validación técnica real. Sustitución con archivo íntegro y publicación exclusiva, pausas/manual, reanudación y limpieza por operación completa.
 - **Evidencia de vídeo**: 173 pruebas rápidas y 45 integraciones reales pasadas sin omisiones; 25 nuevas de vídeo con medios sintéticos. Ocho interrupciones entre volumen local y HFS+ sintético, sin recodificar ni perder originales. Wheel con preset incluido comprobado desde fuera del repositorio.
 - **Límites comprobados**: Vídeo 10/11 tareas; revisión visual 3.4 pendiente y RF 22 aún propuesto. Metadata 3.3 sigue pendiente; no se afirma equivalencia con Apple Photos Brute Force. AAC de FFmpeg probado; ca_aac de Apple falló en este host. HDR/pistas avanzadas y exportación/entrega conservan sus pendientes. Ningún cambio archivado ni biblioteca personal utilizada; commits con push tras cada uno.

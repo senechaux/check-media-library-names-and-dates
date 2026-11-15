@@ -66,8 +66,10 @@ con `python -m media_library run`, pausas e informes. Las
 [fechas y nombres](fechas-nombres.md) ya usan un servicio real sobre estos contratos.
 La [normalización y compresión de vídeo](video-validado.md) usa estos contratos,
 incluida `substitute`: publica el derivado con backup y retira después su original.
-Exportación integral y entrega remota siguen en la propuesta posterior.
-`export` aquí es solo la primitiva de publicación de un candidato validado.
+[Exportación y auditoría](exportacion-entrega.md) ya consumen estos contratos.
+La entrega tiene protocolo optativo y backup, con transporte remoto simulado en
+pruebas y compatibilidad de gphotos pendiente. `export` sigue siendo la primitiva
+que publica candidatos; renovar uno propio conserva el destino anterior por hash.
 Las firmas de imagen clasifican contenido, sin certificar que una imagen completa
 sea decodificable: esa validación corresponde al consumidor de `prepare`.
 
