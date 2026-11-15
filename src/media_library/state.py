@@ -167,6 +167,10 @@ class RunStore:
 
     @staticmethod
     def _replay(manifest, record):
+        if "entries" in record:
+            snapshot = manifest.to_dict()
+            snapshot["entries"] = record["entries"]
+            manifest.entries = Manifest.from_dict(snapshot).entries
         operation = record.get("operation")
         if operation:
             op = Operation(**operation)
@@ -188,13 +192,15 @@ class RunStore:
         manifest.state = record["state"]
         manifest.sequence = record["sequence"]
 
-    def commit(self, kind, operation=None, *, state=None, evidence=None):
+    def commit(self, kind, operation=None, *, state=None, evidence=None, entries=None):
         self.require()
         sequence = self.manifest.sequence + 1
         event = {"sequence": sequence, "kind": kind, "operation_id": operation.operation_id if operation else None,
                  "evidence": evidence or {}}
         record = {"sequence": sequence, "event": event, "operation": asdict(operation) if operation else None,
                   "state": state or self.manifest.state}
+        if entries is not None:
+            record["entries"] = [asdict(entry) for entry in entries]
         updated = copy.deepcopy(self.manifest)
         self._replay(updated, record)
         try:

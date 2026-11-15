@@ -1,6 +1,6 @@
 """Lectura estricta y preflight de solo lectura; no crea destinos."""
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 import fnmatch
 import json
@@ -11,6 +11,7 @@ import tomllib
 import unicodedata
 
 from .process import run_tool
+from .pipeline_settings import parse_settings
 
 
 class ConfigError(ValueError):
@@ -35,11 +36,14 @@ class Config:
     timeout_seconds: float
     reserve_bytes: int
     tools: dict[str, Tool]
+    pipeline: dict = field(default_factory=dict)
 
     def effective(self):
         data = asdict(self)
         for key in ("source", "workspace", "archive", "export"):
             data[key] = str(data[key])
+        if not self.pipeline:
+            data.pop("pipeline")  # Compatible con manifiestos del núcleo anteriores.
         return json.loads(json.dumps(data))
 
     def excluded(self, relative):
@@ -63,7 +67,7 @@ def load_config(filename):
     filename = Path(filename).resolve(strict=True)
     with filename.open("rb") as handle:
         data = tomllib.load(handle)
-    _keys(data, ("paths", "inventory", "execution", "tools"), "raíz")
+    _keys(data, ("paths", "inventory", "execution", "tools", "pipeline"), "raíz")
     paths = data.get("paths", {})
     _keys(paths, ("source", "workspace", "archive", "export"), "paths")
     if set(paths) != {"source", "workspace", "archive", "export"}:
@@ -100,7 +104,11 @@ def load_config(filename):
         tools[name] = Tool(executable, _strings(raw.get("version_args", ["-version"]), "version_args"),
                            _strings(raw.get("capability_args", ["-h", "full"]), "capability_args"),
                            _strings(raw.get("required_capabilities", []), "required_capabilities"))
-    config = Config(**resolved, exclude=exclude, timeout_seconds=timeout, reserve_bytes=reserve, tools=tools)
+    try:
+        pipeline = parse_settings(data["pipeline"]).effective() if "pipeline" in data else {}
+    except ValueError as exc:
+        raise ConfigError(str(exc)) from exc
+    config = Config(**resolved, exclude=exclude, timeout_seconds=timeout, reserve_bytes=reserve, tools=tools, pipeline=pipeline)
     validate_paths(config)
     return config
 
