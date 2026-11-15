@@ -64,8 +64,9 @@ el estado; no se permite seguir escribiendo con un almacén incierto.[^contract]
 El núcleo ofrece API, consumida ya por el [proceso reanudable](pipeline-reanudable.md)
 con `python -m media_library run`, pausas e informes. Las
 [fechas y nombres](fechas-nombres.md) ya usan un servicio real sobre estos contratos.
-Los perfiles de compresión, exportación integral y entrega remota siguen en las
-otras dos propuestas, sin sus servicios integrados todavía.
+La [normalización y compresión de vídeo](video-validado.md) usa estos contratos,
+incluida `substitute`: publica el derivado con backup y retira después su original.
+Exportación integral y entrega remota siguen en la propuesta posterior.
 `export` aquí es solo la primitiva de publicación de un candidato validado.
 Las firmas de imagen clasifican contenido, sin certificar que una imagen completa
 sea decodificable: esa validación corresponde al consumidor de `prepare`.
@@ -82,9 +83,10 @@ antes de registrar el stat final; candidatos y backups permanecen conservados.
 
 Las integraciones acreditan compatibilidad básica del núcleo con ffprobe/FFmpeg
 y HandBrake sobre medios sintéticos, sin aprobar perfiles ni calidad visual.
-Las pruebas reales de ExifTool se describen en la ficha de fechas y nombres.
-No se ha probado sobre biblioteca personal, cuentas remotas ni varios volúmenes
-físicos. Véase [verificación](verificacion.md) para evidencia y comandos.[^tests]
+Las pruebas de ExifTool y del perfil de vídeo están en sus fichas. La recuperación
+de vídeo se ha probado entre el volumen local y uno HFS+ sintético montado desde
+una imagen temporal. No se ha probado sobre biblioteca personal, cuentas remotas
+ni discos físicos distintos. Véase [verificación](verificacion.md).[^tests]
 
 [^code]: [Código del núcleo](../../src/media_library/).
 [^contract]: [Contrato del esquema y operaciones](../manifest-v1.md).

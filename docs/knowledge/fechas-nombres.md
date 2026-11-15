@@ -26,8 +26,9 @@ sources:
 La etapa `metadata` del comando `run` usa ahora un servicio real para leer fechas,
 compararlas, resolver decisiones explícitas, escribir campos seleccionados y
 renombrar. Reutiliza StageResult, copias verificadas, backups, bloqueo, manifiesto
-y journal. Las otras etapas de conversión, compresión, exportación y auditoría
-integral siguen pendientes. `metadata-and-naming` permanece sin archivar y con
+y journal. [Normalización y compresión](video-validado.md) ya reutilizan sus fechas
+seleccionadas y validadores; exportación y auditoría integral siguen pendientes.
+`metadata-and-naming` permanece sin archivar y con
 la tarea 3.3 pendiente de ensayo humano con las apps.[^service]
 
 `CaptureDate` conserva valor original, fuente/tag, valor normalizado, precisión,
@@ -89,7 +90,7 @@ auditar los demás.
 | --- | --- |
 | JPEG | ExifIFD:DateTimeOriginal, ExifIFD:CreateDate (DateTimeDigitized), offsets Original/Digitized y subseconds cuando existen o se seleccionan. |
 | MP4/MOV | QuickTime:CreateDate y fechas de creación de las pistas en UTC; Keys:CreationDate local con offset explícito. M4V está admitido por el servicio, sin fixture propio en esta verificación. |
-| Otros tipos o fechas duplicadas ambiguas | Lectura/renombrado cuando la fuente sea utilizable; escritura automática no acreditada, con incidencia/pausa manual. |
+| Otros tipos o fechas duplicadas dentro de la misma familia 1 | Lectura/renombrado cuando la fuente sea utilizable; escritura automática no acreditada, con incidencia/pausa manual. Los CopyN de familia 4 entre pistas distintas no implican duplicación ambigua. |
 
 No se escribe AllDates ni All:All. `metadata-to-filename` conserva los tags;
 `filename-to-metadata` conserva el nombre salvo una acción explícita adicional.

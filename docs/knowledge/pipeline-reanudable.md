@@ -42,7 +42,7 @@ zonas, DST y precisión, sin atribuir esa implementación al cambio del orquesta
 
 Instalar con `python -m pip install -e '.[dev]'` en un venv y copiar el TOML de
 ejemplo a la configuración local. No usar las tablas de fechas/perfiles del plan
-futuro como si ya fueran configuración aceptada; `[dates]` ya está implementado
+futuro como si ya fueran configuración aceptada; `[dates]` y `[video]` están implementados
 con las claves del ejemplo actual, que es la fuente
 de opciones disponibles.
 
@@ -116,14 +116,17 @@ estado duradero y se muestra el fallo y la ruta de recuperación.
 Son reales el control de etapas, las pausas, planificación, estado, inventario,
 instalación segura e informes. Son declaraciones humanas la revisión de importación
 y la entrega web. Metadata usa lectura/selección/ExifTool/renombrado reales;
-normalización, compresión, exportación y auditoría integral aún usan adaptadores
-pendientes y no se consideran completadas por confirmar. Los adaptadores que
+normalización y compresión ya tienen servicios y validadores reales. Solo
+exportación y auditoría integral usan adaptadores pendientes y no se completan
+por confirmar. Los adaptadores que
 simulan servicios solo se inyectan en tests; el informe los identifica.[^adapters]
 
 La suite demuestra el recorrido completo con servicios simulados y operaciones
 reales sobre temporales. Las integraciones adicionales de metadata sí acreditan
-ExifTool en los formatos documentados. Perfiles de vídeo, calidad visual y una
-entrega remota integral siguen en las otras dos propuestas. Se conservan los
+ExifTool en los formatos documentados. El [servicio de vídeo](video-validado.md)
+acredita técnicamente el perfil y la recuperación entre volúmenes sintéticos;
+la calidad visual requiere revisión humana. Entrega remota integral sigue pendiente.
+Se conservan los
 límites de bloqueo y filesystem del núcleo; equivalencia con Apple Photos pendiente.
 No se ha utilizado biblioteca personal ni realizado carga remota.[^tests]
 

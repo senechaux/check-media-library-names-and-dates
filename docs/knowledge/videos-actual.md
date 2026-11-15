@@ -15,6 +15,12 @@ sources:
 ---
 # find-biggest-videos.py
 
+Esta ficha conserva la procedencia de los scripts históricos. El paquete ya
+ofrece [normalización y compresión reales](video-validado.md) con selección,
+validación, backups y publicación recuperable. Para ese contrato se usa
+`python -m media_library run`, sin ejecutar los movimientos históricos ni sus
+`_full_path.txt`. La calidad visual del RF propuesto sigue pendiente de revisión.
+
 Actualización del 2026-11-15: la consulta de MediaInfo usa argumentos literales,
 timeout y `ToolError` ante fallos; un error impide continuar con logs de éxito.
 Los helpers compartidos de movimiento rechazan colisiones y propagan errores.

@@ -17,8 +17,9 @@ sources:
 El [núcleo seguro](nucleo-seguro.md) ya está implementado como paquete importable.
 El [proceso reanudable](pipeline-reanudable.md) ya implementa el comando y el
 control de etapas. [Fechas y nombres](fechas-nombres.md) ya integra ExifTool y
-validadores reales, con el ensayo humano de compatibilidad pendiente. Conversión,
-compresión, exportación y entrega integral siguen siendo propuestas.
+validadores reales, con el ensayo humano de compatibilidad pendiente.
+[Vídeo validado](video-validado.md) integra normalización y compresión reales,
+pendiente de muestra visual. Exportación y entrega integral siguen siendo propuestas.
 
 Tras instalar el proyecto y sus herramientas, ejecutar desde cualquier carpeta:
 
@@ -40,8 +41,8 @@ ejecución interrumpida y volverá a verificar sus precondiciones.
 # Configuración propuesta
 
 El ejemplo siguiente conserva el diseño de los servicios futuros; las tablas
-compression/export/external todavía no son opciones del comando actual.
-`[dates]` sí está implementada con las claves mostradas aquí.
+export/external todavía no son opciones del comando actual.
+`[dates]` y `[video]` sí están implementadas con las claves mostradas aquí.
 Usar `media-library.example.toml` y la ficha del proceso para el TOML aceptado hoy.
 Un único TOML local, fuera de Git si contiene rutas personales:
 
@@ -56,11 +57,11 @@ export = "/ruta/exportacion/2026"
 timezone = "Europe/Madrid" # Elección explícita del usuario, no deducida de viajes.
 policy = "review"         # O filename-to-metadata / metadata-to-filename, explícitas.
 
-[compression]
+[video]
 min_bytes = 50000000
 profile = "archive-720p30"
 frame_rate_mode = "pfr"           # cfr es una opción distinta.
-portrait_bounds = "720x1280"     # Alternativa revisable: height-720.
+quality_reviewed = false         # Requiere revisión humana antes de instalar.
 
 [export]
 enabled = true
@@ -89,11 +90,12 @@ una foto. Las exclusiones serán compartidas por todas las fases.
 2. **Inventario**: recorrer todos los medios independientemente de que el nombre
    sea válido, clasificar formatos reales, fechas y tamaños, y presentar el plan.
 3. **Nombres y fechas**: implementado con autoridad por archivo/lote, relectura
-   tras escritura selectiva y renombrados recuperables. La conversión de formatos
-   no MP4 pertenece a la propuesta posterior de vídeo y sigue pendiente.
-4. **Vídeos grandes**: seleccionar, comprimir a temporal y validar; restaurar
-   las fechas seleccionadas y ofrecer revisión visual de la muestra. Si el
-   tamaño no disminuye, registrar y dejar el original, sin reintentos infinitos.
+   tras escritura selectiva y renombrados recuperables. Normalización MP4 real
+   por remux o recodificación combinada, también para vídeos pequeños.
+4. **Vídeos grandes**: implementado con selección configurable, HandBrake,
+   validación técnica completa y fechas restauradas/releídas. La muestra visual
+   necesita revisión humana antes de instalar. Sin ahorro se registra
+   `not_beneficial` y se conserva el original, sin reintentos de calidad.
 5. **Instalación**: conservar una copia íntegra verificable del original,
    publicar el resultado validado en su álbum y registrar la sustitución.
    Limpiar solo los temporales de operaciones completadas. Retención por defecto
@@ -138,7 +140,7 @@ Códigos implementados: 0 completado, 2 intervención pendiente, 3 fallo operati
 | 1 | `safe-execution-core` | Implementado y verificado; pendiente de revisión sin archivar: configuración, inventario, manifiesto y operaciones seguras | — |
 | 2 | `resumable-pipeline` | Implementado y verificado sin archivar: comando, plan/aprobación, pausas, reanudación e informes; servicios posteriores simulados solo en tests | 1 |
 | 3 | `metadata-and-naming` | Implementado y probado con ExifTool real: fechas EXIF/QuickTime, zona/DST, ambas direcciones, renombrado recuperable y alternativa manual; ensayo humano 3.3 pendiente, sin archivar | 1 y 2 para integración |
-| 4 | `validated-video-compression` | Perfil 720p30, orientación, conversión MP4 y sustitución validada | 1, 3 y 2 para integración |
+| 4 | `validated-video-compression` | Implementado y probado con herramientas reales: normalización MP4, perfil y sustitución recuperable; revisión visual 3.4 pendiente, sin archivar | 1, 3 y 2 para integración |
 | 5 | `verified-export-and-delivery` | Derivados, auditoría final, carga opcional y backup del estado | 1–4 |
 
 OpenSpec separa propuestas, diseño, requisitos y tareas; su archivo incorpora

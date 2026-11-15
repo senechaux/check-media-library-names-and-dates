@@ -64,8 +64,10 @@ Se omiten con motivo si falta una herramienta. Los resultados están en
 [verificación](verificacion.md). El orquestador ya prueba simulación, pausas, EOF,
 señales reales, fallos y reanudación con adaptadores simulados. Fechas y nombres
 añaden pruebas con ExifTool real, DST, contenido/metadatos ajenos, atributos del
-filesystem, colisiones, ciclos e interrupciones. Los perfiles de vídeo y entrega
-siguen pendientes; la compatibilidad con las apps/Apple Photos requiere el ensayo
+filesystem, colisiones, ciclos e interrupciones. Vídeo añade perfiles reales,
+geometría/timing, audio, remux, pausas, colisiones y recuperación entre un volumen
+local y otro HFS+ sintético. Entrega sigue pendiente. La calidad visual del RF
+propuesto requiere revisión humana; la compatibilidad con las apps/Apple Photos requiere el ensayo
 humano indicado en [fechas y nombres](fechas-nombres.md).
 
 [^user]: Preferencia explícita del usuario recibida el 2026-11-14.

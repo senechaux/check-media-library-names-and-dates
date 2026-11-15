@@ -21,13 +21,12 @@ required_capabilities = ["-show_format", "-show_streams", "-print_format"]
 
 [pipeline]
 include = ["*"] # Patrones de rutas relativas, después de las exclusiones.
-compression_profile = "archive-720p30 (pendiente de integrar)"
 
 [pipeline.modes]
 import_review = "manual"
 metadata = "manual"    # Servicio real: compara y valida copias; auto escribe/renombra según política explícita.
-normalize = "manual"   # Sin conversor/validador integrado.
-compression = "manual" # Prepara mapa/copias; no codifica todavía.
+normalize = "manual"   # Real: MP4 por remux o una única recodificación combinada.
+compression = "manual" # Real: HandBrake + validación técnica y fechas.
 installation = "auto"  # Real, solo instala candidatos previamente validados.
 export = "manual"      # Servicio pendiente.
 audit = "manual"       # Servicio pendiente.
@@ -47,3 +46,24 @@ set_file_create_date = false # macOS + SetFile; capacidad y resultado verificado
 # [tools.exiftool]
 # executable = "/ruta/exiftool"
 # version_args = ["-ver"]
+
+[video]
+min_bytes = 50000000
+profile = "archive-720p30" # height-720 es una política vertical distinta.
+frame_rate_mode = "pfr"   # cfr exige 30 constantes.
+quality = 22             # Propuesta: revisar muestra visual antes de publicar.
+encoder_preset = "fast"
+audio_encoder = "ffmpeg_aac" # AAC estéreo; el vídeo de HandBrake se copia, sin recodificarlo otra vez.
+min_savings_bytes = 1
+min_savings_ratio = 0.0
+allow_remux_growth = false
+historical_policy = "review"
+quality_reviewed = false  # La validación técnica no acredita calidad visual.
+
+# Opcional: declarar las herramientas hace que preflight las exija.
+# [tools.HandBrakeCLI]
+# executable = "HandBrakeCLI"
+# version_args = ["--version"]
+# [tools.ffmpeg]
+# executable = "ffmpeg"
+# version_args = ["-version"]

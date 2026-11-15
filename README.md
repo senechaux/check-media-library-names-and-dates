@@ -3,8 +3,8 @@
 El paquete `media_library` incorpora TOML validado, inventario, procesos comprobados, manifiesto, journal,
 bloqueo, backups y publicación recuperable por evidencia.
 Los scripts históricos siguen en `src/`. `run` ya controla etapas, pausas y
-reanudación. Fechas, ExifTool y nombres ya tienen servicio real; conversión,
-compresión y exportación integral siguen pendientes de integración.
+reanudación. Fechas, nombres, normalización MP4 y compresión ya tienen servicios
+y validadores reales. Exportación integral y entrega siguen pendientes.
 
 ```sh
 python3 -m venv .venv-core
@@ -52,8 +52,8 @@ cambiar el alcance o ajustes requiere un plan nuevo.
 
 El ejemplo habilita pausas manuales y deshabilita entrega. `metadata` ya lee y
 compara fuentes reales, escribe fechas selectivas con ExifTool y renombra con
-backups y recuperación. Normalización, compresión, exportación y auditoría
-integral siguen sin sus servicios; confirmar no los completa. Los adaptadores
+backups y recuperación. Normalización y compresión usan HandBrake/FFmpeg reales;
+exportación y auditoría integral siguen sin sus servicios y confirmar no los completa. Los adaptadores
 simulados solo están en tests. Las fechas se publican mediante operaciones del
 núcleo; instalación no repite una corrección ya aplicada.
 
@@ -131,6 +131,40 @@ Apple Photos siguen pendientes de ensayo humano** (tarea 3.3): no se afirma
 equivalencia con Apple Photos Brute Force. Los scripts históricos conservan
 su comportamiento y no son la entrada del servicio nuevo.
 
+# Vídeo real y revisión visual
+
+Instalar también HandBrakeCLI; en macOS con Homebrew está disponible con
+`brew install handbrake`. Se han probado HandBrakeCLI 1.11.2, FFmpeg/ffprobe 9.0.2
+y ExifTool 13.40. Configurar `[tools.HandBrakeCLI]` con `version_args=["--version"]`
+si se fija su ejecutable; para ExifTool usar `["-ver"]`. Aumentar
+`execution.timeout_seconds` para vídeos largos y reservar espacio para las copias.
+
+Para este alcance, habilitar `normalize`, `compression` e `installation` en auto,
+elegir las fechas con `[dates]` y deshabilitar import_review/export/audit/delivery.
+La tabla `[video]` del ejemplo controla el perfil real. Usa umbral >=50.000.000
+bytes, H.264, RF 22 propuesto, SAR 1:1 y PFR hasta 30 FPS. `frame_rate_mode="cfr"`
+solicita 30 constantes. Conserva la proporción visual con límites según orientación,
+sin recorte ni ampliación; contempla rotación y SAR. MOV compatible puede remuxarse
+por debajo del umbral; si necesita recodificar, combina normalización/compresión
+en una sola codificación de vídeo. El audio AAC predeterminado se produce con
+FFmpeg, copiando el vídeo de HandBrake al multiplexar.
+
+`quality_reviewed=false` permite preparar/validar y deja la instalación en pausa.
+Tras revisar una muestra representativa, `decidir quality_reviewed=true` seguido
+de `comprobar` guarda una declaración humana. Las pruebas técnicas no acreditan
+calidad visual. Deshabilitar installation permite conservar candidatos para revisión
+sin sustituir originales. RF 22 sigue pendiente de esa revisión (tarea 3.4).
+
+La publicación verifica fechas, contenido decodificable, geometría, duración,
+FPS, pistas, ahorro y backup antes de retirar el original. Un resultado sin el
+ahorro exigido registra `not_beneficial` y conserva el original; un remux mayor
+requiere autorización independiente. HDR, varias pistas, subtítulos o entrelazado
+sin política quedan pendientes. Los marcadores históricos sin manifiesto exigen
+una política explícita. Solo se limpian temporales propios de publicaciones completas.
+
+Véase [vídeo validado](docs/knowledge/video-validado.md) para configuración,
+modo manual, recuperación, límites comprobados y protocolo de revisión visual.
+
 # Documentación y planificación
 
 La [base de conocimiento en formato OKF](docs/knowledge/index.md) documenta el
@@ -141,9 +175,11 @@ distinguen ese procedimiento del comportamiento efectivo del código.
 El [plan de automatización](docs/knowledge/automatizacion.md) propone un comando
 único con pausas y reanudación. Los cambios futuros se especifican en
 [`openspec/changes/`](openspec/changes/). `safe-execution-core` y `resumable-pipeline`
-están implementados y verificados, pendientes de revisión sin archivar; las otras
-dos propuestas de vídeo/exportación siguen pendientes. `metadata-and-naming`
+están implementados y verificados, pendientes de revisión sin archivar;
+la propuesta de exportación/entrega sigue pendiente. `metadata-and-naming`
 tiene implementado lo verificable, con su ensayo humano todavía pendiente.
+`validated-video-compression` tiene 10/11 tareas verificadas; resta la revisión
+visual 3.4. Ningún cambio se ha archivado.
 
 La [guía de revisión e implementación](docs/knowledge/trabajo-con-agentes.md)
 incluye el orden sugerido, decisiones pendientes y skills evaluadas.

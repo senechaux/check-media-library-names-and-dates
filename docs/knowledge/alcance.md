@@ -23,8 +23,9 @@ El núcleo está implementado y verificado, pendiente de revisión sin archivar;
 `resumable-pipeline` también está implementado. La etapa de
 [fechas y nombres](fechas-nombres.md) ya usa ExifTool y validadores reales;
 `metadata-and-naming` conserva pendiente el ensayo humano de su tarea 3.3.
-Compresión/normalización y exportación/entrega siguen sin implementar. Los tres
-cambios permanecen sin archivar; los servicios simulados solo se usan en tests.
+[Vídeo validado](video-validado.md) integra normalización y compresión reales,
+con revisión visual 3.4 pendiente. Solo exportación/entrega integral sigue sin
+implementar. Ningún cambio se ha archivado; los servicios simulados solo se usan en tests.
 
 Este paquete documenta los seis archivos Python que siguen en uso, tomando como
 referencia el commit indicado. El código tiene prioridad sobre el README cuando difieren.

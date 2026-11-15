@@ -21,9 +21,9 @@ importación es una barrera global humana antes del inventario.
 | Preflight/inventario/plan/estado/informe | Real, del núcleo y orquestador | — |
 | Revisión de importación | Declaración humana local; ninguna sincronización | No automatiza Dropbox/Drive |
 | Nombres/fechas | `MetadataAdapter` real (`metadata-and-naming:v1`), ExifTool selectivo, decisiones, validación y renombrado por lote | Ensayo humano de apps/Photos pendiente |
-| Normalización de vídeo | `UnavailableAdapter`, copias por ID e instrucciones; sin conversor/validador | `validated-video-compression` |
-| Compresión | `UnavailableAdapter`, mapa ID/entrada/salida y perfil declarado; sin codificador/validador | `validated-video-compression` |
-| Instalación | `InstallationAdapter` real: candidato acreditado → `SafeExecutor.plan/execute`, backup y recuperación; reconoce `applied=True` cuando metadata ya lo publicó | Consume candidatos del servicio integrado |
+| Normalización de vídeo | `VideoAdapter` real: remux compatible o recodificación combinada, ffprobe/FFmpeg/ExifTool | Políticas HDR/pistas avanzadas pendientes |
+| Compresión | `VideoAdapter` real: perfil reproducible, HandBrake, validación técnica, fechas y ahorro | Calidad visual requiere declaración humana |
+| Instalación | `InstallationAdapter` real: candidato → replace o substitute, backup y recuperación; metadata ya aplicada no se repite; revisión visual separada para vídeo | Limpieza por operación completa |
 | Exportación/auditoría | `UnavailableAdapter`, sin acreditar derivados | `verified-export-and-delivery` |
 | Entrega manual | Declaración humana diferenciada de prueba API; no ejecuta cargas | `verified-export-and-delivery` |
 
@@ -99,7 +99,18 @@ rutas y consume la decisión `output` cuando el contenido ya no conserve su hash
 No se adivina por nombre/posición. `authority`, `timezone`, `fold`, `offset`,
 `source_tag`, `date` y opciones de fecha se conservan como decisiones y pasan por
 la validación de dominio del servicio real antes de guardarse. `output` sigue
-limitado al directorio propio de trabajo. No se implementan presets de vídeo.
+limitado al directorio propio de trabajo. Vídeo añade historical_policy,
+allow_remux_growth y quality_reviewed. Esta última es declaración humana, sin
+atribuir calidad visual a la validación técnica.
+
+`video_work` congela en el checkpoint por archivo un plan compartido por normalize
+y compression, fecha/decisión, tags de origen y huella. Una sola etapa prepara el
+candidato y la otra reconoce el trabajo. El Artifact conserva evidencia `video`
+con perfil, versiones, geometría, timing, fechas, ahorro e intermedios propios.
+InstallationAdapter reconoce ese contrato, propone `substitute` y no instala un
+resultado `not_beneficial`. Su finalización limpia únicamente rutas propias con
+hash acreditado tras completar la operación. No se requiere el candidato borrado
+para reanudar una publicación completa.
 
 Las pruebas de integración del orquestador son
 `tests/test_pipeline.py`, `tests/test_pipeline_recovery.py` y
@@ -107,3 +118,6 @@ Las pruebas de integración del orquestador son
 Las integraciones reales del núcleo y de metadata mantienen la marca `integration`.
 `test_metadata_integration.py` y `test_metadata_pipeline_integration.py` usan
 ExifTool/FFmpeg reales con medios sintéticos; no dependen de los servicios simulados.
+Las pruebas `test_video_integration.py` y `test_video_recovery_integration.py`
+añaden HandBrake y AAC de FFmpeg reales, modo manual y recuperación entre volúmenes
+sintéticos. Declarar revisión visual en esos tests solo prueba el protocolo.

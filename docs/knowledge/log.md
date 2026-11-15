@@ -2,6 +2,10 @@
 
 ## 2026-11-15
 
+- **Vídeo implementado y verificable**: Normalización MP4 por remux o recodificación combinada, perfil reproducible, geometría visual con SAR/rotación, PFR/CFR, fechas comunes y validación técnica real. Sustitución con archivo íntegro y publicación exclusiva, pausas/manual, reanudación y limpieza por operación completa.
+- **Evidencia de vídeo**: 173 pruebas rápidas y 45 integraciones reales pasadas sin omisiones; 25 nuevas de vídeo con medios sintéticos. Ocho interrupciones entre volumen local y HFS+ sintético, sin recodificar ni perder originales. Wheel con preset incluido comprobado desde fuera del repositorio.
+- **Límites comprobados**: Vídeo 10/11 tareas; revisión visual 3.4 pendiente y RF 22 aún propuesto. Metadata 3.3 sigue pendiente; no se afirma equivalencia con Apple Photos Brute Force. AAC de FFmpeg probado; ca_aac de Apple falló en este host. HDR/pistas avanzadas y exportación/entrega conservan sus pendientes. Ningún cambio archivado ni biblioteca personal utilizada; commits con push tras cada uno.
+
 - **Implementación verificable de metadata-and-naming**: CaptureDate, comparación por precisión/offset/zona/DST, decisiones persistentes, lectura y escritura selectiva con ExifTool, renombrados por lote recuperables y validadores reales en metadata. Reutilizados backups, bloqueo, manifiesto y journal; las otras propuestas siguen pendientes, sin archivar cambios.
 - **Evidencia real de fechas y nombres**: 139 pruebas rápidas y 20 integraciones pasadas, incluidas 18 nuevas con ExifTool 13.40 y medios sintéticos. Ambas direcciones, contenido/metadatos ajenos, atributos macOS, ciclos, idempotencia e interrupciones; 97 pruebas rápidas previas siguen pasando.
 - **Documentación y límite humano**: Añadida ficha de fechas/nombres y actualizados uso, requisitos, contratos y OKF. 10/11 tareas verificadas; 3.3 Attributes/Rename/Apple Photos pendiente con protocolo de ensayo. No se ha usado biblioteca personal ni hecho cargas remotas. Commits pequeños con push tras cada uno.

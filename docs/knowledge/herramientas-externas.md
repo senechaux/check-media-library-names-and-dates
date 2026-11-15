@@ -87,19 +87,19 @@ indica píxel no cuadrado. No equivale a una salida vertical 720×1280. La captu
 no muestra RF, bitrate de audio, pestaña Dimensions ni todos los ajustes del
 preset. No se pueden recuperar exactamente desde ella.[^handbrake]
 
-Propuesta predeterminada: MP4 H.264, hasta 30 FPS PFR para respetar la captura,
+Implementado en [vídeo validado](video-validado.md): MP4 H.264, hasta 30 FPS PFR,
 SAR 1:1, sin recorte ni ampliación, encajando el tamaño visual en 1280×720
 si es apaisado y 720×1280 si es vertical. Ejemplos: 1920×1080 → 1280×720;
-1080×1920 → 720×1280. Es una decisión propuesta para mantener más detalle.
+1080×1920 → 720×1280. La revisión visual del RF propuesto sigue pendiente.
 Un perfil alternativo `height-720` reproduce aproximadamente los 405×720
 visuales de la captura, redondeando dimensiones a valores admitidos por x264.
 Ofrecer CFR 30 como opción explícita si se quieren exactamente 30 frames/s.
 
-Usar HandBrakeCLI porque ya es una dependencia, exportar un preset JSON y
-registrar su huella y la versión del codificador. La implementación ajustará
-límites por orientación efectiva, rotación y DAR, sin reutilizar a ciegas el
-ancho/alto de almacenamiento. FFmpeg sería una alternativa si una prueba
-demuestra límites en ese control, no una segunda implementación inicial.
+HandBrakeCLI codifica el vídeo con preset JSON y huella/versiones registradas.
+La geometría se calcula por orientación efectiva, SAR y DAR, sin duplicar la
+rotación aplicada al leer. Para audio se ha probado AAC de FFmpeg con copia del
+vídeo al multiplexar; ca_aac de Apple falló en este host. No se afirma que RF 22
+o este audio reproduzcan los parámetros no visibles de la captura.
 
 Mantener los metadatos comunes y alinear audio/vídeo, pero releer y verificar
 las fechas seleccionadas después de comprimir. Preservar orientación visible,

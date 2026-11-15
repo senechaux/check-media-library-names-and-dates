@@ -26,12 +26,16 @@ consultan con argumentos de versión/ayuda de solo lectura; la configuración es
 local y de confianza. Las estimaciones del preflight se suman por volumen y las
 copias vuelven a comprobar espacio antes de escribir. El preflight no crea
 destinos. `media_library run` ya orquesta etapas sobre el núcleo; los servicios
-EXIF/QuickTime ya tiene servicio real; vídeo, exportación integral y entrega remota
-siguen pendientes. La tabla
+EXIF/QuickTime y vídeo ya tienen servicios reales; exportación integral y entrega
+remota siguen pendientes. La tabla
 opcional `pipeline` congela alcance/modos; sin ella se conserva la representación
 de configuración de los manifiestos anteriores. `[dates]` también es opcional y
 se omite de la representación efectiva cuando está vacía; una vez configurada
 queda congelada, con excepciones por ruta original de entrada.
+`[video]` es opcional con la misma compatibilidad de omisión; conserva selección,
+perfil, ahorro, migración histórica y revisión visual declarada. El antiguo texto
+`pipeline.compression_profile` sigue siendo descriptivo para adaptadores externos;
+el servicio real obtiene sus opciones de `[video]`.
 
 ## Estado, bloqueo y publicación
 
@@ -65,6 +69,11 @@ Los errores de proceso conservan su diagnóstico y cualquier parcial sin publica
 - `rename`: publicar en una ruta libre del origen y retirar la ruta anterior.
 - `export`: publicar una copia nueva en la raíz de exportación, sin backup de una
   entrada que no se modifica. No constituye la etapa de exportación de medios.
+- `substitute`: publicar un Artifact transformado en una ruta libre del origen
+  y retirar la entrada anterior solo después de verificar publicación y backup.
+  Usado por vídeo; conserva identidad y ruta original, con `source_retired`
+  registrado antes de completar. Colisiones fallidas no acreditan propiedad de
+  una salida existente aunque sus bytes coincidan.
 
 Se persiste la huella antes de mutar. `execute(operation_id)` crea y verifica el
 backup para replace/rename, prepara una copia en el volumen del destino, vuelve
@@ -116,3 +125,7 @@ El pipeline persiste su propio estado versión 1 dentro de los eventos
 el inventario posterior a la revisión de importación; su replay es atómico con
 el checkpoint. Se mantienen esquema del manifiesto y compatibilidad con registros
 anteriores sin ese campo. Véase el [contrato de adaptadores](pipeline-adapters.md).
+El esquema sigue siendo 1: `substitute` es un tipo de operación nuevo y exige esta
+versión del ejecutor; una versión anterior lo rechazará al intentar ejecutarlo.
+Las identidades de adaptadores quedan congeladas; ejecuciones con adaptadores
+anteriores no se reinterpretan automáticamente al actualizar el programa.

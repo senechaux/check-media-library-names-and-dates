@@ -1,7 +1,7 @@
 ---
 type: Reference
-title: Verificación del núcleo, pipeline y fechas
-description: Pruebas del núcleo, orquestador y ExifTool real con medios sintéticos y límites pendientes.
+title: Verificación del núcleo y servicios de medios
+description: Pruebas del pipeline, fechas y vídeo real con medios sintéticos y revisiones humanas pendientes.
 tags: [verificacion, tests, seguridad, documentacion]
 status: draft
 x_analysis_date: "2026-11-15"
@@ -21,14 +21,16 @@ sources:
     resource: pipeline-reanudable.md
   - id: dates
     resource: fechas-nombres.md
+  - id: video
+    resource: video-validado.md
 ---
 # Comprobaciones del 2026-11-15
 
 | Comprobación | Resultado y alcance |
 | --- | --- |
-| Instalación | `pip install -e '.[dev]'` en venv temporal con Python 3.12.15 y pytest 9.2.0; importación desde otra carpeta y `pip check` correctos. |
-| Suite rápida | 139 pruebas pasadas con `python -m pytest`: 97 existentes y 42 nuevas de fechas, nombres, contrato ExifTool y estado; las 20 integraciones se excluyen por marca. |
-| Herramientas reales | 20 integraciones pasadas con `python -m pytest -m integration`: ExifTool 13.40, FFmpeg/ffprobe 9.0.2 y HandBrake 1.11.2; ninguna omitida en esta máquina. |
+| Instalación | Venv temporal con Python 3.12.15 y pytest 9.2.0; importación desde otra carpeta y `pip check` correctos. Wheel construido con dependencias de build aisladas; preset JSON importable desde el wheel fuera del repositorio. |
+| Suite rápida | 173 pruebas pasadas con `python -m pytest`: 139 existentes y 34 nuevas de planificación de vídeo, publicación recuperable y grupos ExifTool; las 45 integraciones se excluyen por marca. |
+| Herramientas reales | 45 integraciones pasadas con `python -m pytest -m integration`: 20 previas y 25 de vídeo, con ExifTool 13.40, FFmpeg/ffprobe 9.0.2 y HandBrake 1.11.2; ninguna omitida en esta máquina. |
 | Configuración | Rutas relativas al TOML, solapamientos por symlinks/mayúsculas, permisos, capacidades y estimación de espacio agregado por volumen. Preflight sin crear destinos. |
 | Inventario y procesos | Profundidades variadas, formatos independientes del nombre, mismo basename/bytes con IDs distintos, Unicode, nombres especiales literales, ilegibles, FIFOs, symlinks, timeout, no cero y parcial sin publicar. |
 | Backups y recuperación | Hash, conflictos de destino/backup/temporal, cambios externos antes y después del backup, falta de espacio y fallo de copia parcial sin tocar el original. |
@@ -41,15 +43,18 @@ sources:
 | Zona y DST | Sin inferir la zona del host; fold 0/1 del invierno releído en UTC con ExifTool real, verano, hora inexistente que exige otra fecha y offsets contradictorios diagnosticados. |
 | Escritura selectiva | JPEG y MP4/MOV sintéticos con ExifTool real: campos objetivo releídos, fracciones conservadas, metadatos ajenos extraídos y contenido codificado iguales, legibilidad decodificada. FileModifyDate y FileCreateDate comprobados por separado en macOS con SetFile, también después de renombrar. |
 | Nombres y recuperación | Reservas, sufijos, ciclos y mayúsculas/Unicode, prefijos históricos y cambios externos. Integración de ciclo de dos nombres y cinco puntos de interrupción; reanudación sin repetir escrituras, backups íntegros y segunda ejecución sin mutaciones. |
-| OpenSpec 2.0.0 | Núcleo, pipeline y metadata válidos en modo estricto. Metadata: 10/11 tareas verificadas, ensayo humano 3.3 pendiente. Ningún cambio archivado. |
+| Vídeo | Horizontal 1920×1080 →1280×720, vertical 1080×1920 →720×1280, matriz rotada, SAR 4:3, 24/60 FPS PFR y CFR 30; pistas silenciosas/audio real, MP4 y MOV, remux de paquetes íntegros y fechas releídas. |
+| Seguridad de vídeo | Manual correcto/corrupto revalidado, revisión visual como declaración separada, HDR/múltiples pistas pendientes, resultado realmente mayor y ahorro mínimo no alcanzado, dos álbumes con una colisión y temporales independientes. |
+| Otro volumen | Imagen HFS+ sintética de 64 MB montada en temporal, con st_dev distinto del origen. Workspace y archivo en ella; ocho interrupciones hasta limpieza, con original/salida/backup íntegros y una sola codificación al reanudar. |
+| OpenSpec 2.0.0 | Núcleo, pipeline, metadata y vídeo válidos en modo estricto. Metadata: ensayo humano 3.3 pendiente; vídeo: muestra visual 3.4 pendiente. Ambos 10/11 tareas verificadas; ningún cambio archivado. |
 | Documentación | Frontmatter OKF parseable, índices/log reservados, versión 0.2 y destinos de enlaces Markdown locales existentes. |
 | Git | Commits descriptivos en `changes-by-codex`, con push tras cada commit; upstream configurado, sin force push. |
 
 Las integraciones generan un vídeo mínimo con FFmpeg, verifican contenedor/codec
 con ffprobe y ejercitan los tags del adaptador histórico. La segunda prepara un
 candidato real con HandBrake, valida stream/duración y lo publica mediante el
-núcleo, comprobando que el origen permanece intacto. No valida el perfil futuro
-de compresión ni exige un tamaño exacto de salida.[^tests]
+núcleo, comprobando que el origen permanece intacto. Estos dos casos del núcleo
+no acreditan por sí solos el perfil nuevo ni exigen tamaño exacto de salida.[^tests]
 
 Los 37 casos del orquestador prueban el control del proceso. Los adaptadores simulados solo se inyectan
 en tests; el comando de producción conserva los pendientes si falta un validador.
@@ -60,9 +65,16 @@ de contenido sintético y los renombrados se asocian sin adivinar por basename.[
 Las 18 integraciones nuevas de metadata ejercitan herramientas reales: 5 casos
 del escritor/atributos y 13 del pipeline. Comprueban ambas direcciones, copias
 corregidas manualmente y revalidadas, decisiones persistentes, prefijos,
-idempotencia y recuperación. Los 7 tests rápidos de contrato ExifTool simulan
-fallos deliberados; no se cuentan como prueba de compatibilidad real.
-El servicio no integra todavía codificadores/exportadores futuros.[^dates]
+idempotencia y recuperación. Los 8 tests rápidos de contrato ExifTool usan datos/fallos simulados;
+no se cuentan como prueba de compatibilidad real.[^dates]
+
+Los 25 casos nuevos de vídeo son 9 de perfil/pipeline y 16 de pausas/fallos y
+recuperación. Se han usado los codificadores y lectores reales. La corrupción
+manual conserva contenedor/cabeceras y rompe un paquete de vídeo: ffprobe puede
+inspeccionarlo y la decodificación impide publicar, aunque el candidato sea menor.
+La revisión visual declarada por los tests prueba solo el protocolo, no calidad.
+El AAC predeterminado de FFmpeg pasó; el ca_aac de Apple falló al inicializar en
+este entorno y no se presenta como integración compatible.[^video]
 
 Las interrupciones parametrizadas cubren intención, backup, intención de
 publicación, publicación y confirmación para replace/rename/export cuando
@@ -85,6 +97,7 @@ python -m pip check
 npx --yes --package @fission-ai/openspec@2.0.0 openspec validate safe-execution-core --strict --no-interactive
 npx --yes --package @fission-ai/openspec@2.0.0 openspec validate resumable-pipeline --strict --no-interactive
 npx --yes --package @fission-ai/openspec@2.0.0 openspec validate metadata-and-naming --strict --no-interactive
+npx --yes --package @fission-ai/openspec@2.0.0 openspec validate validated-video-compression --strict --no-interactive
 git diff --check
 ```
 
@@ -94,6 +107,11 @@ la caché npm local y un entorno Python en `/private/tmp`, sin instalar herramie
 globales. ExifTool 13.40 se extrajo del repositorio oficial en `/private/tmp`;
 los tests lo seleccionaron con `MEDIA_LIBRARY_EXIFTOOL=/ruta/exiftool`.
 Esa variable es exclusiva de tests: el producto usa PATH o `[tools.exiftool]`.
+Las ocho pruebas entre volúmenes requieren `MEDIA_LIBRARY_TEST_VOLUME` apuntando
+a un volumen temporal aislado con dispositivo distinto; sin él se omiten con
+motivo y no acreditan esa recuperación. En esta sesión se creó/montó una imagen
+HFS+ sintética bajo `/private/tmp` y se indicó su punto de montaje al ejecutar
+las 45 integraciones. No usar una ruta que contenga medios personales.
 La estructura OKF y los enlaces se revisaron mediante una comprobación
 puntual con el parser YAML local; no se añadió un validador al producto.
 
@@ -110,7 +128,7 @@ ocultos.[^history]
 
 No se ha usado la biblioteca personal, la Papelera, credenciales ni cargas
 remotas. Los originales de las pruebas son sintéticos y viven en temporales.
-No se han probado fallos físicos de alimentación, distintos volúmenes reales,
+No se han probado fallos físicos de alimentación, discos físicos distintos,
 ACL/resource forks, ni bloqueo entre máquinas. La recuperación se acredita en
 el sistema local; las operaciones comparan huellas frente a cambios externos,
 pero otros editores no participan en el bloqueo del programa.[^core]
@@ -119,9 +137,11 @@ ExifTool está acreditado en los formatos indicados; no se acredita escritura
 universal PNG/GIF/HEIC. La tarea 3.3 sigue pendiente: Attributes/Rename, fechas
 vistas en Apple Photos y equivalencia con su modo Brute Force requieren un ensayo
 humano. La ficha de fechas detalla las copias, datos y evidencia a registrar.
-Orientación/calidad visual, perfiles completos y uploader pertenecen a las otras
-dos propuestas, que no se han implementado. No se presentan los servicios
-simulados como integraciones reales superadas.
+La orientación y el perfil de vídeo tienen validación técnica real. La muestra
+visual RF 22 sigue pendiente en vídeo 3.4; su ficha describe cómo revisar detalle,
+movimiento y sincronía antes de aprobar un lote. HDR/pistas avanzadas conservan
+pausa sin política. Exportación/entrega sigue sin implementar. No se presentan
+servicios simulados ni declaraciones humanas como validaciones reales superadas.
 Los documentos siguen en `draft`, sin atribuir una aprobación humana.[^scope]
 
 [^tests]: [Suite del núcleo](../../tests/).
@@ -130,3 +150,4 @@ Los documentos siguen en `draft`, sin atribuir una aprobación humana.[^scope]
 [^scope]: [Alcance y procedencia](alcance.md).
 [^pipeline]: [Proceso reanudable implementado](pipeline-reanudable.md).
 [^dates]: [Servicio de fechas, evidencia real y ensayo humano pendiente](fechas-nombres.md).
+[^video]: [Vídeo real, evidencia y revisión visual pendiente](video-validado.md).
