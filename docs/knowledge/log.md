@@ -2,6 +2,9 @@
 
 ## 2026-11-15
 
+- **P1 posterior — truncado de vídeo**: Cuatro regresiones publicaban 1 s de imagen con 2 s de audio en lugar de la fuente de 2 s; una recuperación ready v1 también omitía revalidarse. Se separan duración y cobertura de imagen del audio, con tolerancia de FPS/timestamps y revalidación de pruebas antiguas. Los cuatro candidatos próximos válidos siguen aceptados. Pasados 248 tests rápidos y 15 integraciones A/V reales; vídeo 12/13, sin completar revisión visual 3.4.
+- **Cierre de los dos P1 posteriores**: 248 pruebas rápidas y 84 integraciones locales pasadas sin omisiones, con volumen HFS+ sintético y transporte simulado; 12 casos nuevos por grupo. OpenSpec estricto de las cinco propuestas, pip check, OKF y enlaces locales correctos. Ninguna propuesta archivada ni revisión humana/remota completada por inferencia; escritores externos y pérdida física de alimentación siguen sin reproducir.
+
 - **P1 posterior — historial ilegible**: Reproducido el segundo submit de un derivado reutilizado cuando otro manifiesto UNCERTAIN no se podía leer/validar. Entrega exige historial completo y coherente con su journal, conserva diagnóstico y recupera sin enviar otra vez. Cinco contratos y cuatro recorridos locales nuevos; 14 integraciones de entrega, 31 contratos y 241 pruebas rápidas pasados. Entrega 15/16; su tarea remota 2.3 sigue pendiente.
 
 - **Correcciones de revisión integral**: Se reprodujeron y corrigieron los seis hallazgos: bloqueo por identidad del origen, reconciliación de todos los antecedentes del job, propiedad de publicación de rename, autorización por intento, errores de inventario del backup y tiempos relativos A/V con edit lists/padding y silencio medido. Cada corrección incluye regresiones y casos válidos próximos, con commit y push.

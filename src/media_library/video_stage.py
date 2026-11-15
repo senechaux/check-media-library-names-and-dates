@@ -207,7 +207,7 @@ def video_installation(context, artifact):
         return None
     video = artifact.evidence["video"]
     plan = video["plan"]
-    if video.get("av_timing", {}).get("method") != "decoded-presentation:v1":
+    if video.get("av_timing", {}).get("method") != "decoded-presentation:v2":
         VideoDriver(context.store.config).validate(plan["source"], artifact.path, plan, video["dates"])
     if not options(context)["quality_reviewed"] and plan["action"] == "encode":
         return StageResult(State.WAITING_USER, issues=[Issue("quality_review_pending",

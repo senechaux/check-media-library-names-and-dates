@@ -47,6 +47,22 @@ Pasaron las 14 integraciones de entrega, los 31 contratos y la suite rápida de 
 sigue siendo un cliente local simulado. Véase la evidencia por hallazgo en
 [correcciones de revisión](correcciones-revision.md).
 
+La corrección posterior de vídeo truncado añadió siete contratos rápidos (seis
+de cobertura y uno de recuperación v1) y ocho integraciones PFR/CFR ×
+automático/manual con audio completo. Antes de corregir, las cuatro variantes
+truncadas se publicaban y el ready v1 omitía revalidarse. Los cuatro candidatos
+válidos próximos siguieron pasando. Después pasaron 248 pruebas rápidas y las
+15 integraciones A/V con herramientas reales; el candidato truncado no se publica
+y el original no se retira al reanudar. La revisión visual no se declara realizada.
+
+El cierre conjunto de estos dos P1 pasó **248 pruebas rápidas y 84 integraciones
+locales, sin omisiones**: 12 casos nuevos de cada grupo respecto a los seis commits
+anteriores. Incluye publicación/recuperación en HFS+ sintético, ExifTool 13.40,
+FFmpeg/ffprobe 9.0.2, HandBrakeCLI 1.11.2 y transporte remoto simulado. Pasaron
+la validación estricta de las cinco propuestas, `pip check`, frontmatter de los
+16 conceptos OKF y sus enlaces/recursos locales. No se reproducen por ello las
+ventanas con escritores externos ni pérdida física de alimentación.
+
 | Comprobación | Resultado y alcance |
 | --- | --- |
 | Instalación | Venv temporal con Python 3.12.15 y pytest 9.2.0; importación desde otra carpeta y `pip check` correctos. Wheel construido con dependencias de build aisladas; preset JSON importable desde el wheel fuera del repositorio. |
@@ -190,7 +206,7 @@ Los documentos siguen en `draft`, sin atribuir una aprobación humana.[^scope]
 | safe-execution-core | 15/15: núcleo y regresiones de bloqueo por identidad y propiedad de publicación. | Sin tarea de implementación pendiente; límites de filesystem/bloqueo documentados. |
 | resumable-pipeline | 11/11: comando, alcance, aprobación, pausas, señales, reanudación e informes. | Las acciones humanas se declaran; no equivalen a pruebas técnicas. |
 | metadata-and-naming | 10/11: fechas, zona/DST, decisiones, ExifTool selectivo y nombres recuperables. | 3.3 Attributes/Rename/Apple Photos; sin equivalencia Brute Force demostrada. |
-| validated-video-compression | 11/12: vídeo real y validación de presentación relativa A/V, con regresiones de automático/manual, edit lists y padding. | 3.4 muestra visual RF 22; HDR/pistas avanzadas sin política permanecen bloqueados. |
+| validated-video-compression | 12/13: vídeo real, presentación relativa A/V y duración/cobertura de imagen independiente, con regresiones de automático/manual, edit lists, padding y reanudación v1. | 3.4 muestra visual RF 22; HDR/pistas avanzadas sin política permanecen bloqueados. |
 | verified-export-and-delivery | 15/16: exportación/entrega por protocolo y regresiones de antecedentes, historial no acreditable, autorizaciones y backup; transporte remoto simulado. | 2.3 adaptador/auth real de gphotos y ensayo de cuenta/lote autorizado. Revisión visual de nuevos derivados de carga declarada antes de publicar. |
 
 Todas siguen en changes para revisión; ninguna se ha archivado. No se han usado

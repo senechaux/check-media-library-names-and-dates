@@ -122,17 +122,27 @@ por ejecución/ID. Se requiere salida MP4/H.264 real, decodificación completa c
 FFmpeg y código de proceso correcto. La duración puede diferir como máximo
 `max(0,1 s, dos frames de salida)`. Se comprueban tamaño/geometría, SAR, orientación,
 FPS/timestamps, pistas/audio y fechas restauradas y releídas con ExifTool. La
-duración se mide sobre los frames presentados; se contrasta la cobertura de audio
+duración se mide sobre los frames presentados. Se exige por separado duración y
+cobertura de intervalos de imagen equivalentes a la fuente, normalizados al
+primer frame, con la misma tolerancia y 2 µs de redondeo de timestamps. El audio
+no acredita imagen ausente: vídeo de 1 s con audio de 2 s no sustituye a vídeo de
+2 s, ni en PFR ni en CFR, automático o manual. También se rechazan huecos de imagen
+fuera de tolerancia aunque coincidan los extremos. Se contrasta la cobertura de audio
 relativa al primer frame de vídeo, tras edit lists y skip/discard del decoder.
 Un origen temporal común puede cambiar sin desincronizar. Se toleran 50 ms o dos
 bloques AAC según sample rate. Intervalos añadidos/retirados solo se permiten si
 astats acredita silencio <= -90 dBFS en todas sus muestras. Esto admite el silencio
 inicial de la ruta AAC existente sin aceptar un desplazamiento de audio real.
-Se guarda evidencia av_timing; candidatos/operaciones pendientes con evidencia
-anterior se revalidan antes de publicar. No es correlación del contenido sonoro
+Se guardan `video_timing` (duración/intervalos de imagen) y `av_timing` con método
+`decoded-presentation:v2`. Candidatos/operaciones pendientes con evidencia
+anterior, incluida v1, se revalidan antes de publicar, también al recuperar un
+resultado ready de instalación o exportación. No se vuelven a codificar por
+añadir esta validación. No es correlación del contenido sonoro
 ni revisión de calidad; una línea temporal no acreditable impide publicar.
-Las
-fechas del filesystem solicitadas se reaplican y verifican en el destino final.
+Las operaciones completadas con versiones anteriores no se restauran automáticamente:
+si se sospecha truncado previo, comparar en copias con el original archivado y
+planificar recuperación explícita. Las fechas del filesystem solicitadas se
+reaplican y verifican en el destino final.
 No se copian indiscriminadamente tags estructurales del original recodificado.[^driver]
 
 La compresión exige salida positiva y menor, además de ambos mínimos de ahorro.

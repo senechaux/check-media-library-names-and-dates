@@ -15,3 +15,4 @@
 - [x] 3.3 Inyectar interrupciones en cada paso de publicación y comprobar conservación/recuperación en otro volumen.
 - [ ] 3.4 Revisar muestra visual con RF propuesto antes de fijar perfil; actualizar OKF y documentar equivalencia y diferencias con la captura.
 - [x] 3.5 Validar tiempos relativos A/V efectivos en automático/manual, con edit lists, padding AAC, offsets comunes y silencio añadido legítimo; rechazar desincronización antes de publicar.
+- [x] 3.6 Verificar duración y cobertura de presentación de vídeo independientemente del audio, con regresiones PFR/CFR automáticas/manuales, reanudación y candidatos válidos próximos.

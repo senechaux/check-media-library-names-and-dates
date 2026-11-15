@@ -3,11 +3,28 @@
 import copy
 import pytest
 
-from media_library.av_timing import presentation, validate_alignment
+from media_library.av_timing import presentation, validate_alignment, validate_video_coverage
 
 
 def timeline(start=0, intervals=((0,1),)):
     return {"video":{"start":start}, "audio":{"sample_rate":44100,"segments":intervals}}
+
+
+@pytest.mark.parametrize('duration',[1.9,2,2.1])
+def test_video_duration_accepts_frame_rounding_and_common_timestamp_origin(duration):
+    source={'video':{'start':2,'end':4,'segments':[(2,4)]},'audio':{'end':4}}
+    output={'video':{'start':0,'end':duration,'segments':[(0,duration)]},'audio':{'end':2}}
+    assert validate_video_coverage(source,output,.1)['verified']
+
+
+@pytest.mark.parametrize('segments',[
+    [(0,1)], [(0,.5),(1,2)], [(0,2.11)],
+])
+def test_video_missing_tail_or_internal_coverage_is_not_accredited_by_audio(segments):
+    source={'video':{'start':0,'end':2,'segments':[(0,2)]},'audio':{'end':2}}
+    output={'video':{'start':0,'end':segments[-1][1],'segments':segments},'audio':{'end':2}}
+    with pytest.raises(ValueError,match='Vídeo'):
+        validate_video_coverage(source,output,.1)
 
 
 def test_shifted_audio_requires_real_silence_evidence():
@@ -46,7 +63,8 @@ def test_incomplete_decoded_timeline_is_rejected(fault):
     with pytest.raises(ValueError):presentation(data)
 
 
-def test_resume_revalidates_legacy_ready_video_operation_before_publication(config_file,monkeypatch):
+@pytest.mark.parametrize('proof',[{}, {'verified':True,'method':'decoded-presentation:v1'}])
+def test_resume_revalidates_legacy_ready_video_operation_before_publication(config_file,monkeypatch,proof):
     from dataclasses import asdict
     from pathlib import Path
     from media_library.models import StageResult,State
@@ -64,7 +82,7 @@ def test_resume_revalidates_legacy_ready_video_operation_before_publication(conf
                   'destination':str(Path(context.entry.current_path).with_name('derived.mp4'))}
             def produce(path):path.write_bytes(b'synthetic old candidate')
             artifact=context.executor.prepare(context.file_id,produce,
-                lambda path:{'video':{'plan':plan,'dates':{'targets':{'synthetic':'date'}}}})
+                lambda path:{'video':{'plan':plan,'dates':{'targets':{'synthetic':'date'}},'av_timing':proof}})
             return StageResult(State.COMPLETED,evidence={'artifact':asdict(artifact)})
     commit=RunStore.commit;fired=False
     def interrupt(store,event,*args,**kwargs):

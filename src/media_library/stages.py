@@ -140,7 +140,7 @@ class InstallationAdapter(Adapter):
 
     def validate_operation(self, context, operation):
         video = operation.evidence.get("validation", {}).get("video")
-        if operation.state == "COMPLETED" or not video or video.get("av_timing", {}).get("method") == "decoded-presentation:v1":
+        if operation.state == "COMPLETED" or not video or video.get("av_timing", {}).get("method") == "decoded-presentation:v2":
             return
         from .video_driver import VideoDriver
         from .filesystem import same_content

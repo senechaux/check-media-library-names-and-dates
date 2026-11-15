@@ -16,7 +16,8 @@ sources:
 ---
 # Alcance
 
-Correcciones de los seis hallazgos reproducidos de la revisión integral. Las
+Correcciones de los seis hallazgos reproducidos de la revisión integral y dos P1
+de su revisión posterior. Las
 pruebas usan temporales, medios sintéticos y transporte remoto simulado. No
 acreditan recuperación ante pérdida física de alimentación ni eliminan las
 carreras con editores externos entre la última comprobación y replace/unlink.
@@ -180,3 +181,41 @@ El diagnóstico no contiene bytes del estado; restaurar corrupción exige una
 copia fiable, no se reconstruye autorización ni se descarta historial por error.
 Pasaron las 14 integraciones de entrega (cuatro nuevas), los 31 contratos y la suite
 rápida de 241 casos. Los nueve casos nuevos usan temporales, sin cuentas ni red.
+
+# Revisión posterior — vídeo truncado con audio completo (P1)
+
+Fuente sintética MOV: 2 s de vídeo a 60 FPS y 2 s de audio. Candidato MP4: 1 s
+de vídeo a 30 FPS y 2 s de audio. Antes de corregir, las cuatro regresiones
+PFR/CFR × automático/manual terminaban con código 0, publicaban el truncado y
+retiraban el original del álbum. El span conjunto seguía siendo 2 s y la
+alineación A/V era correcta; ninguna de esas evidencias acreditaba la imagen final.
+Los cuatro candidatos válidos próximos (59 frames a 30 FPS) ya pasaban antes.
+Además, una regresión de ready con prueba v1 anterior publicaba al reanudar sin
+pasar de nuevo por el validador; la variante sin prueba ya estaba protegida.
+
+La validación contrasta ahora duración e intervalos de vídeo por separado,
+normalizados al primer frame y sin usar audio. Conserva max(0,1 s, dos frames de
+salida) y 2 µs para serialización de timestamps; compara cobertura en ambas
+direcciones, incluidos huecos internos. Se mantienen la validación A/V efectiva,
+edit lists, padding AAC, origen común y medición de silencio. Se conserva la
+ruta de audio y no se añade otra recodificación.
+
+La evidencia conjunta pasa a decoded-presentation:v2 y registra video_timing.
+Antes de instalar/exportar una operación pendiente con evidencia anterior se
+vuelven a acreditar candidato y fuente íntegros; ready no elude la nueva prueba.
+Las regresiones observan código 3, original idéntico en su álbum, ausencia de
+publicación y de operaciones completadas, también tras reanudar. Los válidos
+publican, conservan backup idéntico y tienen duración real de vídeo/audio medida
+por ffprobe. Seis contratos cubren límites de redondeo, origen común, cola y huecos.
+Pasaron las 15 integraciones A/V y los 248 casos de la suite rápida.
+
+No se acredita identidad perceptual del contenido por conservar sus tiempos.
+Las operaciones completadas antiguas no se restauran automáticamente; revisar
+una sospecha de truncado previo contra el original archivado en copias, antes
+de planificar recuperación. Las revisiones humanas y remotas siguen pendientes.
+
+El cierre de las dos correcciones pasó 248 pruebas rápidas y 84 integraciones
+locales sin omisiones, incluida recuperación entre volúmenes sintéticos. Son
+12 contratos y 12 integraciones nuevos respecto a los seis commits anteriores.
+Los riesgos sobre escritores externos y pérdida física de alimentación siguen
+sin reproducir; estas pruebas no los declaran resueltos.

@@ -13,7 +13,7 @@ from .inventory import probe_media
 from .process import run_tool
 from .state import atomic_json
 from .video_plan import VideoPolicyError, preset, ratio, video_info
-from .av_timing import presentation, validate_alignment
+from .av_timing import presentation, validate_alignment, validate_video_coverage
 
 
 class VideoValidationError(ValueError):
@@ -161,13 +161,15 @@ class VideoDriver:
             raise VideoValidationError("Audio distinto del estéreo solicitado")
         self.call([self.ffmpeg, "-v", "error", "-xerror", "-i", str(path), "-map", "0:v", "-map", "0:a?", "-f", "null", "-"])
         before_timeline, after_timeline = self.timeline(source), self.timeline(path)
-        if abs(after_timeline["span"] - before_timeline["span"]) > tolerance:
+        if abs(after_timeline["span"] - before_timeline["span"]) > tolerance + .000002:
             raise VideoValidationError("Duración de presentación fuera de tolerancia")
         try:
+            video_timing = validate_video_coverage(before_timeline, after_timeline, tolerance)
             av_timing = validate_alignment(before_timeline, after_timeline,
                 lambda side, start, end: self.silent_interval(source if side == "source" else path, start, end))
         except ValueError as exc:
             raise VideoValidationError(str(exc)) from exc
+        av_timing["method"] = "decoded-presentation:v2"  # Incluye cobertura de vídeo independiente.
         times = after_timeline["video"]["times"]
         deltas = [b - a for a, b in zip(times, times[1:])]
         mode = plan["settings"]["frame_rate_mode"]
@@ -193,5 +195,6 @@ class VideoDriver:
         return {"video": {"plan": plan, "profile_hash": plan["profile_hash"], "output": actual, "output_bytes": size,
                           "saved_bytes": saved, "beneficial": beneficial, "decode": "complete", "frames": len(times),
                           "av_timing": av_timing,
+                          "video_timing": video_timing,
                           "timing_sha256": hashlib.sha256(json.dumps(times).encode()).hexdigest(), "dates": date_evidence},
                 "file_attributes": date_evidence.get("file_attributes", {})}

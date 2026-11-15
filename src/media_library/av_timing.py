@@ -50,7 +50,7 @@ def presentation(data):
 
 
 def uncovered(intervals, covered, tolerance):
-    """Porciones presentadas de un lado sin audio equivalente en el otro."""
+    """Porciones presentadas de un lado sin cobertura equivalente en el otro."""
     for start, end in intervals:
         cursor = start
         for left, right in covered:
@@ -66,6 +66,26 @@ def uncovered(intervals, covered, tolerance):
                 break
         if cursor < end:
             yield cursor, end
+
+
+def validate_video_coverage(source, output, tolerance):
+    """Acreditar imagen sin usar el audio como sustituto de frames ausentes."""
+    tracks = {}
+    for side, timeline in (("source", source), ("output", output)):
+        video = timeline["video"]
+        origin = video["start"]
+        tracks[side] = {"duration_seconds": video["end"] - origin,
+                        "segments_relative": [[s-origin, e-origin] for s, e in video["segments"]]}
+    # ffprobe serializa PTS/duraciones con precisión de microsegundos.
+    epsilon = .000002
+    if abs(tracks["source"]["duration_seconds"] - tracks["output"]["duration_seconds"]) > tolerance + epsilon:
+        raise ValueError("Vídeo: duración de presentación fuera de tolerancia")
+    for side, other in (("source", "output"), ("output", "source")):
+        if next(uncovered(tracks[side]["segments_relative"], tracks[other]["segments_relative"],
+                          tolerance + epsilon), None) is not None:
+            raise ValueError("Vídeo: cobertura de presentación no conservada")
+    return {"verified": True, "method": "decoded-video-coverage:v1", "tolerance_seconds": tolerance,
+            "timestamp_epsilon_seconds": epsilon, **tracks}
 
 
 def validate_alignment(source, output, silence):

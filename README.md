@@ -168,6 +168,9 @@ una política explícita. Solo se limpian temporales propios de publicaciones co
 La validación A/V contrasta tiempos efectivos de presentación, edit lists y padding
 del decoder, incluidos huecos relativos al vídeo. Un intervalo distinto exige
 silencio medido; no se acepta un audio desplazado solo porque dure lo mismo.
+La duración y cobertura de imagen se comparan por separado: audio completo no
+acredita un vídeo truncado. Se aplica también en manual y al reanudar candidatos
+pendientes con evidencia anterior.
 Es comprobación técnica, con [evidencia y límites](docs/knowledge/correcciones-revision.md),
 y conserva las revisiones humanas pendientes.
 
@@ -224,8 +227,8 @@ El [plan de automatización](docs/knowledge/automatizacion.md) propone un comand
 [`openspec/changes/`](openspec/changes/). `safe-execution-core` y `resumable-pipeline`
 están implementados y verificados, pendientes de revisión sin archivar;
 `metadata-and-naming` tiene implementado lo verificable, con su ensayo humano pendiente.
-`validated-video-compression` tiene 11/12 tareas verificadas, incluida la corrección
-de sincronización A/V; resta la revisión
+`validated-video-compression` tiene 12/13 tareas verificadas, incluidas sincronización
+A/V y duración/cobertura de imagen independiente del audio; resta la revisión
 visual 3.4. Ningún cambio se ha archivado.
 `verified-export-and-delivery` tiene 15/16 tareas verificadas: lo verificable local y el
 protocolo de entrega; su tarea 2.3 de adaptador/autenticación real sigue pendiente.
