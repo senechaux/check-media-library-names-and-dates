@@ -130,7 +130,7 @@ def resolve_zone(date, zone=None, *, fold=None, offset=None):
             aware = local.replace(tzinfo=tz, fold=choice)
             back = aware.astimezone(timezone.utc).astimezone(tz)
             if back.replace(tzinfo=None) == local:
-                candidates[offset_text(aware.utcoffset())] = (choice, aware)
+                candidates.setdefault(offset_text(aware.utcoffset()), (choice, aware))
         if not candidates:
             return replace(date, zone=zone, issue="nonexistent_local_time")
         if offset:

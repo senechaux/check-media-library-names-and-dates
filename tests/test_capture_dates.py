@@ -44,6 +44,7 @@ def test_dst_gap_fold_and_explicit_offset():
     assert resolve_zone(repeated, "Europe/Madrid", offset="+03:00").issue == "offset_zone_mismatch"
     assert resolve_zone(parse_date("2026-07-10T12:00:00", "test"), "Europe/Madrid").offset == "+02:00"
     assert resolve_zone(parse_date("2026-01-10T12:00:00", "test"), "Europe/Madrid").offset == "+01:00"
+    assert resolve_zone(parse_date("2026-01-10T12:00:00", "test"), "Europe/Madrid").fold == 0
 
 
 def test_no_host_zone_and_fractions_remain_lossless():

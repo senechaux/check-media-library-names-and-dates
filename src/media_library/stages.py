@@ -121,7 +121,7 @@ class InstallationAdapter(Adapter):
                 return StageResult(State.COMPLETED, operations, evidence={"validated_artifact": artifact.sha256})
             operation = context.executor.plan(context.file_id, "replace", artifact=artifact)
             return StageResult(State.COMPLETED, [operation], evidence={"validated_artifact": artifact.sha256})
-        if all(records[stage]["state"] == "DISABLED" or records[stage].get("evidence", {}).get("unchanged")
+        if all(records[stage]["state"] == "DISABLED" or records[stage].get("evidence", {}).get("unchanged") or records[stage].get("evidence", {}).get("applied")
                for stage in ("metadata", "normalize", "compression")):
             return StageResult(State.COMPLETED, evidence={"unchanged": True, "reason": "Sin candidato que instalar"})
         return StageResult(State.WAITING_USER, issues=[Issue("missing_artifact", "Falta candidato validado para instalar", file_id=context.file_id)])
@@ -130,8 +130,9 @@ class InstallationAdapter(Adapter):
 
 
 def default_adapters():
+    from .metadata_stage import MetadataAdapter
     result = {stage: UnavailableAdapter(stage) for stage in ("metadata", "normalize", "compression", "export", "audit")}
-    result.update(import_review=HumanAdapter(), delivery=HumanAdapter(), installation=InstallationAdapter())
+    result.update(metadata=MetadataAdapter(), import_review=HumanAdapter(), delivery=HumanAdapter(), installation=InstallationAdapter())
     return result
 
 

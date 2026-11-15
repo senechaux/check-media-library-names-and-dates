@@ -99,6 +99,9 @@ class Pipeline:
         self.save(entries=entries)
 
     def show_plan(self):
+        metadata = self.adapters["metadata"]
+        if self.mode("metadata") != "disabled" and hasattr(metadata, "preview"):
+            metadata.preview(self)
         lines = [f"Ejecución: {self.store.manifest.run_id}", f"Simulación: {self.data['dry_run']}"]
         proposals = []
         for stage in STAGES:
@@ -269,8 +272,16 @@ class Pipeline:
                 continue
             if words and words[0] == "decidir":
                 decisions = dict(word.split("=", 1) for word in words[1:] if "=" in word)
-                if not decisions or any(key not in ("authority", "timezone", "output") or not value for key, value in decisions.items()):
+                allowed = ("authority", "timezone", "output", "fold", "offset", "source_tag", "date", "remove_historical",
+                           "discard_description", "set_file_modify_date", "set_file_create_date", "allow_create_date_fallback", "quicktime_semantics")
+                if not decisions or any(key not in allowed or not value for key, value in decisions.items()):
                     self.console.write("Decisión inválida")
+                    continue
+                try:
+                    if hasattr(adapter, "validate_decisions"):
+                        adapter.validate_decisions(context, {**record.get("decisions", {}), **decisions})
+                except (ValueError, KeyError, TypeError) as exc:
+                    self.console.write("Decisión inválida: " + str(exc))
                     continue
                 record.setdefault("decisions", {}).update(decisions)
                 record["pause"]["decisions"] = record["decisions"]
@@ -292,14 +303,15 @@ class Pipeline:
             if not value["selected"] or value.get("inventory_failed"):
                 continue
             try:
-                operations = [op for op in self.store.manifest.operations.values() if op.file_id == entry.file_id]
+                operations = [self.store.manifest.operations[key] for key in entry.operations]
                 pending = [op for op in operations if op.state not in ("COMPLETED", "RESTORED")]
                 if any(self.executor.inspect(op.operation_id).output_matches and "continue" in self.executor.inspect(op.operation_id).actions for op in pending):
                     continue  # La etapa recuperará la publicación antes de comprobar su nueva huella.
                 for index, op in enumerate(operations):
                     if op.backup and op.state == "COMPLETED" and not same_content(op.backup, op.expected["sha256"]):
                         raise ConflictError("Backup completado alterado")
-                    later = any(other.destination == op.destination and other.state == "COMPLETED" for other in operations[index + 1:])
+                    later = any((other.destination == op.destination or (other.kind == "rename" and other.source == op.destination))
+                                and other.state == "COMPLETED" for other in operations[index + 1:])
                     if op.state == "COMPLETED" and not later and not same_content(op.destination, op.output_sha256):
                         raise ConflictError("Salida completada alterada")
                 expected = value["baseline"]
@@ -313,7 +325,7 @@ class Pipeline:
     def process_file(self, stage, file_id):
         value = self.data["files"][file_id]
         record = value["stages"][stage]
-        if record["state"] in DONE or record.get("cancelled"):
+        if record["state"] in DONE or record.get("cancelled") or record.get("batch_pending"):
             return
         previous = FILE_STAGES[:FILE_STAGES.index(stage)]
         if any(value["stages"][earlier]["state"] not in DONE for earlier in previous):
@@ -361,6 +373,8 @@ class Pipeline:
                 result.append({"file_id": file_id, "reason": value["reason"]})
             else:
                 for stage, record in value["stages"].items():
+                    if record.get("evidence", {}).get("pending_rename"):
+                        result.append({"file_id": file_id, "stage": stage, "reason": "Renombrado reservado pendiente"})
                     if record["state"] not in DONE:
                         result.append({"file_id": file_id, "stage": stage, "state": record["state"],
                                        "reason": record.get("reason") or record.get("issues") or "Etapa pendiente"})
@@ -411,11 +425,17 @@ class Pipeline:
                 return self.finish()
             if not self.approve(apply):
                 return self.finish()
+            metadata = self.adapters["metadata"]
+            if self.mode("metadata") != "disabled" and hasattr(metadata, "finalize"):
+                metadata.finalize(self, recover_only=True)
             self.check_sources()
             for stage in FILE_STAGES:
                 for file_id, value in self.data["files"].items():
                     if value["selected"] and not value["replan"] and not value.get("inventory_failed"):
                         self.process_file(stage, file_id)
+                adapter = self.adapters[stage]
+                if self.mode(stage) != "disabled" and hasattr(adapter, "finalize"):
+                    adapter.finalize(self)
             return self.finish()
         except KeyboardInterrupt:
             self.data["interrupted"] = {"at": self.current, "reason": "Ctrl+C o señal de interrupción"}
