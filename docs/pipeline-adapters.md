@@ -20,9 +20,10 @@ importación es una barrera global humana antes del inventario.
 | --- | --- | --- |
 | Preflight/inventario/plan/estado/informe | Real, del núcleo y orquestador | — |
 | Revisión de importación | Declaración humana local; ninguna sincronización | No automatiza Dropbox/Drive |
-| Nombres/fechas y normalización | `UnavailableAdapter`, copias por ID e instrucciones; sin validador | `metadata-and-naming` |
+| Nombres/fechas | `MetadataAdapter` real (`metadata-and-naming:v1`), ExifTool selectivo, decisiones, validación y renombrado por lote | Ensayo humano de apps/Photos pendiente |
+| Normalización de vídeo | `UnavailableAdapter`, copias por ID e instrucciones; sin conversor/validador | `validated-video-compression` |
 | Compresión | `UnavailableAdapter`, mapa ID/entrada/salida y perfil declarado; sin codificador/validador | `validated-video-compression` |
-| Instalación | `InstallationAdapter` real: candidato acreditado → `SafeExecutor.plan/execute`, backup y recuperación | Consume candidatos del servicio integrado |
+| Instalación | `InstallationAdapter` real: candidato acreditado → `SafeExecutor.plan/execute`, backup y recuperación; reconoce `applied=True` cuando metadata ya lo publicó | Consume candidatos del servicio integrado |
 | Exportación/auditoría | `UnavailableAdapter`, sin acreditar derivados | `verified-export-and-delivery` |
 | Entrega manual | Declaración humana diferenciada de prueba API; no ejecuta cargas | `verified-export-and-delivery` |
 
@@ -44,6 +45,15 @@ ofrece:
   pausa técnica. Debe ser idempotente y recuperar candidatos/operaciones ya
   preparados; nunca volver a producir o publicar trabajos acreditados.
 
+Los hooks opcionales `preview(pipeline)` y `finalize(pipeline, recover_only=False)`
+permiten reservas globales. Metadata presenta auditorías y destinos del lote antes
+de aprobar; su finalización usa `RenameBatch` para evacuar nombres por ID y publicar
+destinos mediante operaciones seguras. El lote completo y cada paso se registran
+en el journal. `recover_only=True` recupera un lote interrumpido antes de comparar
+las rutas de origen, que pueden estar en sus temporales propios. Una reserva
+pendiente impide declarar completada la ejecución. Los demás adaptadores no
+necesitan estos hooks.
+
 `StageContext` expone etapa, ID, entrada, registro, pausa, decisiones, almacén y
 ejecutor. `artifact()` encuentra el último candidato de las etapas precedentes.
 Una etapa que prepara contenido devuelve `evidence['artifact'] = asdict(Artifact)`
@@ -60,6 +70,12 @@ acreditar todas sus publicaciones. Si la interrupción sucede entre planificar y
 guardar el resultado, entrega los IDs recuperados a `validate`: no presume que
 la etapa estuviera validada. InstallationAdapter resuelve ese caso comprobando
 el candidato previo. Un adaptador sin validador mantiene el trabajo pendiente.
+La finalización de renombrado es una operación global del servicio, registrada
+mediante `RenameBatch` y ejecutada con `SafeExecutor`, para permitir ciclos. En la
+revalidación de operaciones antiguas, una salida consumida por un renombrado
+posterior de la misma entrada no se considera perdida; se verifica el destino
+final y los backups. Los checkpoints se copian al replay para no alterar eventos
+históricos al actualizar el estado actual.
 
 Usar `WAITING_USER` para evidencia ausente/conflictos que requieren decisión y
 `FAILED` para fallo operativo con diagnóstico. `COMPLETED` requiere evidencia,
@@ -80,11 +96,14 @@ se regenere la copia de entrada ni que se sustituya por el original.
 ambigüedad, incluso dos archivos con bytes idénticos, y rechaza compartir salida.
 El consumidor limita los candidatos a sus directorios de trabajo, valida sus
 rutas y consume la decisión `output` cuando el contenido ya no conserve su hash.
-No se adivina por nombre/posición. Los textos `authority`, `timezone` y `output`
-se conservan como decisiones; los futuros servicios deben validarlos según su
-dominio. Este cambio no implementa interpretación de fechas ni presets.
+No se adivina por nombre/posición. `authority`, `timezone`, `fold`, `offset`,
+`source_tag`, `date` y opciones de fecha se conservan como decisiones y pasan por
+la validación de dominio del servicio real antes de guardarse. `output` sigue
+limitado al directorio propio de trabajo. No se implementan presets de vídeo.
 
 Las pruebas de integración del orquestador son
 `tests/test_pipeline.py`, `tests/test_pipeline_recovery.py` y
 `tests/test_pipeline_state.py`; usan servicios simulados y medios sintéticos.
-Las integraciones reales existentes del núcleo mantienen la marca `integration`.
+Las integraciones reales del núcleo y de metadata mantienen la marca `integration`.
+`test_metadata_integration.py` y `test_metadata_pipeline_integration.py` usan
+ExifTool/FFmpeg reales con medios sintéticos; no dependen de los servicios simulados.

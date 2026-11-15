@@ -13,6 +13,14 @@ sources:
   - id: common
     resource: https://github.com/senechaux/check-media-library-names-and-dates/blob/bf3554fab9a04414c3f369ecc4a9fc2dcdbb297c/src/common_functions.py
 ---
+# Procedencia y servicio nuevo
+
+Esta ficha conserva la auditoría de los scripts históricos del commit indicado.
+El servicio del paquete [fechas y nombres](fechas-nombres.md) ya corrige igualdad,
+heurística de 1–2 horas, formatos ISO y fechas parciales mediante comparación por
+precisión/zona y decisiones explícitas. No se ha sustituido la lógica de estos
+scripts: para las garantías nuevas se usa `python -m media_library run`.
+
 # check-filenames.py
 
 `main()` recibe `--dir` obligatorio y `--do_rename` opcional. Crea

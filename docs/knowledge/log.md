@@ -2,6 +2,10 @@
 
 ## 2026-11-15
 
+- **Implementación verificable de metadata-and-naming**: CaptureDate, comparación por precisión/offset/zona/DST, decisiones persistentes, lectura y escritura selectiva con ExifTool, renombrados por lote recuperables y validadores reales en metadata. Reutilizados backups, bloqueo, manifiesto y journal; las otras propuestas siguen pendientes, sin archivar cambios.
+- **Evidencia real de fechas y nombres**: 139 pruebas rápidas y 20 integraciones pasadas, incluidas 18 nuevas con ExifTool 13.40 y medios sintéticos. Ambas direcciones, contenido/metadatos ajenos, atributos macOS, ciclos, idempotencia e interrupciones; 97 pruebas rápidas previas siguen pasando.
+- **Documentación y límite humano**: Añadida ficha de fechas/nombres y actualizados uso, requisitos, contratos y OKF. 10/11 tareas verificadas; 3.3 Attributes/Rename/Apple Photos pendiente con protocolo de ensayo. No se ha usado biblioteca personal ni hecho cargas remotas. Commits pequeños con push tras cada uno.
+
 - **Implementación**: Completado `resumable-pipeline`, sin archivar: comando run, alcance, planificación/aprobación, copias y pausas por ID, validación, reanudación e informes sobre el núcleo existente.
 - **Verificación del proceso**: 97 pruebas rápidas pasadas (60 existentes y 37 nuevas), más las 2 integraciones reales del núcleo. Señales reales, EOF/no TTY, fallos de persistencia y recuperación sin repetir productores; recorrido completo con servicios simulados e instalación segura real.
 - **Límites de integración**: EXIF, normalización, compresión, exportación y auditoría permanecen sin validador de producción; los adaptadores simulados solo se inyectan en tests. Actualizadas instrucciones y contratos, sin empezar las otras propuestas ni archivar cambios.

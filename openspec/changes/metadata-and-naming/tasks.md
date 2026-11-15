@@ -13,4 +13,4 @@
 - [x] 3.1 Cubrir escenarios capture-dates-and-names y regresiones de igualdad, 2 h 59 min, formatos ISO y fechas inválidas.
 - [x] 3.2 Comprobar offset, DST de invierno/verano, metadatos ausentes y errores por archivo sin abortar la auditoría completa.
 - [ ] 3.3 Ensayar equivalencia con Attributes/Rename y Apple Photos en copias locales; conservar alternativa manual si no se demuestra.
-- [ ] 3.4 Verificar idempotencia y conservación de contenido/metadatos ajenos; actualizar OKF con resultados reales.
+- [x] 3.4 Verificar idempotencia y conservación de contenido/metadatos ajenos; actualizar OKF con resultados reales.

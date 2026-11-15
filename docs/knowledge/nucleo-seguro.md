@@ -62,9 +62,10 @@ el estado; no se permite seguir escribiendo con un almacén incierto.[^contract]
 # Límites de esta entrega
 
 El núcleo ofrece API, consumida ya por el [proceso reanudable](pipeline-reanudable.md)
-con `python -m media_library run`, pausas e informes. Las decisiones de fecha/EXIF,
-perfiles de compresión, exportación integral y entrega remota siguen en las otras
-tres propuestas, sin sus servicios integrados todavía.
+con `python -m media_library run`, pausas e informes. Las
+[fechas y nombres](fechas-nombres.md) ya usan un servicio real sobre estos contratos.
+Los perfiles de compresión, exportación integral y entrega remota siguen en las
+otras dos propuestas, sin sus servicios integrados todavía.
 `export` aquí es solo la primitiva de publicación de un candidato validado.
 Las firmas de imagen clasifican contenido, sin certificar que una imagen completa
 sea decodificable: esa validación corresponde al consumidor de `prepare`.
@@ -75,10 +76,13 @@ las precondiciones se comprueban inmediatamente antes de publicar, pero no exist
 compare-and-swap de archivos en la biblioteca estándar frente a esos escritores.
 Se requiere soporte de hardlinks y fsync; no se promete atomicidad entre volúmenes.
 Los backups conservan bytes, modo y atime/mtime; el hash no acredita ACL, atributos
-extendidos ni resource forks. No hay limpieza ni retención automática.
+extendidos ni resource forks. No hay limpieza global ni retención automática.
+Los enlaces temporales privados de publicación se retiran tras verificarla,
+antes de registrar el stat final; candidatos y backups permanecen conservados.
 
 Las integraciones acreditan compatibilidad básica del núcleo con ffprobe/FFmpeg
-y HandBrake sobre medios sintéticos, sin aprobar perfiles, EXIF ni calidad visual.
+y HandBrake sobre medios sintéticos, sin aprobar perfiles ni calidad visual.
+Las pruebas reales de ExifTool se describen en la ficha de fechas y nombres.
 No se ha probado sobre biblioteca personal, cuentas remotas ni varios volúmenes
 físicos. Véase [verificación](verificacion.md) para evidencia y comandos.[^tests]
 

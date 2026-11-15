@@ -17,17 +17,21 @@ operaciones. Dos archivos con los mismos bytes siguen siendo entradas distintas.
 
 Una operación conserva ID, archivo, tipo, rutas, huella prevista, candidato,
 SHA-256 de salida, backup, temporal local, estado, evidencia y error. Las fechas
-y su autoridad no se deducen aquí: `temporal_decision` queda vacía hasta que una
-etapa especializada la determine con fuente y zona explícitas.
+y su autoridad no se deducen en el núcleo: el servicio de metadata ya completa
+`temporal_decision` con auditoría, fuente, precisión, zona/offset y decisiones
+explícitas. Se persiste como snapshot de entradas en el journal.
 
 La configuración TOML solo admite las tablas del ejemplo. Las herramientas se
 consultan con argumentos de versión/ayuda de solo lectura; la configuración es
 local y de confianza. Las estimaciones del preflight se suman por volumen y las
 copias vuelven a comprobar espacio antes de escribir. El preflight no crea
 destinos. `media_library run` ya orquesta etapas sobre el núcleo; los servicios
-EXIF, vídeo, exportación integral y entrega remota siguen pendientes. La tabla
+EXIF/QuickTime ya tiene servicio real; vídeo, exportación integral y entrega remota
+siguen pendientes. La tabla
 opcional `pipeline` congela alcance/modos; sin ella se conserva la representación
-de configuración de los manifiestos anteriores.
+de configuración de los manifiestos anteriores. `[dates]` también es opcional y
+se omite de la representación efectiva cuando está vacía; una vez configurada
+queda congelada, con excepciones por ruta original de entrada.
 
 ## Estado, bloqueo y publicación
 
@@ -72,6 +76,10 @@ ACL, atributos extendidos ni resource forks. Los IDs y el historial se conservan
 tras renombrar. La primera copia original queda en `archive/run_id/ruta-original`;
 mutaciones posteriores de esa entrada usan
 `archive/run_id/.operations/operation_id/ruta-original`, sin sustituirla.
+Los objetivos de FileModifyDate/FileCreateDate solicitados por metadata viajan
+en la evidencia, se reaplican al temporal local de publicación y se verifican
+en la ruta final. La creación requiere macOS/birthtime/SetFile y precisión de
+segundos; no amplía la garantía a todos los atributos del filesystem.
 
 Estados por operación: `PLANNED`, `STARTED`, `BACKED_UP`, `PUBLISHING`,
 `PUBLISHED`, `COMPLETED`, `FAILED`, `RESTORING`, `RESTORED`. Una operación
@@ -85,8 +93,11 @@ devuelve acciones permitidas. `execute(id)` continúa y confirma publicaciones y
 acreditadas sin repetir la transformación. `restore(id)` exige elección explícita
 y backup íntegro; conserva también una salida publicada antes de restaurar.
 Un contenido externo desconocido requiere nuevo plan. La restauración también
-queda registrada y es recuperable. Los temporales/candidatos se conservan para
-revisión; no hay limpieza ni retención automática en esta entrega.
+queda registrada y es recuperable. Se retira únicamente el enlace temporal local
+propio tras verificar `PUBLISHED`, antes de capturar el stat final y registrar
+`COMPLETED`: desvincularlo cambia ctime. Se exige que siga siendo el mismo archivo
+publicado; si no, se informa del conflicto. Candidatos y backups se conservan
+para revisión; no hay limpieza global ni política de retención automática.
 
 Las equivalencias Unicode NFD y casefold se tratan conservadoramente como
 colisiones incluso en volúmenes sensibles. Las colisiones entre rutas originales

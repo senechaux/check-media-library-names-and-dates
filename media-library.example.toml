@@ -25,10 +25,25 @@ compression_profile = "archive-720p30 (pendiente de integrar)"
 
 [pipeline.modes]
 import_review = "manual"
-metadata = "manual"    # Sin validador integrado: permanece pendiente.
+metadata = "manual"    # Servicio real: compara y valida copias; auto escribe/renombra según política explícita.
 normalize = "manual"   # Sin conversor/validador integrado.
 compression = "manual" # Prepara mapa/copias; no codifica todavía.
 installation = "auto"  # Real, solo instala candidatos previamente validados.
 export = "manual"      # Servicio pendiente.
 audit = "manual"       # Servicio pendiente.
 delivery = "disabled"  # manual registra declaración humana; no realiza cargas.
+
+[dates]
+policy = "review" # filename-to-metadata | metadata-to-filename, solo tras revisión explícita.
+# timezone = "Europe/Madrid" # Elegir para el lote; no deducirla del ordenador o de diferencias horarias.
+quicktime_semantics = "unknown" # utc | local solo cuando se conozca el origen.
+allow_create_date_fallback = false
+remove_historical = false
+discard_description = false
+set_file_modify_date = false
+set_file_create_date = false # macOS + SetFile; capacidad y resultado verificados.
+
+# Para fijar una ruta de ExifTool (será una herramienta requerida por preflight):
+# [tools.exiftool]
+# executable = "/ruta/exiftool"
+# version_args = ["-ver"]

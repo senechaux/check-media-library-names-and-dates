@@ -28,10 +28,12 @@ sources:
    documentación; solo entonces sus requisitos pasan a `openspec/specs/`.
 
 Las tareas de `safe-execution-core` y `resumable-pipeline` están implementadas y
-verificadas, pendientes de revisión sin archivar. Las de los otros tres cambios
-siguen pendientes. Las fichas del [núcleo](nucleo-seguro.md) y del
-[proceso reanudable](pipeline-reanudable.md), con sus contratos, describen el código actual;
-el resto de las propuestas OpenSpec describe el futuro.
+verificadas, pendientes de revisión sin archivar. `metadata-and-naming` implementa
+lo verificable con herramientas reales; conserva pendiente su tarea 3.3 de ensayo
+humano con Attributes/Rename y Apple Photos. Las otras dos propuestas siguen
+pendientes. Las fichas del [núcleo](nucleo-seguro.md), del
+[proceso reanudable](pipeline-reanudable.md) y de [fechas y nombres](fechas-nombres.md),
+con sus contratos, describen el código actual. Ningún cambio se ha archivado.
 
 # Reparto posterior
 
@@ -51,11 +53,11 @@ lo consume. Rebasar/integrar cambios pequeños, sin dos agentes editando a la ve
 
 Prompt inicial sugerido para la siguiente sesión:
 
-> Lee `docs/knowledge/index.md` y los artefactos de
-> `openspec/changes/safe-execution-core/`. Implementa solo ese cambio, siguiendo
-> sus escenarios y tareas. Prueba en temporales o fixtures sintéticos; no ejecutes
-> sobre mi biblioteca. Conserva las entradas antiguas, actualiza la documentación
-> de lo implementado y crea commits pequeños. No hagas push.
+> Revisa `docs/knowledge/fechas-nombres.md` y los artefactos de
+> `openspec/changes/metadata-and-naming/`. Revisa la implementación y prepara el
+> ensayo humano pendiente 3.3 con copias sintéticas y una biblioteca aislada de
+> Photos. No uses la biblioteca personal ni declares equivalencia sin evidencia.
+> No archives cambios ni empieces otras propuestas.
 
 El paralelismo aporta más valor después de fijar interfaces que al repartir
 scripts heredados completos. Un revisor puede comprobar escenarios y fallos
@@ -65,14 +67,14 @@ inyectados en otro worktree sin ejecutar el proceso sobre originales personales.
 
 | Prioridad | Punto | Propuesta inicial / comprobación pendiente |
 | --- | --- | --- |
-| P0 | Coincidencias de vídeo marcadas como error y heurística de 1–2 horas | Comparación temporal correcta, con pruebas de regresión en metadata-and-naming. |
+| P0 | Coincidencias de vídeo marcadas como error y heurística de 1–2 horas | Corregidas en el servicio nuevo y cubiertas por regresiones; los scripts históricos conservan su lógica. |
 | P0 | Sobrescrituras, homónimos y limpieza de pendientes | Núcleo seguro y publicación por operación antes de automatizar sustituciones. |
 | P0 | Procesos fallidos o archivos parciales tratados como éxito | Códigos comprobados y validación de contenido antes de publicar. |
 | P1 | ¿Qué fecha manda? | `review` por defecto; elegir por lote/archivo. No hace falta imponer una única dirección. |
 | P1 | «720p» en vertical | Recomendada 720×1280; `height-720` si se prefiere el tamaño visual aproximado de la captura. |
 | P1 | «30 frames» | PFR <=30, como la captura; CFR 30 si se desea tasa constante. |
 | P1 | Calidad y ahorro | RF 22 es una propuesta inicial, no un ajuste inferido de la captura; revisar una muestra. |
-| P1 | Zona de fechas sin offset | Europe/Madrid configurable; revisar lotes de viajes y DST antes de escribir. |
+| P1 | Zona de fechas sin offset | Elección explícita, sin zona predeterminada; revisar lotes de viajes y resolver DST antes de escribir. |
 | P1 | Compatibilidad Apple Photos | Ensayo local comparando Attributes y ExifTool; conservar paso manual hasta demostrarla. |
 | P2 | Carga de Google Photos | Manual inicialmente; activar CLI solo tras comprobar versión, alcance y evidencia. |
 | P2 | Doble compresión para exportar | Usar el original conservado y la misma decisión de fecha para crear el derivado de carga. |

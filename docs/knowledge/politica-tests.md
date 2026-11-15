@@ -59,11 +59,14 @@ o del tamaño exacto producido por una versión concreta del codificador.
 
 El núcleo ya configura pytest en `pyproject.toml` como dependencia `dev`.
 `python -m pytest` ejecuta la suite rápida y `python -m pytest -m integration`
-las integraciones reales con FFmpeg/ffprobe y HandBrake, siempre sobre temporales.
+las integraciones reales con ExifTool, FFmpeg/ffprobe y HandBrake, siempre sobre temporales.
 Se omiten con motivo si falta una herramienta. Los resultados están en
 [verificación](verificacion.md). El orquestador ya prueba simulación, pausas, EOF,
-señales reales, fallos y reanudación con adaptadores simulados. Los casos de EXIF,
-perfiles de vídeo y entrega siguen siendo prioridades para los tres cambios pendientes.
+señales reales, fallos y reanudación con adaptadores simulados. Fechas y nombres
+añaden pruebas con ExifTool real, DST, contenido/metadatos ajenos, atributos del
+filesystem, colisiones, ciclos e interrupciones. Los perfiles de vídeo y entrega
+siguen pendientes; la compatibilidad con las apps/Apple Photos requiere el ensayo
+humano indicado en [fechas y nombres](fechas-nombres.md).
 
 [^user]: Preferencia explícita del usuario recibida el 2026-11-14.
 [^plan]: [Plan de automatización](automatizacion.md).

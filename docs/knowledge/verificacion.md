@@ -1,7 +1,7 @@
 ---
 type: Reference
-title: Verificación del núcleo y del plan
-description: Evidencia de pruebas del núcleo y orquestador, integraciones y límites pendientes.
+title: Verificación del núcleo, pipeline y fechas
+description: Pruebas del núcleo, orquestador y ExifTool real con medios sintéticos y límites pendientes.
 tags: [verificacion, tests, seguridad, documentacion]
 status: draft
 x_analysis_date: "2026-11-15"
@@ -19,14 +19,16 @@ sources:
     resource: alcance.md
   - id: pipeline
     resource: pipeline-reanudable.md
+  - id: dates
+    resource: fechas-nombres.md
 ---
 # Comprobaciones del 2026-11-15
 
 | Comprobación | Resultado y alcance |
 | --- | --- |
 | Instalación | `pip install -e '.[dev]'` en venv temporal con Python 3.12.15 y pytest 9.2.0; importación desde otra carpeta y `pip check` correctos. |
-| Suite rápida | 97 pruebas pasadas con `python -m pytest`: 60 existentes del núcleo y 37 nuevas del pipeline; las 2 integraciones se excluyen por marca. |
-| Herramientas reales | 2 integraciones pasadas con `python -m pytest -m integration`: FFmpeg/ffprobe 9.0.2 y HandBrake 1.11.2, sin omisiones en esta máquina. |
+| Suite rápida | 139 pruebas pasadas con `python -m pytest`: 97 existentes y 42 nuevas de fechas, nombres, contrato ExifTool y estado; las 20 integraciones se excluyen por marca. |
+| Herramientas reales | 20 integraciones pasadas con `python -m pytest -m integration`: ExifTool 13.40, FFmpeg/ffprobe 9.0.2 y HandBrake 1.11.2; ninguna omitida en esta máquina. |
 | Configuración | Rutas relativas al TOML, solapamientos por symlinks/mayúsculas, permisos, capacidades y estimación de espacio agregado por volumen. Preflight sin crear destinos. |
 | Inventario y procesos | Profundidades variadas, formatos independientes del nombre, mismo basename/bytes con IDs distintos, Unicode, nombres especiales literales, ilegibles, FIFOs, symlinks, timeout, no cero y parcial sin publicar. |
 | Backups y recuperación | Hash, conflictos de destino/backup/temporal, cambios externos antes y después del backup, falta de espacio y fallo de copia parcial sin tocar el original. |
@@ -35,7 +37,11 @@ sources:
 | Orquestador | CLI instalada desde otra carpeta, alcance y dependencias por archivo, simulación sin copias/mutadores ni espera, aprobación única, EOF/no TTY, decisiones persistentes, confirmación con revalidación y declaración web diferenciada. |
 | Recuperación del pipeline | Interrupciones al planificar y antes/después de publicar, fallo de guardado tras publicación, Ctrl+C y SIGHUP reales durante espera TTY, sin repetir productores acreditados. |
 | Recorrido manual y servicios | Dos homónimos con copias, IDs y backups separados; un pendiente no bloquea el otro; renombrados asociados por huella/decisión. Recorrido completo con servicios simulados e instalación segura real. |
-| OpenSpec 2.0.0 | `safe-execution-core` y `resumable-pipeline` válidos en modo estricto; tareas completadas tras verificar comportamiento. Ambos sin archivar. |
+| Fechas | Coincidencias, discrepancia de 2 h 59 min, ISO/EXIF, offsets y fracciones, precisión parcial sin completar, fechas inválidas/ausentes y errores por archivo aislados. Calendario parcial comparado en la zona declarada. |
+| Zona y DST | Sin inferir la zona del host; fold 0/1 del invierno releído en UTC con ExifTool real, verano, hora inexistente que exige otra fecha y offsets contradictorios diagnosticados. |
+| Escritura selectiva | JPEG y MP4/MOV sintéticos con ExifTool real: campos objetivo releídos, fracciones conservadas, metadatos ajenos extraídos y contenido codificado iguales, legibilidad decodificada. FileModifyDate y FileCreateDate comprobados por separado en macOS con SetFile, también después de renombrar. |
+| Nombres y recuperación | Reservas, sufijos, ciclos y mayúsculas/Unicode, prefijos históricos y cambios externos. Integración de ciclo de dos nombres y cinco puntos de interrupción; reanudación sin repetir escrituras, backups íntegros y segunda ejecución sin mutaciones. |
+| OpenSpec 2.0.0 | Núcleo, pipeline y metadata válidos en modo estricto. Metadata: 10/11 tareas verificadas, ensayo humano 3.3 pendiente. Ningún cambio archivado. |
 | Documentación | Frontmatter OKF parseable, índices/log reservados, versión 0.2 y destinos de enlaces Markdown locales existentes. |
 | Git | Commits descriptivos en `changes-by-codex`, con push tras cada commit; upstream configurado, sin force push. |
 
@@ -45,12 +51,18 @@ candidato real con HandBrake, valida stream/duración y lo publica mediante el
 núcleo, comprobando que el origen permanece intacto. No valida el perfil futuro
 de compresión ni exige un tamaño exacto de salida.[^tests]
 
-Los 37 casos nuevos prueban el control del proceso, no implementan EXIF ni los
-codificadores/exportadores futuros. Los adaptadores simulados solo se inyectan
+Los 37 casos del orquestador prueban el control del proceso. Los adaptadores simulados solo se inyectan
 en tests; el comando de producción conserva los pendientes si falta un validador.
 Las pruebas de señales usan un proceso real con pseudo-terminal y comprueban
 código 130, estado guardado y bloqueo liberado. Las correcciones manuales son
 de contenido sintético y los renombrados se asocian sin adivinar por basename.[^pipeline]
+
+Las 18 integraciones nuevas de metadata ejercitan herramientas reales: 5 casos
+del escritor/atributos y 13 del pipeline. Comprueban ambas direcciones, copias
+corregidas manualmente y revalidadas, decisiones persistentes, prefijos,
+idempotencia y recuperación. Los 7 tests rápidos de contrato ExifTool simulan
+fallos deliberados; no se cuentan como prueba de compatibilidad real.
+El servicio no integra todavía codificadores/exportadores futuros.[^dates]
 
 Las interrupciones parametrizadas cubren intención, backup, intención de
 publicación, publicación y confirmación para replace/rename/export cuando
@@ -72,21 +84,27 @@ python -m pytest -m integration
 python -m pip check
 npx --yes --package @fission-ai/openspec@2.0.0 openspec validate safe-execution-core --strict --no-interactive
 npx --yes --package @fission-ai/openspec@2.0.0 openspec validate resumable-pipeline --strict --no-interactive
+npx --yes --package @fission-ai/openspec@2.0.0 openspec validate metadata-and-naming --strict --no-interactive
 git diff --check
 ```
 
-Las integraciones se omiten con motivo si falta FFmpeg, ffprobe o HandBrakeCLI;
+Las integraciones se omiten con motivo si falta ExifTool, FFmpeg, ffprobe o HandBrakeCLI;
 una omisión no acredita compatibilidad. La sesión utilizó OpenSpec 2.0.0 desde
 la caché npm local y un entorno Python en `/private/tmp`, sin instalar herramientas
-globales. La estructura OKF y los enlaces se revisaron mediante una comprobación
+globales. ExifTool 13.40 se extrajo del repositorio oficial en `/private/tmp`;
+los tests lo seleccionaron con `MEDIA_LIBRARY_EXIFTOOL=/ruta/exiftool`.
+Esa variable es exclusiva de tests: el producto usa PATH o `[tools.exiftool]`.
+La estructura OKF y los enlaces se revisaron mediante una comprobación
 puntual con el parser YAML local; no se añadió un validador al producto.
 
 # Evidencia histórica y trabajo pendiente
 
-Las tres anomalías de nombres/fechas reproducidas el 2026-11-13 siguen
-perteneciendo a `metadata-and-naming`: igualdad de vídeo rechazada, diferencia
-de 2 h 59 min aceptada como zona y patrón 16 sin aplicar. El núcleo no cambia
-esa lógica. Las fichas de los scripts señalan los adaptadores que sí cambiaron:
+Las tres anomalías reproducidas el 2026-11-13 (igualdad de vídeo rechazada,
+diferencia de 2 h 59 min aceptada como zona y patrón 16 sin aplicar) corresponden
+a los scripts históricos. El servicio nuevo usa comparación por precisión/zona
+y mantiene las fechas parciales pendientes de una decisión; esas regresiones
+están cubiertas. No se ha cambiado la lógica temporal de los scripts antiguos.
+Las fichas históricas señalan los adaptadores que sí cambiaron:
 contador sin shell, procesos comprobados y movimientos compartidos sin errores
 ocultos.[^history]
 
@@ -97,10 +115,13 @@ ACL/resource forks, ni bloqueo entre máquinas. La recuperación se acredita en
 el sistema local; las operaciones comparan huellas frente a cambios externos,
 pero otros editores no participan en el bloqueo del programa.[^core]
 
-ExifTool, fechas vistas en Apple Photos, orientación/calidad visual, perfiles
-completos y uploader se verificarán en sus cambios. El orquestador y las pausas
-sí están probados; no se presentan los servicios simulados como integraciones
-reales superadas ni como implementación de las otras tres propuestas.
+ExifTool está acreditado en los formatos indicados; no se acredita escritura
+universal PNG/GIF/HEIC. La tarea 3.3 sigue pendiente: Attributes/Rename, fechas
+vistas en Apple Photos y equivalencia con su modo Brute Force requieren un ensayo
+humano. La ficha de fechas detalla las copias, datos y evidencia a registrar.
+Orientación/calidad visual, perfiles completos y uploader pertenecen a las otras
+dos propuestas, que no se han implementado. No se presentan los servicios
+simulados como integraciones reales superadas.
 Los documentos siguen en `draft`, sin atribuir una aprobación humana.[^scope]
 
 [^tests]: [Suite del núcleo](../../tests/).
@@ -108,3 +129,4 @@ Los documentos siguen en `draft`, sin atribuir una aprobación humana.[^scope]
 [^history]: [Regresiones históricas](auditoria-actual.md).
 [^scope]: [Alcance y procedencia](alcance.md).
 [^pipeline]: [Proceso reanudable implementado](pipeline-reanudable.md).
+[^dates]: [Servicio de fechas, evidencia real y ensayo humano pendiente](fechas-nombres.md).

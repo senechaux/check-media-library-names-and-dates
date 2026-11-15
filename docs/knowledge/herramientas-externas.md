@@ -25,11 +25,13 @@ En imágenes: `Set DateTimeOriginal & DateTimeDigitized`; en películas:
 un desplazamiento adicional. Procesar archivos y carpetas está marcado;
 subcarpetas y su contenido está desmarcado.[^screenshots]
 
-Propuesta: leer la fecha del nombre con un parser estricto; una política
-`filename-to-metadata` escribiría `EXIF:DateTimeOriginal` y `EXIF:CreateDate`
+Implementado en el [servicio de fechas y nombres](fechas-nombres.md): parser
+estricto y política `filename-to-metadata` que escribe `ExifIFD:DateTimeOriginal` y `ExifIFD:CreateDate`
 (nombre usado por ExifTool para DateTimeDigitized), offsets cuando se conozcan,
 y las fechas del sistema de archivos, como operaciones separadas y verificadas.
-ExifTool sería el escritor principal; Pillow seguiría dedicado a imágenes.
+ExifTool es el escritor; relee campos y verifica contenido/metadatos ajenos antes
+de publicar. Los atributos del filesystem son opciones separadas, desactivadas
+por defecto. La tabla de formatos acreditados y sus límites está en esa ficha.
 
 Para MOV/MP4, especificar los grupos al escribir fechas QuickTime y conservar
 la hora local con offset en `Keys:CreationDate`. Las fechas enteras QuickTime
@@ -39,7 +41,7 @@ universal sin conocer el origen. Un timestamp sin zona no permite inferir UTC
 de manera fiable.[^quicktime]
 
 En macOS `FileCreateDate` requiere el ejecutable `setfile` para escritura
-según ExifTool; el preflight debe comprobar la capacidad real del entorno.
+según ExifTool; el servicio comprueba la capacidad real antes de preparar la escritura.
 Cambiar EXIF y cambiar fechas del sistema de archivos son resultados distintos.
 Si uno no está soportado, registrar la limitación y abrir una pausa manual.[^filesystem]
 
@@ -57,19 +59,19 @@ Categoría `Date & Time`, acción `Rename to date/time`, modo Simple. Fecha
 `Content Creation Date (e.g. EXIF)`. Cambia solo el nombre sin extensión.
 Procesa archivos y carpetas, sin recursión a subcarpetas.[^screenshots]
 
-Propuesta: política inversa `metadata-to-filename` con fecha de captura
+Implementado: política inversa `metadata-to-filename` con fecha de captura
 seleccionada explícitamente. En imágenes priorizar `DateTimeOriginal` y su
 offset; `CreateDate` solo como fallback configurado. En vídeos, resolver
 `Keys:CreationDate`/fechas QuickTime con su semántica de zona. Mostrar la fuente
 elegida, mantener la extensión y ofrecer el nombre canónico
 `YYYY-MM-DD HH.MM.SS.ext`. Conservar por defecto el texto descriptivo existente
-es una mejora propuesta, configurable; reproducir la captura permite descartarlo.
+está implementado como opción predeterminada; `discard_description=true` permite descartarlo.
 
 Nunca aplicar ambas direcciones a un conflicto sin una decisión previa sobre
 la fuente correcta. No usar automáticamente mtime como fecha de captura.
 Resolver colisiones sin sobrescribir: proponer un sufijo estable ` (2)`,
 ` (3)`, etc., considerando también mayúsculas y normalización Unicode en macOS.
-La normalización de extensiones es otra opción independiente.
+La extensión se conserva; no hay normalización automática de extensiones.
 
 # Captura 3: HandBrake
 

@@ -3,7 +3,8 @@
 El paquete `media_library` incorpora TOML validado, inventario, procesos comprobados, manifiesto, journal,
 bloqueo, backups y publicación recuperable por evidencia.
 Los scripts históricos siguen en `src/`. `run` ya controla etapas, pausas y
-reanudación; los servicios EXIF, vídeo y exportación siguen pendientes de integración.
+reanudación. Fechas, ExifTool y nombres ya tienen servicio real; conversión,
+compresión y exportación integral siguen pendientes de integración.
 
 ```sh
 python3 -m venv .venv-core
@@ -12,6 +13,15 @@ python -m pip install -e '.[dev]'
 python -m pytest
 python -m pytest -m integration
 ```
+
+Para fechas automáticas se requieren **ExifTool y FFmpeg/ffprobe** en PATH.
+Se ha probado ExifTool 13.40 y FFmpeg 9.0.2. FileCreateDate requiere además
+SetFile en macOS; si falta capacidad, queda pendiente. La integración real se
+omite con motivo si falta una herramienta; una omisión no prueba compatibilidad.
+En macOS con Homebrew, `brew install exiftool ffmpeg` instala las herramientas
+del servicio de fechas. HandBrakeCLI es adicional para las integraciones del núcleo.
+Si ExifTool está fuera de PATH, los tests aceptan
+`MEDIA_LIBRARY_EXIFTOOL=/ruta/exiftool python -m pytest -m integration`.
 
 La suite rápida excluye la marca `integration`. Las integraciones usan medios
 sintéticos y herramientas locales; si falta alguna se omiten con su motivo.
@@ -40,11 +50,12 @@ aplicar: no espera ni prepara copias ni transforma/carga medios. Para aplicar,
 crear una ejecución nueva. La reanudación exige el TOML y los adaptadores congelados;
 cambiar el alcance o ajustes requiere un plan nuevo.
 
-El ejemplo habilita pausas manuales y deshabilita entrega. Nombres/fechas,
-normalización, compresión, exportación y auditoría aún **no tienen sus validadores
-de producción**: confirmar no completa esas etapas. Los adaptadores simulados
-solo están en tests. Instalación sí reutiliza las operaciones seguras del núcleo
-cuando un servicio aporta un candidato validado.
+El ejemplo habilita pausas manuales y deshabilita entrega. `metadata` ya lee y
+compara fuentes reales, escribe fechas selectivas con ExifTool y renombra con
+backups y recuperación. Normalización, compresión, exportación y auditoría
+integral siguen sin sus servicios; confirmar no los completa. Los adaptadores
+simulados solo están en tests. Las fechas se publican mediante operaciones del
+núcleo; instalación no repite una corrección ya aplicada.
 
 Para recorrer un alcance real limitado a inventario, planificación y conservación,
 deshabilitar las etapas pendientes y la revisión/entrega humanas:
@@ -63,7 +74,8 @@ delivery = "disabled"
 
 En una pausa: `comprobar` revalida, `posponer` conserva el pendiente y `cancelar`
 bloquea ese archivo. `decidir authority=metadata timezone=Europe/Madrid` guarda
-una decisión explícita, sin validarla como fecha correcta. Sin TTY o con EOF,
+una decisión explícita validada por el servicio, sin acreditar una corrección de
+los campos por sí sola. Sin TTY o con EOF,
 persiste `WAITING_USER` y sale con 2; Ctrl+C/cierre de terminal, con 130. Un fallo
 operativo devuelve 3; solo completar el alcance sin pendientes devuelve 0.
 Tras una caída dura, revisar el propietario y añadir `--recover-stale-lock` al
@@ -76,6 +88,49 @@ realiza cargas remotas. Véanse la [guía real del proceso](docs/knowledge/pipel
 y los [puntos de integración](docs/pipeline-adapters.md), incluidos los tres recorridos
 de alcance automático limitado, corrección manual simulada y reanudación sin terminal.
 
+# Fechas y nombres reales
+
+Para ejecutar solo este alcance, habilitar `metadata="auto"` e
+`installation="auto"`, y deshabilitar import_review, normalize, compression,
+export, audit y delivery en `[pipeline.modes]`. Revisar primero con `--dry-run`.
+La configuración temporal puede ser:
+
+```toml
+[dates]
+policy = "review"
+timezone = "Europe/Madrid" # Solo si se ha elegido para este lote.
+quicktime_semantics = "unknown"
+```
+
+`filename-to-metadata` usa la fecha válida del nombre; `metadata-to-filename`
+usa la fuente seleccionada y conserva extensión/descripción. Una fecha parcial
+permanece parcial. Conflictos, zona ausente y DST ambiguo requieren decisión:
+
+```text
+decidir authority=filename-to-metadata timezone=Europe/Madrid
+decidir fold=1
+comprobar
+```
+
+Las excepciones se configuran en `[dates.files."álbum/ruta-original.JPG"]`.
+`source_tag=Keys:CreationDate` permite elegir una fuente discrepante; `date=...`
+aporta una fecha conocida explícita, sin inventar partes ausentes. La semántica
+QuickTime de lectura solo se declara UTC/local con evidencia. La escritura
+QuickTime usa UTC y Keys local con offset y verifica ambos al releer.
+
+Se ha acreditado escritura selectiva JPEG y MP4/MOV, con conservación del
+contenido codificado y metadatos ajenos extraídos. Otros formatos o capacidades
+no acreditadas conservan pausa manual. `remove_historical=true` retira los dos
+prefijos históricos solo después de resolver/verificar; no se añaden prefijos.
+`discard_description=true` es una opción explícita. Las fechas del filesystem
+se solicitan por separado con `set_file_modify_date` y `set_file_create_date`.
+
+El [detalle de fechas y nombres](docs/knowledge/fechas-nombres.md) documenta
+formatos, renombrados con ciclos, idempotencia y límites. **Attributes/Rename y
+Apple Photos siguen pendientes de ensayo humano** (tarea 3.3): no se afirma
+equivalencia con Apple Photos Brute Force. Los scripts históricos conservan
+su comportamiento y no son la entrada del servicio nuevo.
+
 # Documentación y planificación
 
 La [base de conocimiento en formato OKF](docs/knowledge/index.md) documenta el
@@ -87,7 +142,8 @@ El [plan de automatización](docs/knowledge/automatizacion.md) propone un comand
 único con pausas y reanudación. Los cambios futuros se especifican en
 [`openspec/changes/`](openspec/changes/). `safe-execution-core` y `resumable-pipeline`
 están implementados y verificados, pendientes de revisión sin archivar; las otras
-tres propuestas siguen pendientes.
+dos propuestas de vídeo/exportación siguen pendientes. `metadata-and-naming`
+tiene implementado lo verificable, con su ensayo humano todavía pendiente.
 
 La [guía de revisión e implementación](docs/knowledge/trabajo-con-agentes.md)
 incluye el orden sugerido, decisiones pendientes y skills evaluadas.

@@ -35,13 +35,15 @@ El plan muestra IDs, rutas, etapas, herramienta, ajustes, candidatos/destinos y
 backups previstos antes de pedir una aprobación del lote. `--apply` sustituye
 solo esa aprobación de operaciones automáticas. No elige autoridad de fechas ni
 confirma tareas humanas. Las decisiones explícitas se conservan para los servicios
-futuros; todavía no se interpretan fechas ni zonas en este cambio.[^pipeline]
+integrados. El servicio real de [fechas y nombres](fechas-nombres.md) ya interpreta
+zonas, DST y precisión, sin atribuir esa implementación al cambio del orquestador.[^pipeline]
 
 # Tres recorridos disponibles
 
 Instalar con `python -m pip install -e '.[dev]'` en un venv y copiar el TOML de
 ejemplo a la configuración local. No usar las tablas de fechas/perfiles del plan
-futuro como si ya fueran configuración aceptada; el ejemplo actual es la fuente
+futuro como si ya fueran configuración aceptada; `[dates]` ya está implementado
+con las claves del ejemplo actual, que es la fuente
 de opciones disponibles.
 
 1. **Automático con alcance real limitado**: deshabilitar revisión humana,
@@ -54,8 +56,10 @@ de opciones disponibles.
    `python -m pytest tests/test_pipeline.py -k manual_resume` prepara copias por
    ID de dos homónimos, pospone un archivo, corrige otro y reanuda hasta instalar
    ambos mediante el núcleo. El validador es sintético; no acredita EXIF real.
-   El comando de producción prepara las mismas pausas, pero el validador EXIF
-   aún no está integrado y conserva el pendiente aunque se confirme.
+   El comando de producción tiene ahora un validador real de ExifTool: audita
+   los campos acordados y el contenido antes de publicar copias corregidas.
+   Las integraciones nuevas prueban ese recorrido real por separado de esta
+   prueba del orquestador con contenido sintético simulado.
 3. **Reanudar sin terminal**: usar
    `python -m media_library run --config /ruta/media-library.toml --resume <run-id>`.
    Revalida las pausas técnicas mediante su adaptador; si falta intervención o
@@ -83,8 +87,9 @@ En terminal se espera con lectura bloqueante. Opciones:
 - `posponer`: mantiene pendientes y permite continuar archivos independientes.
 - `cancelar`: mantiene ese archivo bloqueado; un nuevo plan permite reconsiderarlo.
 - `decidir authority=metadata timezone=Europe/Madrid output="/ruta/a/copia"`:
-  conserva una decisión explícita. El consumidor debe validarla; por sí sola no
-  completa la etapa ni prueba metadatos correctos.
+  conserva una decisión explícita. Metadata admite además fold, offset,
+  source_tag, date y opciones de fecha/etiquetas; las valida según su dominio.
+  Por sí sola una decisión no prueba que los campos ya se hayan corregido.
 
 Una confirmación web se registra como **declaración humana**, con
 `technical_verification=false`. El programa no carga archivos ni comprueba APIs.
@@ -110,15 +115,16 @@ estado duradero y se muestra el fallo y la ruta de recuperación.
 
 Son reales el control de etapas, las pausas, planificación, estado, inventario,
 instalación segura e informes. Son declaraciones humanas la revisión de importación
-y la entrega web. Nombres/EXIF, normalización, compresión, exportación y auditoría
-de medios usan adaptadores pendientes: no hay validación técnica por defecto y
-no pueden declararse completados. Los adaptadores que simulan esos servicios
-solo se inyectan en tests; el informe los identifica como simulados.[^adapters]
+y la entrega web. Metadata usa lectura/selección/ExifTool/renombrado reales;
+normalización, compresión, exportación y auditoría integral aún usan adaptadores
+pendientes y no se consideran completadas por confirmar. Los adaptadores que
+simulan servicios solo se inyectan en tests; el informe los identifica.[^adapters]
 
 La suite demuestra el recorrido completo con servicios simulados y operaciones
-reales sobre temporales. No demuestra compatibilidad EXIF, perfiles de vídeo,
-calidad visual ni una entrega remota integral. Esas integraciones siguen en las
-otras tres propuestas. Se conservan los límites de bloqueo y filesystem del núcleo.
+reales sobre temporales. Las integraciones adicionales de metadata sí acreditan
+ExifTool en los formatos documentados. Perfiles de vídeo, calidad visual y una
+entrega remota integral siguen en las otras dos propuestas. Se conservan los
+límites de bloqueo y filesystem del núcleo; equivalencia con Apple Photos pendiente.
 No se ha utilizado biblioteca personal ni realizado carga remota.[^tests]
 
 [^command]: [Entrada de consola](../../src/media_library/__main__.py).
