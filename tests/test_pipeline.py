@@ -204,7 +204,8 @@ def test_partial_operational_failure_retains_other_successes(config_file):
 def test_web_confirmation_is_human_and_never_remote_verification(config_file):
     configure(config_file, modes={"delivery": "manual"})
     media(config_file)
-    assert run(config_file, "--apply", console=ScriptConsole(["comprobar"])) == 0
+    from media_library.stages import HumanAdapter
+    assert run(config_file, "--apply", console=ScriptConsole(["comprobar"]),adapters={"delivery":HumanAdapter()}) == 0
     value = report(config_file)
     assert value["human_confirmations"] == [{"stage": "delivery", "file_id": value["files"][0]["file_id"], "technical_verification": False}]
     assert value["files"][0]["stages"]["delivery"]["pause"]["outputs"] == {}

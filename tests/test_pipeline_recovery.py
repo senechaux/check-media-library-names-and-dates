@@ -49,6 +49,8 @@ def test_all_stages_with_simulated_services_and_real_safe_installation(config_fi
     transform, audit = TransformAdapter(), SimulatedAdapter()
     adapters = {stage: transform for stage in ("metadata", "normalize", "compression", "export")}
     adapters["audit"] = audit
+    from media_library.stages import HumanAdapter
+    adapters["delivery"] = HumanAdapter()
     assert run(config_file, console=ScriptConsole(["comprobar", "aprobar", "comprobar", "comprobar"]), adapters=adapters) == 0
     value = report(config_file)
     assert value["simulated"] and len(value["changed"]) == 2

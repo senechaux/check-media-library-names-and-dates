@@ -153,10 +153,11 @@ def default_adapters():
     from .metadata_stage import MetadataAdapter
     from .video_stage import VideoAdapter
     from .export_stage import ExportAdapter, AuditAdapter
+    from .delivery_stage import DeliveryAdapter
     result = {stage: UnavailableAdapter(stage) for stage in ("metadata", "normalize", "compression", "export", "audit")}
     result.update(metadata=MetadataAdapter(), import_review=HumanAdapter(), delivery=HumanAdapter(), installation=InstallationAdapter())
     result.update(normalize=VideoAdapter("normalize"), compression=VideoAdapter("compression"))
-    result.update(export=ExportAdapter(),audit=AuditAdapter())
+    result.update(export=ExportAdapter(),audit=AuditAdapter(),delivery=DeliveryAdapter())
     return result
 
 

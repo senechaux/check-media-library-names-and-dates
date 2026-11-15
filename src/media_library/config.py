@@ -15,6 +15,7 @@ from .pipeline_settings import parse_settings
 from .date_settings import parse_date_settings
 from .video_settings import parse_video_settings
 from .export_settings import parse_export_settings
+from .delivery_settings import parse_delivery_settings
 
 
 class ConfigError(ValueError):
@@ -43,6 +44,7 @@ class Config:
     dates: dict = field(default_factory=dict)
     video: dict = field(default_factory=dict)
     export_settings: dict = field(default_factory=dict)
+    delivery: dict = field(default_factory=dict)
 
     def effective(self):
         data = asdict(self)
@@ -56,6 +58,8 @@ class Config:
             data.pop("video")
         if not self.export_settings:
             data.pop("export_settings")
+        if not self.delivery:
+            data.pop("delivery")
         return json.loads(json.dumps(data))
 
     def excluded(self, relative):
@@ -79,7 +83,7 @@ def load_config(filename):
     filename = Path(filename).resolve(strict=True)
     with filename.open("rb") as handle:
         data = tomllib.load(handle)
-    _keys(data, ("paths", "inventory", "execution", "tools", "pipeline", "dates", "video", "export"), "raíz")
+    _keys(data, ("paths", "inventory", "execution", "tools", "pipeline", "dates", "video", "export", "delivery"), "raíz")
     paths = data.get("paths", {})
     _keys(paths, ("source", "workspace", "archive", "export"), "paths")
     if set(paths) != {"source", "workspace", "archive", "export"}:
@@ -121,9 +125,14 @@ def load_config(filename):
         dates = parse_date_settings(data["dates"]) if "dates" in data else {}
         video = parse_video_settings(data["video"]) if "video" in data else {}
         export_settings = parse_export_settings(data["export"]) if "export" in data else {}
+        delivery = parse_delivery_settings(data["delivery"],filename.parent) if "delivery" in data else {}
+        if delivery:
+            expected_mode={"configured-cli":"auto","manual":"manual","disabled":"disabled"}[delivery["mode"]]
+            if parse_settings(pipeline).modes["delivery"]!=expected_mode:
+                raise ValueError("delivery.mode debe corresponder a pipeline.modes.delivery (CLI=auto)")
     except ValueError as exc:
         raise ConfigError(str(exc)) from exc
-    config = Config(**resolved, exclude=exclude, timeout_seconds=timeout, reserve_bytes=reserve, tools=tools, pipeline=pipeline, dates=dates, video=video, export_settings=export_settings)
+    config = Config(**resolved, exclude=exclude, timeout_seconds=timeout, reserve_bytes=reserve, tools=tools, pipeline=pipeline, dates=dates, video=video, export_settings=export_settings,delivery=delivery)
     validate_paths(config)
     return config
 
@@ -140,6 +149,7 @@ def existing_parent(path):
 
 def validate_paths(config):
     paths = [config.source, config.workspace, config.archive, config.export]
+    paths += [Path(config.delivery[key]) for key in ("state_dir","backup_dir") if config.delivery.get(key)]
     if any(path.resolve() != path for path in paths):
         raise ConfigError("Las rutas han cambiado desde su resolución")
     for i, path in enumerate(paths):
