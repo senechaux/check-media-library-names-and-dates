@@ -74,5 +74,3 @@ def snapshot(config_file):
     root = next((config_file.parent / "work").iterdir())
     manifest = json.loads((root / "manifest.json").read_text())
     return next(event["evidence"]["pipeline"] for event in reversed(manifest["events"]) if "pipeline" in event["evidence"])
-
-

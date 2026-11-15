@@ -12,5 +12,3 @@ def test_renamed_outputs_require_unique_hash_or_explicit_decision(tmp_path):
     with pytest.raises(ConflictError, match="ambigua"):
         associate_outputs({"id-a": sha, "id-b": sha}, [a, b])
     assert associate_outputs({"id-a": sha, "id-b": sha}, [a, b], {"id-a": a, "id-b": b}) == {"id-a": str(a), "id-b": str(b)}
-
-
