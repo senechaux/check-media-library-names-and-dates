@@ -66,8 +66,11 @@ Sin recibos completos, cero solo acredita el comando y abre pausa de declaració
 La intención SUBMITTING se sincroniza antes de llamar al cliente. Timeout,
 interrupción o resultado incierto conserva la pausa y nunca reinicia submit
 automáticamente. Revisar el cliente/recibos y declarar delivered o not-delivered;
-esta última resolución permite un intento, no reintentos ilimitados. El alias
-y la identidad/huella del alcance protegen también entre ejecuciones.
+esta última resolución permite un intento, no reintentos ilimitados.
+La declaración explícita genera una autorización ligada al job/intento y se
+consume antes de reintentar. Cambiar solo delivery_confirmed no la renueva.
+Una resolución antigua sin autorización requiere una nueva declaración explícita.
+El alias y la identidad/huella del alcance protegen también entre ejecuciones.
 Se reconcilian todos los snapshots del job por intento/revisión, también al
 reanudar su propietario antiguo; adoptar un READY no puede ignorar un envío
 incierto posterior. Si hay varios jobs solapados con entrega posible, se pausa.

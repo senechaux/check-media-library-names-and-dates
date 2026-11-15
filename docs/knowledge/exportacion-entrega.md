@@ -140,8 +140,12 @@ remota independiente. Sin recibos completos se pide declaración humana. Tras
 timeout, interrupción o error incierto no se repite automáticamente: se recuperan
 recibos válidos o se declara `delivery_resolution=delivered|not-delivered` después
 de revisar el cliente. `not-delivered` autoriza un intento concreto; no crea un
-bucle de reintentos. Otra ejecución equivalente reutiliza la evidencia registrada;
-se reconcilian todos los antecedentes por job, incluido el propietario de un READY
+bucle de reintentos. Cada nueva declaración explícita de delivery_resolution se vincula al job y a su
+intento incierto mediante una autorización consumible. Cambiar delivery_confirmed
+o una revisión general no crea otra autorización. Las resoluciones históricas sin
+vinculación deben declararse otra vez después de revisar el resultado.
+Otra ejecución equivalente reutiliza la evidencia registrada. Se reconcilian
+todos los antecedentes por job, incluido el propietario de un READY
 antiguo al reanudarlo. Intento y revisión duradera prevalecen sobre ese snapshot;
 el orden de los UUID de ejecución no acredita progreso. Sin revisión histórica,
 se conserva el estado más avanzado del intento. Jobs distintos con entrega posible

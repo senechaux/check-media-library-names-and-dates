@@ -73,6 +73,13 @@ def fork_delivery(context, *, run_id=None):
     return StageContext(p,'delivery',context.file_id,p.data['files'][context.file_id]['stages']['delivery'])
 
 
+def authorize_resolution(context,value):
+    DeliveryAdapter().record_decisions(context,{'delivery_resolution':value})
+    context.decisions['delivery_resolution']=value
+    context.record['decision_revision']=context.record.get('decision_revision',0)+1
+    context.pipeline.save()
+
+
 def test_all_job_antecedents_override_stale_ready_even_when_resuming_its_owner(delivery_case,monkeypatch):
     from media_library.delivery_client import DeliveryClient
     original,counter,_=delivery_case(behavior='fail',backup=False)
@@ -87,7 +94,7 @@ def test_all_job_antecedents_override_stale_ready_even_when_resuming_its_owner(d
     newest=fork_delivery(original)
     assert adapter.run(newest).state=='WAITING_USER' and counter.read_text()=='1'
     assert adapter.run(original).state=='WAITING_USER' and counter.read_text()=='1'
-    newest.decisions['delivery_resolution']='delivered';newest.record['decision_revision']=1
+    authorize_resolution(newest,'delivered')
     assert adapter.run(newest).state=='COMPLETED' and counter.read_text()=='1'
     assert adapter.run(original).state=='COMPLETED' and counter.read_text()=='1'
 
@@ -195,15 +202,52 @@ def test_empty_scope_never_starts_a_client(delivery_case):
 def test_explicit_not_delivered_authorizes_only_one_retry(delivery_case):
     context,counter,reload=delivery_case(behavior='fail')
     assert DeliveryAdapter().run(context).state=='WAITING_USER'
-    context=reload();context.decisions['delivery_resolution']='not-delivered';context.record['decision_revision']=1
+    context=reload();authorize_resolution(context,'not-delivered')
     assert DeliveryAdapter().run(context).state=='WAITING_USER' and counter.read_text()=='2'
     assert DeliveryAdapter().run(reload()).state=='WAITING_USER' and counter.read_text()=='2'
+    context=reload();authorize_resolution(context,'not-delivered')
+    assert DeliveryAdapter().run(context).state=='WAITING_USER' and counter.read_text()=='3'
+    assert DeliveryAdapter().run(reload()).state=='WAITING_USER' and counter.read_text()=='3'
+
+
+def test_retry_authorization_survives_interruption_before_submit_once(delivery_case,monkeypatch):
+    from media_library.delivery_client import DeliveryClient
+    context,counter,reload=delivery_case(behavior='fail',backup=False)
+    adapter=DeliveryAdapter();assert adapter.run(context).state=='WAITING_USER'
+    context=reload();authorize_resolution(context,'not-delivered')
+    with monkeypatch.context() as patch:
+        patch.setattr(DeliveryClient,'preflight',lambda *a:(_ for _ in ()).throw(KeyboardInterrupt()))
+        with pytest.raises(KeyboardInterrupt):adapter.run(context)
+    context=reload();assert context.pipeline.data['delivery_job']['state']=='READY'
+    assert adapter.run(context).state=='WAITING_USER' and counter.read_text()=='2'
+    assert adapter.run(reload()).state=='WAITING_USER' and counter.read_text()=='2'
+
+
+def test_legacy_resolution_requires_new_explicit_authorization(delivery_case):
+    context,counter,reload=delivery_case(behavior='fail',backup=False)
+    adapter=DeliveryAdapter();assert adapter.run(context).state=='WAITING_USER'
+    context=reload();context.decisions['delivery_resolution']='not-delivered'
+    context.record['decision_revision']=2
+    context.pipeline.data['delivery_job']['resolution_consumed']=[context.file_id,1]
+    context.pipeline.save()
+    assert adapter.run(reload()).state=='WAITING_USER' and counter.read_text()=='1'
+    context=reload();authorize_resolution(context,'not-delivered')
+    assert adapter.run(context).state=='WAITING_USER' and counter.read_text()=='2'
+
+
+def test_unrelated_decision_does_not_renew_consumed_retry(delivery_case):
+    context,counter,reload=delivery_case(behavior='fail',backup=False)
+    adapter=DeliveryAdapter();assert adapter.run(context).state=='WAITING_USER'
+    context=reload();authorize_resolution(context,'not-delivered')
+    assert adapter.run(context).state=='WAITING_USER' and counter.read_text()=='2'
+    context=reload();context.decisions['delivery_confirmed']='false';context.record['decision_revision']=2
+    assert adapter.run(context).state=='WAITING_USER' and counter.read_text()=='2'
 
 
 def test_export_repair_does_not_reactivate_a_consumed_delivery_resolution(delivery_case):
     context,counter,reload=delivery_case(behavior='fail')
     adapter=DeliveryAdapter();assert adapter.run(context).state=='WAITING_USER'
-    context=reload();context.decisions['delivery_resolution']='not-delivered';context.record['decision_revision']=1
+    context=reload();authorize_resolution(context,'not-delivered')
     assert adapter.run(context).state=='WAITING_USER' and counter.read_text()=='2'
     value=context.pipeline.data['files'][context.file_id]
     exported=copy.deepcopy(value['stages']['export']['evidence'])

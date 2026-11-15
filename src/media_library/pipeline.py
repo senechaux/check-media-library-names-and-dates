@@ -296,6 +296,8 @@ class Pipeline:
                 try:
                     if hasattr(adapter, "validate_decisions"):
                         adapter.validate_decisions(context, {**record.get("decisions", {}), **decisions})
+                    if hasattr(adapter, "record_decisions"):
+                        adapter.record_decisions(context, decisions)
                 except (ValueError, KeyError, TypeError) as exc:
                     self.console.write("Decisión inválida: " + str(exc))
                     continue

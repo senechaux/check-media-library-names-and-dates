@@ -221,6 +221,8 @@ class ExportAdapter(Adapter):
                     if old["state"]!="DISABLED":
                         value["stages"][stage]={"state":"PLANNED","decisions":copy.deepcopy(old.get("decisions",{})),
                             "decision_revision":old.get("decision_revision",0),"start_sequence":pipeline.store.manifest.sequence+1}
+                        if "delivery_authorization" in old:
+                            value["stages"][stage]["delivery_authorization"]=copy.deepcopy(old["delivery_authorization"])
         pipeline.save()
 
 

@@ -34,6 +34,14 @@ class DeliveryAdapter(Adapter):
         if decisions.get("delivery_confirmed","false") not in ("true","false"):raise ValueError("delivery_confirmed requiere true/false")
         if decisions.get("delivery_resolution","delivered") not in ("delivered","not-delivered"):raise ValueError("Resolución de entrega inválida")
 
+    def record_decisions(self,context,supplied):
+        if "delivery_resolution" not in supplied:return
+        job=context.pipeline.data.get("delivery_job")
+        if not job or job["state"] not in ("SUBMITTING","UNCERTAIN"):
+            raise ValueError("La reconciliación exige un intento de entrega incierto")
+        context.record["delivery_authorization"]={"id":uuid.uuid4().hex,"job_id":job["job_id"],
+            "attempt":job["attempts"],"resolution":supplied["delivery_resolution"]}
+
     def coverage(self,context):
         coverage=context.pipeline.data.get("coverage",{})
         if not coverage.get("local_complete"):
@@ -168,11 +176,14 @@ class DeliveryAdapter(Adapter):
                 job.update(state="DELIVERED",evidence_kind="command_and_human_declaration",remote_presence_verified=False)
             elif job["state"] in ("SUBMITTING","UNCERTAIN"):
                 job["state"]="UNCERTAIN";context.pipeline.save()
-                revision=[context.file_id,context.record.get("decision_revision",0)]
                 resolution=context.decisions.get("delivery_resolution")
-                if not resolution or job.get("resolution_consumed")==revision:
-                    return self.pending(context,"Resultado remoto incierto; revisar recibos/cliente. No se repite automáticamente")
-                job["resolution_consumed"]=revision
+                authorization=context.record.get("delivery_authorization",{})
+                if (not resolution or authorization.get("job_id")!=job["job_id"]
+                    or authorization.get("attempt")!=job["attempts"] or authorization.get("resolution")!=resolution
+                    or not authorization.get("id") or job.get("resolution_consumed")==authorization["id"]):
+                    return self.pending(context,"Resultado remoto incierto; revisar recibos/cliente y declarar delivery_resolution explícitamente para este intento. No se repite automáticamente")
+                job["resolution_consumed"]=authorization["id"]
+                job["last_resolution"]=copy.deepcopy(authorization)
                 if resolution=="delivered":
                     job.update(state="DELIVERED",evidence_kind="human_reconciliation",remote_presence_verified=False)
                 else:

@@ -104,6 +104,21 @@ def test_uncertain_delivery_cannot_be_repeated_by_resume_or_new_run(config_file,
     assert resolved['delivery']['evidence_kind']=='human_reconciliation'
 
 
+def test_only_an_explicit_new_resolution_can_authorize_another_attempt(config_file,video_tools):
+    config=configure_export(config_file,video_tools)
+    counter=delivery_toml(config_file,behavior='fail',backup=False)
+    make_jpeg(config.source/'2026-01-02 04.04.05.JPG')
+    code,report=run_real(config_file,'--apply');assert code==2 and counter.read_text()=='1'
+    run_id=report['run_id']
+    code,report=run_real(config_file,'--resume',run_id,console=ScriptConsole(['decidir delivery_resolution=not-delivered','comprobar']))
+    assert code==2 and counter.read_text()=='2'
+    code,report=run_real(config_file,'--resume',run_id,console=ScriptConsole(['decidir delivery_confirmed=false','comprobar']))
+    assert code==2 and counter.read_text()=='2'
+    code,report=run_real(config_file,'--resume',run_id,console=ScriptConsole(['decidir delivery_resolution=not-delivered','comprobar']))
+    assert code==2 and counter.read_text()=='3'
+    assert run_real(config_file,'--resume',run_id)[0]==2 and counter.read_text()=='3'
+
+
 def test_backup_failure_after_client_receipts_only_retries_backup(config_file,video_tools,monkeypatch):
     config=configure_export(config_file,video_tools)
     counter=delivery_toml(config_file)

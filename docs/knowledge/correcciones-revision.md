@@ -56,8 +56,7 @@ nuevas de reanudación del propietario antiguo y apertura de otra ejecución.
 
 # Correcciones todavía en curso
 
-Autorización
-de reintento, inventario de backup y sincronización A/V se verifican por separado.
+Inventario de backup y sincronización A/V se verifican por separado.
 
 # 3. Propiedad de publicación (P1)
 
@@ -75,5 +74,23 @@ y recuperación después de retirar el enlace local. Candidatos y backups se con
 Pasaron 64 pruebas afectadas, la suite rápida de 220 casos y después las dos
 variantes de rechazo actual/antiguo. Pasaron además 13 integraciones de interrupción
 de metadata y publicación de vídeo entre volúmenes local/HFS+ sintéticos.
+
+# 4. Autorización de reintento (P1)
+
+La regresión fallaba porque delivery_confirmed=false renovaba una resolución ya
+consumida y provocaba el tercer submit. Ahora solo una declaración explícita de
+delivery_resolution crea una autorización única ligada al job y al intento
+incierto. Se persiste y consume antes de habilitar el siguiente intento. Cambiar
+otras decisiones o reparar exportados conserva su estado, sin renovarla.
+
+Una autorización consumida antes de interrumpir el preflight puede completar ese
+único intento al reanudar. Si vuelve a fallar, hace falta otra declaración explícita,
+incluso si el valor vuelve a ser not-delivered. Las decisiones antiguas sin esa
+vinculación conservan la pausa y requieren declarar de nuevo la resolución.
+Las regresiones comprueban la decisión ajena, la reparación, la interrupción y
+una nueva autorización válida. La integración usa JPEG/ExifTool reales y cliente
+remoto simulado, con las mismas órdenes interactivas del producto.
+Pasaron las 224 pruebas rápidas y las dos integraciones afectadas de reconciliación
+y autorizaciones sucesivas, sin repetir una entrega por cambiar otra decisión.
 
 [^tests]: [Regresiones ejecutables](../../tests/).
