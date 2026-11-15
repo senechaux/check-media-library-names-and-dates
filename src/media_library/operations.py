@@ -33,6 +33,10 @@ class Recovery:
     explanation: str
 
 
+def backup_hash(operation):
+    return operation.evidence.get("previous_destination", operation.expected)["sha256"]
+
+
 class SafeExecutor:
     def __init__(self, store):
         self.store = store
@@ -72,7 +76,7 @@ class SafeExecutor:
         self.store.commit("prepared", evidence={"file_id": file_id, "path": str(path), "sha256": sha, "validation": evidence})
         return Artifact(file_id, str(path), sha, evidence)
 
-    def plan(self, file_id, kind, *, artifact=None, destination=None):
+    def plan(self, file_id, kind, *, artifact=None, destination=None, previous_destination=None):
         self._require()
         entry = self.store.entry(file_id)
         if entry.issues:
@@ -113,7 +117,11 @@ class SafeExecutor:
         allowed = self.config.export if kind == "export" else self.config.source
         if not destination.is_relative_to(allowed) or destination == allowed:
             raise ConflictError("Destino fuera de su raíz")
-        assert_destination(destination, allow_exact=kind == "replace")
+        if previous_destination is not None:
+            if kind != "export":
+                raise ValueError("Solo export admite renovar un derivado propio")
+            check_fingerprint(destination, previous_destination)
+        assert_destination(destination, allow_exact=kind == "replace" or previous_destination is not None)
         for other in self.store.manifest.operations.values():
             if other.file_id != file_id and other.state not in ("COMPLETED", "RESTORED") and portable_key(other.destination) == portable_key(destination):
                 raise ConflictError("Destino reservado por otra operación")
@@ -127,6 +135,9 @@ class SafeExecutor:
             attributes = previous[-1].evidence.get("validation", {}).get("file_attributes", {})
             if attributes:
                 op.evidence["validation"]["file_attributes"] = attributes
+        if previous_destination is not None:
+            op.evidence["previous_destination"] = dict(previous_destination)
+            op.backup = str(self.config.archive / self.store.manifest.run_id / ".exports" / operation_id / destination.relative_to(self.config.export))
         self.store.commit("operation_planned", op)
         return op
 
@@ -155,7 +166,7 @@ class SafeExecutor:
         except (OSError, ConflictError):
             pass
         output = same_content(op.destination, op.output_sha256)
-        backup = bool(op.backup and same_content(op.backup, op.expected["sha256"]))
+        backup = bool(op.backup and same_content(op.backup, backup_hash(op)))
         candidate = same_content(op.candidate, op.output_sha256)
         source_exists = Path(op.source).exists() or Path(op.source).is_symlink()
         actions = []
@@ -173,7 +184,7 @@ class SafeExecutor:
                 actions.append("continue")
             elif source_matches and candidate:
                 actions.append("continue")
-            if backup and (not source_exists or same_content(op.source, op.output_sha256)):
+            if op.kind != "export" and backup and (not source_exists or same_content(op.source, op.output_sha256)):
                 actions.append("restore")
             explanation = "Comparación por huellas; elegir acción explícita" if actions else "Conflicto o contenido externo: replantear sin modificarlo"
         return Recovery(operation_id, tuple(actions), source_matches, output, backup, explanation)
@@ -181,7 +192,7 @@ class SafeExecutor:
     def _complete(self, op):
         if not same_content(op.destination, op.output_sha256):
             raise ConflictError("La publicación no coincide con la salida validada")
-        if op.backup and not same_content(op.backup, op.expected["sha256"]):
+        if op.backup and not same_content(op.backup, backup_hash(op)):
             raise ConflictError("No se puede confirmar sin backup verificado")
         from .file_attributes import verify_attributes
         verify_attributes(op.destination, op.evidence.get("validation", {}).get("file_attributes", {}))
@@ -207,7 +218,7 @@ class SafeExecutor:
         if op.state == "COMPLETED":
             if not same_content(op.destination, op.output_sha256):
                 raise ConflictError("La salida completada cambió; no repetir")
-            if op.backup and not same_content(op.backup, op.expected["sha256"]):
+            if op.backup and not same_content(op.backup, backup_hash(op)):
                 raise ConflictError("Backup completado ausente o cambiado; no repetir")
             from .file_attributes import verify_attributes
             verify_attributes(op.destination, op.evidence.get("validation", {}).get("file_attributes", {}))
@@ -227,21 +238,24 @@ class SafeExecutor:
                     fsync_directory(Path(op.source).parent)
                 return self._complete(op)
             check_fingerprint(op.source, op.expected)
+            previous_destination = op.evidence.get("previous_destination")
+            if previous_destination:
+                check_fingerprint(op.destination, previous_destination)
             op.state = "STARTED"
             self.store.commit("operation_intent", op, state=State.RUNNING)
             if op.backup:
                 if Path(op.backup).exists():
-                    if not same_content(op.backup, op.expected["sha256"]):
+                    if not same_content(op.backup, backup_hash(op)):
                         raise ConflictError("Backup existente diferente")
                 else:
-                    durable_copy(op.source, op.backup, op.expected["sha256"], reserve=self.config.reserve_bytes)
+                    durable_copy(op.destination if previous_destination else op.source, op.backup, backup_hash(op), reserve=self.config.reserve_bytes)
                 check_fingerprint(op.source, op.expected)
                 op.state = "BACKED_UP"
                 op.evidence["backup_sha256"] = fingerprint(op.backup)["sha256"]
                 self.store.commit("backup_verified", op)
             if not same_content(op.candidate, op.output_sha256):
                 raise ConflictError("Candidato modificado")
-            assert_destination(op.destination, allow_exact=op.kind == "replace")
+            assert_destination(op.destination, allow_exact=op.kind == "replace" or bool(previous_destination))
             if Path(op.local_part).exists():
                 if not same_content(op.local_part, op.output_sha256):
                     raise ConflictError("Temporal local incompleto: revisar sin sobrescribir")
@@ -252,13 +266,15 @@ class SafeExecutor:
                 from .file_attributes import apply_attributes
                 apply_attributes(op.local_part, attributes, timeout=self.config.timeout_seconds)
             check_fingerprint(op.source, op.expected)
-            if op.backup and not same_content(op.backup, op.expected["sha256"]):
+            if op.backup and not same_content(op.backup, backup_hash(op)):
                 raise ConflictError("Backup cambiado antes de publicar")
             op.state = "PUBLISHING"
             self.store.commit("publish_intent", op)
-            assert_destination(op.destination, allow_exact=op.kind == "replace")
+            assert_destination(op.destination, allow_exact=op.kind == "replace" or bool(previous_destination))
             check_fingerprint(op.source, op.expected)
-            if op.kind == "replace":
+            if previous_destination:
+                check_fingerprint(op.destination, previous_destination)
+            if op.kind == "replace" or previous_destination:
                 os.replace(op.local_part, op.destination)
             else:
                 os.link(op.local_part, op.destination, follow_symlinks=False)
@@ -277,7 +293,7 @@ class SafeExecutor:
                     self.store.commit("source_retired", op)
             return self._complete(op)
         except (OSError, ConfigError, ConflictError, ToolError, AttributeCapabilityError) as exc:
-            if op.kind == "substitute" and not published_here:
+            if op.kind in ("substitute", "export") and not published_here:
                 op.evidence["publication_rejected"] = True
             op.error, op.state = str(exc), "FAILED"
             self.store.commit("operation_failed", op, state=State.FAILED)
