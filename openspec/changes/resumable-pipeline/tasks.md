@@ -10,7 +10,7 @@
 - [x] 2.4 Implementar recuperación por evidencia e informe final con códigos de salida.
 
 ## 3. Verificación e integración
-- [ ] 3.1 Verificar escenarios guided-pipeline con adaptadores simulados, entradas de terminal y fallos inyectados.
+- [x] 3.1 Verificar escenarios guided-pipeline con adaptadores simulados, entradas de terminal y fallos inyectados.
 - [x] 3.2 Probar recorrido manual y reanudación con dos archivos homónimos en álbumes distintos.
-- [ ] 3.3 Comprobar el recorrido de etapas con adaptadores simulados y documentar sus puntos de integración; cada cambio posterior integra su adaptador y la prueba integral pertenece a verified-export-and-delivery.
+- [x] 3.3 Comprobar el recorrido de etapas con adaptadores simulados y documentar sus puntos de integración; cada cambio posterior integra su adaptador y la prueba integral pertenece a verified-export-and-delivery.
 - [ ] 3.4 Actualizar OKF y README con instrucciones reales y límites comprobados.
