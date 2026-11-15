@@ -92,7 +92,7 @@ class SafeExecutor:
             candidate, output_sha = source, expected["sha256"]
             if destination is None:
                 raise ValueError("rename requiere destino")
-        elif kind in ("replace", "export"):
+        elif kind in ("replace", "export", "substitute"):
             if artifact is None or artifact.file_id != file_id:
                 raise ValueError("Se requiere un Artifact validado para esta entrada")
             candidate, output_sha = Path(artifact.path), artifact.sha256
@@ -104,7 +104,7 @@ class SafeExecutor:
                        and event["evidence"].get("sha256") == output_sha for event in self.store.manifest.events):
                 raise ConflictError("Candidato sin evidencia de preparación")
         else:
-            raise ValueError("Tipos admitidos: replace, rename, export")
+            raise ValueError("Tipos admitidos: replace, rename, export, substitute")
         destination = Path(destination) if destination is not None else (source if kind == "replace" else export)
         if not destination.is_absolute() or ".." in destination.parts:
             raise ConflictError("Destino debe ser absoluto y normalizado")
@@ -117,7 +117,7 @@ class SafeExecutor:
         for other in self.store.manifest.operations.values():
             if other.file_id != file_id and other.state not in ("COMPLETED", "RESTORED") and portable_key(other.destination) == portable_key(destination):
                 raise ConflictError("Destino reservado por otra operación")
-        if any(op.kind in ("replace", "rename") for op in previous):
+        if any(op.kind in ("replace", "rename", "substitute") for op in previous):
             backup = self.config.archive / self.store.manifest.run_id / ".operations" / operation_id / entry.relative_path
         op = Operation(operation_id, file_id, kind, str(source), str(destination), expected,
                        str(candidate), output_sha, str(backup) if kind != "export" else None,
@@ -139,7 +139,7 @@ class SafeExecutor:
         root = self.config.export if op.kind == "export" else self.config.source
         if not destination.is_relative_to(root) or destination.resolve() != destination:
             raise ConflictError("Destino de operación fuera de raíz o enlazado")
-        if op.kind not in ("replace", "export", "rename") or (op.kind == "replace" and destination != source):
+        if op.kind not in ("replace", "export", "rename", "substitute") or (op.kind == "replace" and destination != source):
             raise ConflictError("Tipo/destino de operación inválido")
         for name, path_root in (("backup", self.config.archive), ("local_part", destination.parent)):
             value = getattr(op, name)
@@ -169,7 +169,7 @@ class SafeExecutor:
             explanation = "Operación completada" if intact else "La salida o el backup completados cambiaron; replantear"
         else:
             published = op.state in ("PUBLISHING", "PUBLISHED", "FAILED") and output
-            if published and (op.kind != "rename" or not source_exists or source_matches):
+            if published and (op.kind not in ("rename", "substitute") or not source_exists or source_matches):
                 actions.append("continue")
             elif source_matches and candidate:
                 actions.append("continue")
@@ -218,7 +218,7 @@ class SafeExecutor:
         try:
             # Publicación ya acreditada: confirmar, sin repetir la transformación.
             if op.state in ("PUBLISHING", "PUBLISHED", "FAILED") and recovery.output_matches:
-                if op.kind == "rename" and Path(op.source).exists():
+                if op.kind in ("rename", "substitute") and Path(op.source).exists():
                     check_fingerprint(op.source, op.expected)
                     if not recovery.backup_verified:
                         raise ConflictError("Falta backup verificado para terminar rename")
@@ -264,10 +264,14 @@ class SafeExecutor:
             fsync_directory(Path(op.destination).parent)
             op.state = "PUBLISHED"
             self.store.commit("published", op)
-            if op.kind == "rename":
+            if op.kind in ("rename", "substitute"):
+                if not same_content(op.backup, op.expected["sha256"]):
+                    raise ConflictError("Backup cambiado antes de retirar el original")
                 check_fingerprint(op.source, op.expected)
                 Path(op.source).unlink()
                 fsync_directory(Path(op.source).parent)
+                if op.kind == "substitute":
+                    self.store.commit("source_retired", op)
             return self._complete(op)
         except (OSError, ConfigError, ConflictError, ToolError, AttributeCapabilityError) as exc:
             op.error, op.state = str(exc), "FAILED"

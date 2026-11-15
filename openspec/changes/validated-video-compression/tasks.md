@@ -6,7 +6,7 @@
 ## 2. Ejecución y publicación
 - [ ] 2.1 Codificar por ID con código de salida comprobado y restaurar fechas usando el servicio temporal común.
 - [ ] 2.2 Implementar validación de decodificación, duración, geometría, FPS, pistas, fechas y ahorro.
-- [ ] 2.3 Implementar archivo verificado, publicación sin sobrescrituras y retirada recuperable del original.
+- [x] 2.3 Implementar archivo verificado, publicación sin sobrescrituras y retirada recuperable del original.
 - [ ] 2.4 Limpiar solo operaciones completadas e integrar compresión automática/manual con la etapa guiada.
 
 ## 3. Verificación

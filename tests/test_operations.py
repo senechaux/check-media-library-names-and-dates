@@ -42,13 +42,13 @@ def test_replace_verifies_backup_and_preserves_identity(execution):
 
 
 @pytest.mark.parametrize("boundary,kind", [(boundary, kind)
-    for kind in ("replace", "rename", "export")
-    for boundary in ("operation_intent", "backup_verified", "publish_intent", "published", "operation_completed")
-    if not (kind == "export" and boundary == "backup_verified")])
+    for kind in ("replace", "rename", "export", "substitute")
+    for boundary in ("operation_intent", "backup_verified", "publish_intent", "published", "operation_completed", "source_retired")
+    if not (kind == "export" and boundary == "backup_verified") and (boundary != "source_retired" or kind == "substitute")])
 def test_interrupt_at_durable_boundaries_resumes_without_repeating_producer(execution, monkeypatch, boundary, kind):
     executor, file_id = execution
     artifact = prepared(executor, file_id) if kind != "rename" else None
-    target = executor.config.source / "album" / "renamed.PNG" if kind == "rename" else None
+    target = executor.config.source / "album" / "renamed.PNG" if kind in ("rename", "substitute") else None
     op = executor.plan(file_id, kind, artifact=artifact, destination=target)
     original_commit = executor.store.commit
 
@@ -67,9 +67,59 @@ def test_interrupt_at_durable_boundaries_resumes_without_repeating_producer(exec
     assert Path(op.destination).exists()
     if op.backup:
         assert fingerprint(op.backup)["sha256"] == op.expected["sha256"]
-    if kind == "rename":
+    if kind in ("rename", "substitute"):
         assert not Path(op.source).exists()
         assert loaded.store.entry(file_id).current_path == op.destination
+
+
+def test_substitute_publishes_then_retires_with_original_backup(execution, monkeypatch):
+    executor, file_id = execution
+    source = Path(executor.store.entry(file_id).current_path)
+    original = source.read_bytes()
+    op = executor.plan(file_id, "substitute", artifact=prepared(executor, file_id), destination=source.with_name("derived.mp4"))
+    commit = executor.store.commit
+    def observe(event, *args, **kwargs):
+        commit(event, *args, **kwargs)
+        if event == "published":
+            assert source.read_bytes() == original
+            assert Path(op.destination).read_bytes() == OUTPUT
+            assert Path(op.backup).read_bytes() == original
+    monkeypatch.setattr(executor.store, "commit", observe)
+    assert executor.execute(op.operation_id).state == "COMPLETED"
+    assert not source.exists() and Path(op.backup).read_bytes() == original
+    assert reload_executor(executor).store.entry(file_id).current_path == op.destination
+
+
+def test_substitute_never_retires_an_external_source_after_publication(execution, monkeypatch):
+    executor, file_id = execution
+    source = Path(executor.store.entry(file_id).current_path)
+    op = executor.plan(file_id, "substitute", artifact=prepared(executor, file_id), destination=source.with_name("derived.mp4"))
+    commit = executor.store.commit
+    def interrupt(event, *args, **kwargs):
+        commit(event, *args, **kwargs)
+        if event == "published": raise KeyboardInterrupt
+    monkeypatch.setattr(executor.store, "commit", interrupt)
+    with pytest.raises(KeyboardInterrupt): executor.execute(op.operation_id)
+    source.write_bytes(b"external edit after publish")
+    loaded = reload_executor(executor)
+    with pytest.raises(ConflictError): loaded.execute(op.operation_id)
+    assert source.read_bytes() == b"external edit after publish"
+    assert Path(op.destination).read_bytes() == OUTPUT
+
+
+def test_substitute_requires_intact_backup_at_retirement(execution, monkeypatch):
+    executor, file_id = execution
+    source = Path(executor.store.entry(file_id).current_path)
+    original = source.read_bytes()
+    op = executor.plan(file_id, "substitute", artifact=prepared(executor, file_id), destination=source.with_name("derived.mp4"))
+    commit = executor.store.commit
+    def change_backup(event, *args, **kwargs):
+        commit(event, *args, **kwargs)
+        if event == "published": Path(op.backup).write_bytes(b"external backup edit")
+    monkeypatch.setattr(executor.store, "commit", change_backup)
+    assert executor.execute(op.operation_id).state == "FAILED"
+    assert source.read_bytes() == original
+    assert Path(op.destination).read_bytes() == OUTPUT
 
 
 def test_external_change_after_plan_never_touches_new_content(execution):

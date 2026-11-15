@@ -21,7 +21,7 @@ def write_report(pipeline, code, pending):
         stages.append({"stage": stage, "mode": pipeline.mode(stage), "results": counts,
                        "adapter": data["adapters"].get(stage, {"identity": "core", "simulated": False})})
     operations = list(store.manifest.operations.values())
-    changed = sorted({op.file_id for op in operations if op.state == "COMPLETED" and op.kind in ("replace", "rename")})
+    changed = sorted({op.file_id for op in operations if op.state == "COMPLETED" and op.kind in ("replace", "rename", "substitute")})
     failures = [{"file_id": key, "stage": stage, "reason": record.get("reason") or record.get("issues")}
                 for key, value in data["files"].items() if value["selected"]
                 for stage, record in value["stages"].items() if record["state"] == "FAILED"]

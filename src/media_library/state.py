@@ -179,9 +179,9 @@ class RunStore:
             if op.operation_id not in entry.operations:
                 entry.operations.append(op.operation_id)
             entry.sha256 = op.expected["sha256"]
-            if op.state == "COMPLETED" and op.kind == "rename":
+            if op.state == "COMPLETED" and op.kind in ("rename", "substitute"):
                 entry.current_path = op.destination
-            if op.state == "COMPLETED" and op.kind in ("rename", "replace"):
+            if op.state == "COMPLETED" and op.kind in ("rename", "replace", "substitute"):
                 entry.stat = op.evidence["published_stat"]
                 entry.sha256 = op.output_sha256
             if op.state == "RESTORED":
