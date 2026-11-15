@@ -106,11 +106,21 @@ class InstallationAdapter(Adapter):
     identity = "safe-installation:v1"
 
     def instructions(self, context):
+        artifact = context.artifact()
+        if artifact and "video" in artifact.evidence:
+            video = artifact.evidence["video"]
+            return {"tool": "SafeExecutor (núcleo real)", "candidate": artifact.path,
+                    "destination": video["plan"]["destination"],
+                    "expected": "Revisión visual humana declarada si hay pérdida; validación técnica, ahorro, original archivado y publicación exclusiva"}
         return {"tool": "SafeExecutor (núcleo real)", "settings": {},
                 "expected": "Candidato validado, huella del original y backup verificado antes de publicar"}
 
     def run(self, context):
         artifact = context.artifact()
+        from .video_stage import video_installation
+        video = video_installation(context, artifact)
+        if video is not None:
+            return video
         records = context.pipeline.data["files"][context.file_id]["stages"]
         if artifact:
             existing = context.record.get("operations", [])
@@ -128,11 +138,23 @@ class InstallationAdapter(Adapter):
 
     validate = run
 
+    def validate_decisions(self, context, decisions):
+        from .video_stage import options
+        if set(decisions) - {"output", "quality_reviewed"}:
+            raise ValueError("La instalación solo admite revisión visual y salida")
+        options(context, decisions)
+
+    def finalize(self, pipeline):
+        from .video_stage import cleanup_completed_videos
+        cleanup_completed_videos(pipeline)
+
 
 def default_adapters():
     from .metadata_stage import MetadataAdapter
+    from .video_stage import VideoAdapter
     result = {stage: UnavailableAdapter(stage) for stage in ("metadata", "normalize", "compression", "export", "audit")}
     result.update(metadata=MetadataAdapter(), import_review=HumanAdapter(), delivery=HumanAdapter(), installation=InstallationAdapter())
+    result.update(normalize=VideoAdapter("normalize"), compression=VideoAdapter("compression"))
     return result
 
 

@@ -173,7 +173,7 @@ class Pipeline:
                         artifact = context.artifact()
                         if artifact:
                             source = Path(artifact.path)
-                        output = Path(context.entry.current_path)
+                        output = Path(instructions.get("destination", context.entry.current_path))
                     if context.stage == "delivery":
                         exports = [op for op in self.store.manifest.operations.values() if op.file_id == context.file_id and op.kind == "export" and op.state == "COMPLETED"]
                         if exports:
@@ -273,7 +273,8 @@ class Pipeline:
             if words and words[0] == "decidir":
                 decisions = dict(word.split("=", 1) for word in words[1:] if "=" in word)
                 allowed = ("authority", "timezone", "output", "fold", "offset", "source_tag", "date", "remove_historical",
-                           "discard_description", "set_file_modify_date", "set_file_create_date", "allow_create_date_fallback", "quicktime_semantics")
+                           "discard_description", "set_file_modify_date", "set_file_create_date", "allow_create_date_fallback", "quicktime_semantics",
+                           "historical_policy", "allow_remux_growth", "quality_reviewed")
                 if not decisions or any(key not in allowed or not value for key, value in decisions.items()):
                     self.console.write("Decisión inválida")
                     continue
@@ -310,12 +311,12 @@ class Pipeline:
                 for index, op in enumerate(operations):
                     if op.backup and op.state == "COMPLETED" and not same_content(op.backup, op.expected["sha256"]):
                         raise ConflictError("Backup completado alterado")
-                    later = any((other.destination == op.destination or (other.kind == "rename" and other.source == op.destination))
+                    later = any((other.destination == op.destination or (other.kind in ("rename", "substitute") and other.source == op.destination))
                                 and other.state == "COMPLETED" for other in operations[index + 1:])
                     if op.state == "COMPLETED" and not later and not same_content(op.destination, op.output_sha256):
                         raise ConflictError("Salida completada alterada")
                 expected = value["baseline"]
-                if any(op.kind in ("replace", "rename") and op.state == "COMPLETED" for op in operations):
+                if any(op.kind in ("replace", "rename", "substitute") and op.state == "COMPLETED" for op in operations):
                     expected = {**entry.stat, "sha256": entry.sha256}
                 check_fingerprint(entry.current_path, expected)
             except (OSError, ConflictError) as exc:
@@ -377,7 +378,8 @@ class Pipeline:
                         result.append({"file_id": file_id, "stage": stage, "reason": "Renombrado reservado pendiente"})
                     if record["state"] not in DONE:
                         result.append({"file_id": file_id, "stage": stage, "state": record["state"],
-                                       "reason": record.get("reason") or record.get("issues") or "Etapa pendiente"})
+                                       "reason": record.get("reason") or record.get("issues") or "Etapa pendiente",
+                                       "issues": record.get("issues", [])})
         return result
 
     def finish(self, override=None):

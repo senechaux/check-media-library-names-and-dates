@@ -226,7 +226,8 @@ def test_import_review_precedes_inventory_and_does_not_replace_approval(config_f
 def test_compression_pause_has_exact_map_profile_and_copies(config_file):
     configure(config_file, modes={"compression": "manual"})
     media(config_file, ("a/same.PNG", "b/same.PNG"))
-    assert run(config_file, "--apply") == 2
+    from media_library.stages import UnavailableAdapter
+    assert run(config_file, "--apply", adapters={"compression": UnavailableAdapter("compression")}) == 2
     value = report(config_file)
     for entry in value["files"]:
         pause = entry["stages"]["compression"]["pause"]
