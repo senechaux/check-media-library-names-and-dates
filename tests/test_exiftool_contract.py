@@ -66,3 +66,15 @@ def test_non_date_writes_are_refused_before_running_a_process(tmp_path):
     with pytest.raises(MetadataCapabilityError):
         tool.write(target, {"File:FileType": "JPEG"}, {"AllDates": "2026:01:01 12:00:00"})
     assert target.read_bytes() == b"synthetic untouched"
+
+
+def test_family4_copy_numbers_across_tracks_are_not_duplicate_dates(tmp_path):
+    tags = {"File:FileType": "MP4", "Track1:TrackCreateDate": "2026:01:01 00:00:00",
+            "Track2:Copy1:TrackCreateDate": "2026:01:01 00:00:00"}
+    tool = ExifTool()
+    date = parse_date("2026-01-02T03:04:05Z", "user")
+    targets, _ = tool.targets(tags, date, parse_date_settings({}), tmp_path)
+    assert targets["Track1:TrackCreateDate"] == targets["Track2:TrackCreateDate"] == "2026:01:02 03:04:05"
+    tags["Track1:Copy2:TrackCreateDate"] = "2025:01:01 00:00:00"
+    with pytest.raises(MetadataCapabilityError, match="duplicadas"):
+        tool.targets(tags, date, parse_date_settings({}), tmp_path)

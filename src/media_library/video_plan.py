@@ -96,8 +96,13 @@ def preset(settings):
     data = json.loads(files("media_library").joinpath("presets/archive-720p30.json").read_text())
     value = data["PresetList"][0]
     value.update(PresetName=settings["profile"], VideoFramerateMode=settings["frame_rate_mode"],
-                 VideoQualitySlider=settings["quality"], VideoPreset=settings["encoder_preset"], AudioEncoderFallback=settings["audio_encoder"])
-    value["AudioList"][0]["AudioEncoder"] = settings["audio_encoder"]
+                 VideoQualitySlider=settings["quality"], VideoPreset=settings["encoder_preset"])
+    if settings["audio_encoder"] == "ffmpeg_aac":
+        value["AudioList"] = []
+        value["AudioTrackSelectionBehavior"] = "none"
+    else:
+        value["AudioEncoderFallback"] = settings["audio_encoder"]
+        value["AudioList"][0]["AudioEncoder"] = settings["audio_encoder"]
     return data
 
 

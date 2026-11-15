@@ -75,8 +75,16 @@ class ExifTool:
         offset = offset_text(value.utcoffset())
         file_type = tags.get("File:FileType")
         targets = {}
-        if any(":Copy" in key and key.rsplit(":", 1)[-1] in ("DateTimeOriginal", "CreateDate", "TrackCreateDate", "MediaCreateDate", "CreationDate") for key in tags):
-            raise MetadataCapabilityError("Fechas duplicadas en una misma familia: revisión manual necesaria")
+        # Familia 4 numera copias globales: Track2:Copy1 no implica dos fechas
+        # dentro de Track2. Solo es ambiguo repetir la misma clave de familia 1.
+        grouped = {}
+        date_names = ("DateTimeOriginal", "CreateDate", "TrackCreateDate", "MediaCreateDate", "CreationDate")
+        for key, item in tags.items():
+            normalized = re.sub(r":Copy\d+", "", key)
+            if key.rsplit(":", 1)[-1] in date_names and normalized in grouped:
+                raise MetadataCapabilityError("Fechas duplicadas en una misma familia: revisión manual necesaria")
+            grouped[normalized] = item
+        tags = grouped
         if file_type == "JPEG":
             for name, suffix in (("DateTimeOriginal", "Original"), ("CreateDate", "Digitized")):
                 targets["ExifIFD:" + name] = local
@@ -111,7 +119,10 @@ class ExifTool:
     def verify(self, path, before, targets, before_content, attributes=None):
         after = self.read(path)
         for key, expected in targets.items():
-            actual = str(after.get(key, ""))
+            values = [value for tag, value in after.items() if re.sub(r":Copy\d+", "", tag) == key]
+            if len(values) != 1:
+                raise MetadataCapabilityError(f"Campo objetivo ausente o ambiguo: {key}")
+            actual = str(values[0])
             if key == "Keys:CreationDate":
                 from .capture_dates import compare_dates
                 if compare_dates(parse_date(actual, key), parse_date(expected, key)) != "matches":

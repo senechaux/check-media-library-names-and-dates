@@ -3,7 +3,7 @@
 import math
 
 DEFAULTS = {"min_bytes": 50_000_000, "profile": "archive-720p30", "frame_rate_mode": "pfr",
-            "quality": 22, "encoder_preset": "fast", "audio_encoder": "ca_aac",
+            "quality": 22, "encoder_preset": "fast", "audio_encoder": "ffmpeg_aac",
             "min_savings_bytes": 1, "min_savings_ratio": 0.0, "allow_remux_growth": False,
             "historical_policy": "review", "quality_reviewed": False}
 
@@ -20,7 +20,7 @@ def parse_video_settings(raw):
             raise ValueError(f"video.{key} fuera de rango")
     for key, allowed in (("profile", ("archive-720p30", "height-720")), ("frame_rate_mode", ("pfr", "cfr")),
                          ("encoder_preset", ("ultrafast", "superfast", "veryfast", "faster", "fast", "medium", "slow", "slower", "veryslow")),
-                         ("audio_encoder", ("ca_aac", "av_aac")), ("historical_policy", ("review", "keep", "process"))):
+                         ("audio_encoder", ("ffmpeg_aac", "ca_aac", "av_aac")), ("historical_policy", ("review", "keep", "process"))):
         if result[key] not in allowed:
             raise ValueError(f"video.{key} inválido")
     for key in ("allow_remux_growth", "quality_reviewed"):
