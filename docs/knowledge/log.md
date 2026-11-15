@@ -2,6 +2,10 @@
 
 ## 2026-11-15
 
+- **Implementación**: Completado `resumable-pipeline`, sin archivar: comando run, alcance, planificación/aprobación, copias y pausas por ID, validación, reanudación e informes sobre el núcleo existente.
+- **Verificación del proceso**: 97 pruebas rápidas pasadas (60 existentes y 37 nuevas), más las 2 integraciones reales del núcleo. Señales reales, EOF/no TTY, fallos de persistencia y recuperación sin repetir productores; recorrido completo con servicios simulados e instalación segura real.
+- **Límites de integración**: EXIF, normalización, compresión, exportación y auditoría permanecen sin validador de producción; los adaptadores simulados solo se inyectan en tests. Actualizadas instrucciones y contratos, sin empezar las otras propuestas ni archivar cambios.
+
 - **Implementación**: Completado `safe-execution-core`, sin archivar: paquete, TOML, inventario, contratos, procesos, manifiesto, journal, bloqueo, backups y recuperación por evidencia.
 - **Verificación**: 60 pruebas rápidas y 2 integraciones reales con FFmpeg/ffprobe 9.0.2 y HandBrake 1.11.2 sobre fixtures sintéticos; fallos de disco/proceso/persistencia, colisiones e interrupciones cubiertos.
 - **Documentación**: Añadida ficha del núcleo y contrato del esquema 1; actualizadas instalación, política y notas de los adaptadores históricos. Commits descriptivos y push a `changes-by-codex` tras cada commit.

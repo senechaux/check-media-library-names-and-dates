@@ -7,7 +7,7 @@ el estado original y usar una migración explícita si cambia el esquema.
 `StageResult` recibe un `State`, operaciones propuestas, incidencias (`code`,
 `message`, `path`, `file_id`) y evidencia JSON. Una etapa con incidencias no puede
 declararse `COMPLETED`. Los estados son `PLANNED`, `RUNNING`, `WAITING_USER`,
-`FAILED` y `COMPLETED`. El futuro orquestador consumirá estos contratos.
+`FAILED` y `COMPLETED`. El orquestador de resumable-pipeline consume estos contratos.
 
 El manifiesto contiene `schema_version`, `run_id`, `config` efectiva, `versions`,
 `state`, `entries`, `operations`, `events` y `sequence`. Cada entrada conserva
@@ -24,8 +24,10 @@ La configuración TOML solo admite las tablas del ejemplo. Las herramientas se
 consultan con argumentos de versión/ayuda de solo lectura; la configuración es
 local y de confianza. Las estimaciones del preflight se suman por volumen y las
 copias vuelven a comprobar espacio antes de escribir. El preflight no crea
-destinos. El núcleo no ofrece todavía `media_library run`, etapas EXIF, vídeo,
-exportación integral ni entrega remota.
+destinos. `media_library run` ya orquesta etapas sobre el núcleo; los servicios
+EXIF, vídeo, exportación integral y entrega remota siguen pendientes. La tabla
+opcional `pipeline` congela alcance/modos; sin ella se conserva la representación
+de configuración de los manifiestos anteriores.
 
 ## Estado, bloqueo y publicación
 
@@ -73,7 +75,7 @@ mutaciones posteriores de esa entrada usan
 
 Estados por operación: `PLANNED`, `STARTED`, `BACKED_UP`, `PUBLISHING`,
 `PUBLISHED`, `COMPLETED`, `FAILED`, `RESTORING`, `RESTORED`. Una operación
-completada no completa toda la ejecución: el futuro orquestador decide el estado
+completada no completa toda la ejecución: el orquestador decide el estado
 global. Errores operativos devuelven `StageResult(FAILED)` con diagnóstico;
 conflictos de planificación/recuperación y persistencia incierta lanzan errores
 tipados para impedir que el llamador continúe accidentalmente.
@@ -97,3 +99,9 @@ de archivos frente a escritores externos entre la última comprobación y replac
 Los `_full_path.txt` antiguos aparecen como pendientes/no soportados en el
 inventario; nunca se importan como órdenes de movimiento ni se llama a
 `move-biggest-videos.main()` desde el núcleo.
+
+El pipeline persiste su propio estado versión 1 dentro de los eventos
+`pipeline_checkpoint`. El journal admite un campo opcional `entries` para guardar
+el inventario posterior a la revisión de importación; su replay es atómico con
+el checkpoint. Se mantienen esquema del manifiesto y compatibilidad con registros
+anteriores sin ese campo. Véase el [contrato de adaptadores](pipeline-adapters.md).

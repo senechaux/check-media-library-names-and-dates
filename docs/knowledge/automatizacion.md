@@ -15,7 +15,9 @@ sources:
 # Resultado propuesto
 
 El [núcleo seguro](nucleo-seguro.md) ya está implementado como paquete importable.
-La interfaz y las fases completas descritas a continuación siguen siendo propuestas.
+El [proceso reanudable](pipeline-reanudable.md) ya implementa el comando y el
+control de etapas, con servicios pendientes explícitos. Las integraciones EXIF,
+vídeo y exportación descritas a continuación siguen siendo propuestas.
 
 Tras instalar el proyecto y sus herramientas, ejecutar desde cualquier carpeta:
 
@@ -23,8 +25,8 @@ Tras instalar el proyecto y sus herramientas, ejecutar desde cualquier carpeta:
 python3 -m media_library run --config /ruta/media-library.toml
 ```
 
-**Es una interfaz propuesta, aún no existe.** El `pyproject.toml` actual permite
-instalar el núcleo en el entorno virtual. Usar `argparse`, `pathlib`,
+**El comando ya existe; el recorrido con todos los servicios reales aún no.**
+El `pyproject.toml` permite instalarlo en el entorno virtual. Usar `argparse`, `pathlib`,
 `tomllib`, `dataclasses`, `zoneinfo` y JSON de la biblioteca estándar es
 suficiente; no se necesita una plataforma de tareas ni una interfaz web.
 
@@ -36,6 +38,9 @@ ejecución interrumpida y volverá a verificar sus precondiciones.
 
 # Configuración propuesta
 
+El ejemplo siguiente conserva el diseño de los servicios futuros; las tablas
+dates/compression/export/external todavía no son opciones del comando actual.
+Usar `media-library.example.toml` y la ficha del proceso para el TOML aceptado hoy.
 Un único TOML local, fuera de Git si contiene rutas personales:
 
 ```toml
@@ -121,7 +126,7 @@ plan. Recuperar por evidencias verificadas, no por «ya existe». En fallos entr
 volúmenes, usar copia verificada y publicación local; no asumir que `move` es
 atómico. Ejecutar herramientas con listas de argumentos y comprobar sus salidas.
 
-Códigos propuestos: 0 completado, 2 intervención pendiente, 3 fallo operativo,
+Códigos implementados: 0 completado, 2 intervención pendiente, 3 fallo operativo,
 130 interrupción. Un informe con errores nunca se presenta como éxito total.
 
 # División en cinco cambios
@@ -129,7 +134,7 @@ Códigos propuestos: 0 completado, 2 intervención pendiente, 3 fallo operativo,
 | Orden | Cambio OpenSpec | Entrega verificable | Depende de |
 | --- | --- | --- | --- |
 | 1 | `safe-execution-core` | Implementado y verificado; pendiente de revisión sin archivar: configuración, inventario, manifiesto y operaciones seguras | — |
-| 2 | `resumable-pipeline` | Comando único, plan/aplicación, pausas y reanudación usando contratos de etapa | 1 |
+| 2 | `resumable-pipeline` | Implementado y verificado sin archivar: comando, plan/aprobación, pausas, reanudación e informes; servicios posteriores simulados solo en tests | 1 |
 | 3 | `metadata-and-naming` | Fechas EXIF/QuickTime, zona, renombrado en ambas direcciones y alternativa manual | 1 y 2 para integración |
 | 4 | `validated-video-compression` | Perfil 720p30, orientación, conversión MP4 y sustitución validada | 1, 3 y 2 para integración |
 | 5 | `verified-export-and-delivery` | Derivados, auditoría final, carga opcional y backup del estado | 1–4 |

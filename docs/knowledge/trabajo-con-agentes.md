@@ -27,9 +27,10 @@ sources:
    completar su verificación. Archivar tras comprobar código, escenarios y
    documentación; solo entonces sus requisitos pasan a `openspec/specs/`.
 
-Las tareas de `safe-execution-core` están implementadas y verificadas, pendientes
-de revisión sin archivar. Las de los otros cuatro cambios siguen pendientes.
-La [ficha del núcleo](nucleo-seguro.md) y su contrato describen el código actual;
+Las tareas de `safe-execution-core` y `resumable-pipeline` están implementadas y
+verificadas, pendientes de revisión sin archivar. Las de los otros tres cambios
+siguen pendientes. Las fichas del [núcleo](nucleo-seguro.md) y del
+[proceso reanudable](pipeline-reanudable.md), con sus contratos, describen el código actual;
 el resto de las propuestas OpenSpec describe el futuro.
 
 # Reparto posterior

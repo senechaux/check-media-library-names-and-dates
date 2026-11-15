@@ -2,8 +2,8 @@
 
 El paquete `media_library` incorpora TOML validado, inventario, procesos comprobados, manifiesto, journal,
 bloqueo, backups y publicación recuperable por evidencia.
-Los scripts históricos siguen en `src/`. El comando integral `run` pertenece al
-cambio posterior `resumable-pipeline` y todavía no está disponible.
+Los scripts históricos siguen en `src/`. `run` ya controla etapas, pausas y
+reanudación; los servicios EXIF, vídeo y exportación siguen pendientes de integración.
 
 ```sh
 python3 -m venv .venv-core
@@ -23,6 +23,59 @@ protección transaccional del núcleo. El extra `.[legacy]` instala Pillow y pro
 si se necesitan sus entradas. No se importa ni ejecuta el main histórico de movimientos.
 Los [contratos y compatibilidad](docs/manifest-v1.md) describen el esquema 1.
 
+# Proceso reanudable
+
+Desde cualquier carpeta, con el paquete instalado:
+
+```sh
+python -m media_library run --config /ruta/media-library.toml --dry-run
+python -m media_library run --config /ruta/media-library.toml --apply
+python -m media_library run --config /ruta/media-library.toml --resume <run-id>
+```
+
+Sin `--apply`, muestra el plan y pide una aprobación del lote. `--apply` autoriza
+operaciones automáticas, sin resolver fechas ni confirmar trabajo manual.
+`--dry-run` solo genera inventario/plan/estado/informe y devuelve 2 por plan sin
+aplicar: no espera ni prepara copias ni transforma/carga medios. Para aplicar,
+crear una ejecución nueva. La reanudación exige el TOML y los adaptadores congelados;
+cambiar el alcance o ajustes requiere un plan nuevo.
+
+El ejemplo habilita pausas manuales y deshabilita entrega. Nombres/fechas,
+normalización, compresión, exportación y auditoría aún **no tienen sus validadores
+de producción**: confirmar no completa esas etapas. Los adaptadores simulados
+solo están en tests. Instalación sí reutiliza las operaciones seguras del núcleo
+cuando un servicio aporta un candidato validado.
+
+Para recorrer un alcance real limitado a inventario, planificación y conservación,
+deshabilitar las etapas pendientes y la revisión/entrega humanas:
+
+```toml
+[pipeline.modes]
+import_review = "disabled"
+metadata = "disabled"
+normalize = "disabled"
+compression = "disabled"
+installation = "auto"
+export = "disabled"
+audit = "disabled"
+delivery = "disabled"
+```
+
+En una pausa: `comprobar` revalida, `posponer` conserva el pendiente y `cancelar`
+bloquea ese archivo. `decidir authority=metadata timezone=Europe/Madrid` guarda
+una decisión explícita, sin validarla como fecha correcta. Sin TTY o con EOF,
+persiste `WAITING_USER` y sale con 2; Ctrl+C/cierre de terminal, con 130. Un fallo
+operativo devuelve 3; solo completar el alcance sin pendientes devuelve 0.
+Tras una caída dura, revisar el propietario y añadir `--recover-stale-lock` al
+resume; no desplaza bloqueos activos. No borrar el archivo de bloqueo.
+
+Los informes `plan.json` y `report.json`, el manifiesto y el journal están en
+`workspace/run-id/`. La consola muestra sus rutas y la siguiente orden. Una
+declaración de carga web se distingue de una verificación API; el comando no
+realiza cargas remotas. Véanse la [guía real del proceso](docs/knowledge/pipeline-reanudable.md)
+y los [puntos de integración](docs/pipeline-adapters.md), incluidos los tres recorridos
+de alcance automático limitado, corrección manual simulada y reanudación sin terminal.
+
 # Documentación y planificación
 
 La [base de conocimiento en formato OKF](docs/knowledge/index.md) documenta el
@@ -32,8 +85,9 @@ distinguen ese procedimiento del comportamiento efectivo del código.
 
 El [plan de automatización](docs/knowledge/automatizacion.md) propone un comando
 único con pausas y reanudación. Los cambios futuros se especifican en
-[`openspec/changes/`](openspec/changes/). `safe-execution-core` ya está implementado
-y verificado, pendiente de revisión sin archivar; los otros cuatro siguen pendientes.
+[`openspec/changes/`](openspec/changes/). `safe-execution-core` y `resumable-pipeline`
+están implementados y verificados, pendientes de revisión sin archivar; las otras
+tres propuestas siguen pendientes.
 
 La [guía de revisión e implementación](docs/knowledge/trabajo-con-agentes.md)
 incluye el orden sugerido, decisiones pendientes y skills evaluadas.

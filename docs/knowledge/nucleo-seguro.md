@@ -61,9 +61,10 @@ el estado; no se permite seguir escribiendo con un almacén incierto.[^contract]
 
 # Límites de esta entrega
 
-El núcleo ofrece API; todavía no existe `python -m media_library run`. El
-orquestador, pausas interactivas, decisiones de fecha/EXIF, perfiles de compresión,
-exportación integral y entrega remota pertenecen a los otros cuatro cambios.
+El núcleo ofrece API, consumida ya por el [proceso reanudable](pipeline-reanudable.md)
+con `python -m media_library run`, pausas e informes. Las decisiones de fecha/EXIF,
+perfiles de compresión, exportación integral y entrega remota siguen en las otras
+tres propuestas, sin sus servicios integrados todavía.
 `export` aquí es solo la primitiva de publicación de un candidato validado.
 Las firmas de imagen clasifican contenido, sin certificar que una imagen completa
 sea decodificable: esa validación corresponde al consumidor de `prepare`.
