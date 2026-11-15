@@ -136,6 +136,25 @@ def test_backup_failure_after_client_receipts_only_retries_backup(config_file,vi
     assert sum(e['kind']=='prepared' for e in manifest(config_file,resumed)['events'])==prepared
 
 
+def test_real_unreadable_state_directory_blocks_only_backup_after_delivery(config_file,video_tools):
+    import os
+    config=configure_export(config_file,video_tools)
+    counter=delivery_toml(config_file)
+    make_jpeg(config.source/'2026-01-02 04.04.05.JPG')
+    private=config_file.parent/'uploader-state/private';private.mkdir()
+    (private/'client.db').write_bytes(b'synthetic required state')
+    try:
+        private.chmod(0)
+        if os.access(private,os.R_OK|os.X_OK):pytest.skip('El usuario puede leer el directorio sin permisos')
+        code,report=run_real(config_file,'--apply')
+        assert code==3 and counter.read_text()=='1'
+        assert report['delivery']['state']=='DELIVERED' and not report['delivery'].get('backup',{}).get('verified')
+    finally:private.chmod(0o700)
+    code,resumed=run_real(config_file,'--resume',report['run_id'])
+    assert code==0 and counter.read_text()=='1' and resumed['delivery']['backup']['verified']
+    assert (Path(resumed['delivery']['backup']['root'])/'files/private/client.db').read_bytes()==b'synthetic required state'
+
+
 def test_local_unknown_date_cannot_start_delivery_requiring_dates(config_file,video_tools):
     config=configure_export(config_file,video_tools,require_capture_date=False)
     counter=delivery_toml(config_file)

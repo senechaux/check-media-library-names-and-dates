@@ -177,6 +177,41 @@ def test_backup_failure_after_delivery_retries_only_backup(delivery_case,monkeyp
     assert DeliveryAdapter().run(context).state=='COMPLETED' and counter.read_text()=='1'
 
 
+@pytest.mark.parametrize('fault',['permission','scandir_error'])
+def test_unreadable_state_subtree_cannot_be_an_accredited_backup(delivery_case,monkeypatch,fault):
+    import os
+    context,counter,reload=delivery_case()
+    state=Path(context.store.config.delivery['state_dir'])
+    private=state/'nested';private.mkdir();(private/'client.db').write_bytes(b'synthetic nested state')
+    scan=os.scandir
+    def denied(path):
+        if Path(path)==private:raise PermissionError('synthetic directory read error')
+        return scan(path)
+    try:
+        if fault=='permission':
+            private.chmod(0)
+            if os.access(private,os.R_OK|os.X_OK):pytest.skip('El usuario puede leer el directorio sin permisos')
+        with monkeypatch.context() as patch:
+            if fault=='scandir_error':patch.setattr('media_library.delivery_backup.os.scandir',denied)
+            with pytest.raises(PermissionError):DeliveryAdapter().run(context)
+    finally:private.chmod(0o700)
+    context=reload()
+    assert context.pipeline.data['delivery_job']['state']=='DELIVERED' and counter.read_text()=='1'
+    assert not context.pipeline.data['delivery_job'].get('backup',{}).get('verified')
+    result=DeliveryAdapter().run(context)
+    assert result.state=='COMPLETED' and counter.read_text()=='1'
+    assert (Path(result.evidence['backup']['root'])/'files/nested/client.db').read_bytes()==b'synthetic nested state'
+
+
+def test_readable_empty_uploader_state_is_a_valid_backup(delivery_case):
+    context,counter,_=delivery_case(mode='manual')
+    (Path(context.store.config.delivery['state_dir'])/'session.db').unlink()
+    context.decisions['delivery_confirmed']='true'
+    result=DeliveryAdapter().run(context)
+    assert result.state=='COMPLETED' and result.evidence['backup']['verified']
+    assert result.evidence['backup']['files']==0 and not counter.exists()
+
+
 def test_incomplete_audit_prevents_any_client_invocation(delivery_case):
     context,counter,_=delivery_case(complete=False)
     assert DeliveryAdapter().run(context).state=='WAITING_USER' and not counter.exists()

@@ -56,7 +56,7 @@ nuevas de reanudación del propietario antiguo y apertura de otra ejecución.
 
 # Correcciones todavía en curso
 
-Inventario de backup y sincronización A/V se verifican por separado.
+Sincronización A/V se verifica por separado.
 
 # 3. Propiedad de publicación (P1)
 
@@ -92,5 +92,18 @@ una nueva autorización válida. La integración usa JPEG/ExifTool reales y clie
 remoto simulado, con las mismas órdenes interactivas del producto.
 Pasaron las 224 pruebas rápidas y las dos integraciones afectadas de reconciliación
 y autorizaciones sucesivas, sin repetir una entrega por cambiar otra decisión.
+
+# 5. Inventario del estado del uploader (P2)
+
+Fallaban dos regresiones de subcarpeta ilegible: permisos reales y error inyectado
+de scandir. El recorrido propaga ahora sus errores; tampoco se ocultan errores de
+lectura/copia. La entrega permanece DELIVERED y solo el backup queda pendiente.
+Al recuperar el acceso se copian y verifican los archivos omitidos, sin otro submit.
+
+También se comprueba que un directorio legible realmente vacío sí puede producir
+un backup verificado de cero archivos. La integración recorre JPEG/ExifTool y el
+cliente simulado, pierde acceso al estado, sale con fallo y reanuda solo el backup.
+Pasaron las 227 pruebas rápidas y las dos integraciones afectadas de fallo de copia
+y directorio ilegible, sin omisiones ni repetición del envío simulado.
 
 [^tests]: [Regresiones ejecutables](../../tests/).

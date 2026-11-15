@@ -12,7 +12,9 @@ def inventory_state(root):
     root=Path(root)
     if root.resolve()!=root or not root.is_dir():raise ConflictError("Estado uploader ausente o enlazado")
     files=[]
-    for base,directories,names in os.walk(root,followlinks=False):
+    def fail(error):
+        raise error
+    for base,directories,names in os.walk(root,followlinks=False,onerror=fail):
         for name in directories+names:
             if (Path(base)/name).is_symlink():raise ConflictError("Estado uploader contiene enlaces: revisión necesaria")
         for name in sorted(names):

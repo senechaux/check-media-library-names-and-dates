@@ -150,7 +150,7 @@ antiguo al reanudarlo. Intento y revisión duradera prevalecen sobre ese snapsho
 el orden de los UUID de ejecución no acredita progreso. Sin revisión histórica,
 se conserva el estado más avanzado del intento. Jobs distintos con entrega posible
 para el mismo alcance requieren reconciliación.
-cambiar el comando tampoco elude una entrega incierta al mismo alias. Alcances
+Cambiar el comando tampoco elude una entrega incierta al mismo alias. Alcances
 solapados que no puedan reconciliarse quedan pendientes, sin duplicar cargas.[^delivery]
 
 # Backup del estado y recuperación
@@ -164,6 +164,9 @@ No poner credenciales en TOML, argumentos o Git: el adaptador autentica externam
 
 Un backup fallido deja la entrega duraderamente acreditada y la ejecución sin
 completar; al reanudar se verifica/continúa solo su backup, sin volver a enviar.
+El inventario propaga errores al recorrer directorios: una subcarpeta ilegible no
+puede omitirse y producir un falso backup vacío/verificado. Tras recuperar acceso,
+se continúa el backup. Un directorio realmente vacío y legible sí es válido.
 No se sobrescriben copias parciales ajenas o cambiadas. Un estado fuente que cambió
 respecto al snapshot requiere revisión. Se conserva evidencia de entregas anteriores;
 no hay borrado global ni rotación de credenciales. El backup de un directorio no
