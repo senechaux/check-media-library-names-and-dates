@@ -1,0 +1,20 @@
+# Todas las rutas se resuelven respecto a este TOML. Crear solo source a mano.
+[paths]
+source = "sample/source"
+workspace = "sample/workspace"
+archive = "sample/archive"
+export = "sample/export"
+
+[inventory]
+exclude = [".DS_Store", ".localized", "**/.DS_Store", "**/.localized"]
+
+[execution]
+timeout_seconds = 60
+# Reserva por volumen; al escribir se comprueba además el tamaño de cada copia.
+reserve_bytes = 1048576
+
+[tools.ffprobe]
+executable = "ffprobe"
+version_args = ["-version"]
+capability_args = ["-h", "full"]
+required_capabilities = ["-show_format", "-show_streams", "-print_format"]

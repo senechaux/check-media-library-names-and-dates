@@ -1,7 +1,7 @@
 ## 1. Contratos y configuración
-- [ ] 1.1 Añadir paquete instalable, configuración TOML validada y ejemplo sin datos personales.
-- [ ] 1.2 Definir StageResult, incidencias, operaciones y esquema versionado del manifiesto; documentar compatibilidad.
-- [ ] 1.3 Implementar preflight de rutas resueltas, permisos, capacidades de herramientas y espacio.
+- [x] 1.1 Añadir paquete instalable, configuración TOML validada y ejemplo sin datos personales.
+- [x] 1.2 Definir StageResult, incidencias, operaciones y esquema versionado del manifiesto; documentar compatibilidad.
+- [x] 1.3 Implementar preflight de rutas resueltas, permisos, capacidades de herramientas y espacio.
 
 ## 2. Inventario y ejecución segura
 - [ ] 2.1 Unificar recorrido, exclusiones y detección de formatos sin depender de nombres válidos.
@@ -14,7 +14,7 @@
 - [ ] 3.3 Adaptar funciones reutilizables y conservar entradas antiguas sin invocar movimientos inseguros desde el nuevo flujo.
 
 ## 4. Verificación
-- [ ] 4.0 Configurar pytest como dependencia de desarrollo, suite rápida e integraciones separadas según docs/knowledge/politica-tests.md; documentar sus comandos.
+- [x] 4.0 Configurar pytest como dependencia de desarrollo, suite rápida e integraciones separadas según docs/knowledge/politica-tests.md; documentar sus comandos.
 - [ ] 4.1 Verificar todos los escenarios de safe-execution con archivos temporales, incluidos nombres especiales y mismo basename.
 - [ ] 4.2 Inyectar fallos de disco/proceso/guardado y comprobar backup, bloqueo y recuperación.
 - [ ] 4.3 Actualizar OKF y guía de instalación con capacidades realmente implementadas y resultados de comprobación.

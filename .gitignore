@@ -122,6 +122,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+.venv-core/
 env/
 venv/
 ENV/
@@ -164,3 +165,8 @@ logs/*.log
 logs_copy_to_upload_to_gphotos/*.log
 biggest_videos_compressed/*
 biggest_videos_to_compress/*
+
+# Configuración local y estado del nuevo núcleo
+media-library.toml
+sample/
+.media-library/

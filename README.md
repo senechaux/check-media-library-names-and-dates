@@ -293,3 +293,23 @@ Fix
 ====
 1.884 items, totalling 18,8 GB
 1.884 items, totalling 2,3 GB
+# Núcleo seguro (Python >=3.11)
+
+El paquete `media_library` incorpora configuración y contratos del nuevo núcleo.
+Los scripts históricos siguen en `src/`. El comando integral `run` pertenece al
+cambio posterior `resumable-pipeline` y todavía no está disponible.
+
+```sh
+python3 -m venv .venv-core
+. .venv-core/bin/activate
+python -m pip install -e '.[dev]'
+python -m pytest
+python -m pytest -m integration
+```
+
+La suite rápida excluye la marca `integration`. Las integraciones usan medios
+sintéticos y herramientas locales; si falta alguna se omiten con su motivo.
+Copiar `media-library.example.toml` a `media-library.toml` permite configurar
+rutas relativas al TOML, exclusiones, timeout, reserva y herramientas. No poner
+rutas personales en Git. La configuración local y `sample/` están excluidos.
+Los [contratos y compatibilidad](docs/manifest-v1.md) describen el esquema 1.
