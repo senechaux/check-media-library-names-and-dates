@@ -1,6 +1,6 @@
 ## 1. Derivados y validación
 - [ ] 1.1 Definir recetas y fuentes de mayor calidad, destinos por ruta/ID y descubrimiento de años.
-- [ ] 1.2 Implementar exportación JPG con orientación, límite 1200, fechas y política de color; tratar EXIF ausente.
+- [x] 1.2 Implementar exportación JPG con orientación, límite 1200, fechas y política de color; tratar EXIF ausente.
 - [ ] 1.3 Reutilizar codificación para perfil upload-480p30 con geometría correcta y fechas verificadas.
 - [ ] 1.4 Implementar publicación validada, vigencia por receta/huellas y recuperación de parciales.
 

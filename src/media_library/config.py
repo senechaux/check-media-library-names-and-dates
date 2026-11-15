@@ -14,6 +14,7 @@ from .process import run_tool
 from .pipeline_settings import parse_settings
 from .date_settings import parse_date_settings
 from .video_settings import parse_video_settings
+from .export_settings import parse_export_settings
 
 
 class ConfigError(ValueError):
@@ -41,6 +42,7 @@ class Config:
     pipeline: dict = field(default_factory=dict)
     dates: dict = field(default_factory=dict)
     video: dict = field(default_factory=dict)
+    export_settings: dict = field(default_factory=dict)
 
     def effective(self):
         data = asdict(self)
@@ -52,6 +54,8 @@ class Config:
             data.pop("dates")
         if not self.video:
             data.pop("video")
+        if not self.export_settings:
+            data.pop("export_settings")
         return json.loads(json.dumps(data))
 
     def excluded(self, relative):
@@ -75,7 +79,7 @@ def load_config(filename):
     filename = Path(filename).resolve(strict=True)
     with filename.open("rb") as handle:
         data = tomllib.load(handle)
-    _keys(data, ("paths", "inventory", "execution", "tools", "pipeline", "dates", "video"), "raíz")
+    _keys(data, ("paths", "inventory", "execution", "tools", "pipeline", "dates", "video", "export"), "raíz")
     paths = data.get("paths", {})
     _keys(paths, ("source", "workspace", "archive", "export"), "paths")
     if set(paths) != {"source", "workspace", "archive", "export"}:
@@ -116,9 +120,10 @@ def load_config(filename):
         pipeline = parse_settings(data["pipeline"]).effective() if "pipeline" in data else {}
         dates = parse_date_settings(data["dates"]) if "dates" in data else {}
         video = parse_video_settings(data["video"]) if "video" in data else {}
+        export_settings = parse_export_settings(data["export"]) if "export" in data else {}
     except ValueError as exc:
         raise ConfigError(str(exc)) from exc
-    config = Config(**resolved, exclude=exclude, timeout_seconds=timeout, reserve_bytes=reserve, tools=tools, pipeline=pipeline, dates=dates, video=video)
+    config = Config(**resolved, exclude=exclude, timeout_seconds=timeout, reserve_bytes=reserve, tools=tools, pipeline=pipeline, dates=dates, video=video, export_settings=export_settings)
     validate_paths(config)
     return config
 

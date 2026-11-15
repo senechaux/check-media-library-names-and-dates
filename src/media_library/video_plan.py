@@ -79,7 +79,8 @@ def geometry(info, profile="archive-720p30"):
     if profile == "height-720":
         bounds = (width, Fraction(720))
     else:
-        bounds = (1280, 720) if width > height else (720, 1280) if height > width else (720, 720)
+        long, short = (854, 480) if profile == "upload-480p30" else (1280, 720)
+        bounds = (long, short) if width > height else (short, long) if height > width else (short, short)
     scale = min(Fraction(1), Fraction(bounds[0]) / width, Fraction(bounds[1]) / height)
     max_width, max_height = int(width * scale) // 2 * 2, int(height * scale) // 2 * 2
     # Buscar redondeo par que conserve DAR <=0,5%; nunca ampliar para redondear.

@@ -18,7 +18,7 @@ def parse_video_settings(raw):
     for key, low, high in (("quality", 0, 51), ("min_savings_ratio", 0, 1)):
         if type(result[key]) not in (int, float) or not math.isfinite(result[key]) or not low <= result[key] <= high:
             raise ValueError(f"video.{key} fuera de rango")
-    for key, allowed in (("profile", ("archive-720p30", "height-720")), ("frame_rate_mode", ("pfr", "cfr")),
+    for key, allowed in (("profile", ("archive-720p30", "height-720", "upload-480p30")), ("frame_rate_mode", ("pfr", "cfr")),
                          ("encoder_preset", ("ultrafast", "superfast", "veryfast", "faster", "fast", "medium", "slow", "slower", "veryslow")),
                          ("audio_encoder", ("ffmpeg_aac", "ca_aac", "av_aac")), ("historical_policy", ("review", "keep", "process"))):
         if result[key] not in allowed:
