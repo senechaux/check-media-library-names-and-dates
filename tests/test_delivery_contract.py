@@ -151,6 +151,23 @@ def test_explicit_not_delivered_authorizes_only_one_retry(delivery_case):
     assert DeliveryAdapter().run(reload()).state=='WAITING_USER' and counter.read_text()=='2'
 
 
+def test_export_repair_does_not_reactivate_a_consumed_delivery_resolution(delivery_case):
+    context,counter,reload=delivery_case(behavior='fail')
+    adapter=DeliveryAdapter();assert adapter.run(context).state=='WAITING_USER'
+    context=reload();context.decisions['delivery_resolution']='not-delivered';context.record['decision_revision']=1
+    assert adapter.run(context).state=='WAITING_USER' and counter.read_text()=='2'
+    value=context.pipeline.data['files'][context.file_id]
+    exported=copy.deepcopy(value['stages']['export']['evidence'])
+    path=Path(exported['export']['path']);original=path.read_bytes();path.write_bytes(b'own partial')
+    ExportAdapter().revalidate_completed(context.pipeline)
+    path.write_bytes(original)  # El fixture simula la reparación local; no altera la resolución consumida.
+    value['stages']['export'].update(state='COMPLETED',evidence=exported)
+    value['stages']['audit']['state']='COMPLETED'
+    context=StageContext(context.pipeline,'delivery',context.file_id,value['stages']['delivery'])
+    assert context.record['decision_revision']==1
+    assert adapter.run(context).state=='WAITING_USER' and counter.read_text()=='2'
+
+
 def test_configured_cli_requires_opt_in_and_rejects_inline_secrets(config_file):
     configure(config_file,modes={"delivery":"auto"})
     delivery_toml(config_file)

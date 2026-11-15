@@ -219,7 +219,8 @@ class ExportAdapter(Adapter):
                 for stage in ("export","audit","delivery"):
                     old=value["stages"][stage]
                     if old["state"]!="DISABLED":
-                        value["stages"][stage]={"state":"PLANNED","decisions":old.get("decisions",{}),"start_sequence":pipeline.store.manifest.sequence+1}
+                        value["stages"][stage]={"state":"PLANNED","decisions":copy.deepcopy(old.get("decisions",{})),
+                            "decision_revision":old.get("decision_revision",0),"start_sequence":pipeline.store.manifest.sequence+1}
         pipeline.save()
 
 
