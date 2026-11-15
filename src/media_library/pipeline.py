@@ -166,13 +166,19 @@ class Pipeline:
                 output = folder / ("output" + (".mp4" if context.stage in ("normalize", "compression") else Path(context.entry.current_path).suffix))
                 if context.stage not in COPY_STAGES:
                     source = Path(context.entry.current_path)
+                    if context.stage == "installation":
+                        artifact = context.artifact()
+                        if artifact:
+                            source = Path(artifact.path)
+                        output = Path(context.entry.current_path)
                     if context.stage == "delivery":
                         exports = [op for op in self.store.manifest.operations.values() if op.file_id == context.file_id and op.kind == "export" and op.state == "COMPLETED"]
                         if exports:
                             source = Path(exports[-1].destination)
                 record["pause"]["inputs"] = {context.file_id: str(source)}
-                record["pause"]["outputs"] = {context.file_id: str(output)}
-                record["copy_sha256"] = fingerprint(context.entry.current_path)["sha256"]
+                record["pause"]["outputs"] = {} if context.stage in ("audit", "delivery") else {context.file_id: str(output)}
+                if context.stage in COPY_STAGES:
+                    record["copy_sha256"] = fingerprint(context.entry.current_path)["sha256"]
             self.save(state=State.WAITING_USER)  # Intención y rutas antes de preparar copias.
         if context.file_id and context.stage in COPY_STAGES:
             path = Path(record["pause"]["inputs"][context.file_id])

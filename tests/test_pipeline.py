@@ -207,6 +207,7 @@ def test_web_confirmation_is_human_and_never_remote_verification(config_file):
     assert run(config_file, "--apply", console=ScriptConsole(["comprobar"])) == 0
     value = report(config_file)
     assert value["human_confirmations"] == [{"stage": "delivery", "file_id": value["files"][0]["file_id"], "technical_verification": False}]
+    assert value["files"][0]["stages"]["delivery"]["pause"]["outputs"] == {}
     assert not (config_file.parent / "export").exists()
 
 
