@@ -105,3 +105,12 @@ def test_bad_reader_isolated_per_file():
     settings = effective_decision(parse_date_settings({"timezone": "Europe/Madrid"}), "a.JPG")
     reports = audit_entries(entries, Reader(), lambda entry: settings)
     assert reports[0]["state"] == "FAILED" and reports[1]["state"] == "COMPLETED"
+
+
+def test_grouped_exif_offsets_and_fractions_keep_the_raw_value():
+    from media_library.date_audit import metadata_dates
+    decision = effective_decision(parse_date_settings({}), "a.JPG")
+    raw = "2026:11:10 18:59:08+01:00"
+    sources = metadata_dates({"ExifIFD:DateTimeOriginal": raw, "ExifIFD:SubSecTimeOriginal": "001234567"}, decision)
+    assert sources[0].original == raw and sources[0].fraction == "001234567"
+    assert sources[0].offset == "+01:00"

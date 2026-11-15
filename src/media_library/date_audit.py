@@ -15,11 +15,12 @@ def metadata_dates(tags, decision):
             suffix = "Original" if tag == "DateTimeOriginal" else "Digitized"
             subsecond = tags.get(group + ":SubSecTime" + suffix)
             offset = tags.get(group + ":OffsetTime" + suffix)
-            if subsecond and not parse_date(text, key).fraction:
-                text += "." + str(subsecond)
+            if subsecond is not None and str(subsecond) and not parse_date(text, key).fraction:
+                base = parse_date(text, key)
+                text = base.value + "." + str(subsecond) + (base.offset or "") if base.complete else text
             if offset and not parse_date(text, key).offset:
                 text += str(offset)
-            date = parse_date(text, key)
+            date = replace(parse_date(text, key), original=str(value))
         elif (base_group == "Keys" and tag == "CreationDate") or (base_group == "QuickTime" and tag == "CreateDate") or (base_group.startswith("Track") and tag in ("TrackCreateDate", "MediaCreateDate")):
             date = parse_date(value, key)
             if base_group != "Keys" and date.complete and not date.offset:
@@ -84,6 +85,9 @@ def audit_date(filename, tags, decision):
         if policy == "filename-to-metadata" and not explicit and not decision["remove_historical"] and not decision["discard_description"]:
             target = filename
     return {"filename": asdict(name_date), "sources": [asdict(date) for date in sources],
+            "raw_dates": {key: value for key, value in tags.items() if key.rsplit(":", 1)[-1] in
+                          ("DateTimeOriginal", "CreateDate", "CreationDate", "TrackCreateDate", "MediaCreateDate", "FileModifyDate", "FileCreateDate",
+                           "OffsetTimeOriginal", "OffsetTimeDigitized", "SubSecTimeOriginal", "SubSecTimeDigitized")},
             "source_diagnostics": [{"source": date.source, "issue": date.issue} for date in sources if date.issue],
             "comparisons": comparisons, "metadata_conflict": conflicts, "problems": problems,
             "selected": asdict(selected) if selected else None, "decision": decision,
