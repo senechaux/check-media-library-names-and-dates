@@ -10,6 +10,67 @@ from media_library.process import run_tool
 from media_library.state import LockError, PersistenceError, RunStore, SourceLock
 
 
+@pytest.mark.parametrize("names", [("source", "SOURCE"), ("origen-é", "origen-e\u0301")])
+def test_lock_rejects_filesystem_aliases(tmp_path, names):
+    source, alias = (tmp_path / name for name in names)
+    source.mkdir()
+    if not alias.exists() or not source.samefile(alias):
+        pytest.skip("El filesystem no identifica estos nombres como alias")
+    with SourceLock(source, registry=tmp_path / "locks") as lock:
+        with pytest.raises(LockError, match="Otro escritor"):
+            with SourceLock(alias, registry=tmp_path / "locks"):
+                pass
+        lock.require(alias)
+
+
+@pytest.mark.parametrize("when", ["before_enter", "while_held"])
+def test_lock_rejects_replaced_source_directory(tmp_path, when):
+    source = tmp_path / "source"
+    source.mkdir()
+    lock = SourceLock(source, registry=tmp_path / "locks")
+    def replace_source():
+        source.rename(tmp_path / "previous")
+        source.mkdir()
+    if when == "before_enter":
+        replace_source()
+        with pytest.raises(LockError):
+            with lock:
+                pass
+    else:
+        with lock:
+            replace_source()
+            with pytest.raises(LockError):
+                lock.require(source)
+
+
+def test_independent_directories_can_be_locked_together(tmp_path):
+    first, second = tmp_path / "first", tmp_path / "second"
+    first.mkdir(); second.mkdir()
+    with SourceLock(first, registry=tmp_path / "locks") as left:
+        with SourceLock(second, registry=tmp_path / "locks") as right:
+            left.require(first); right.require(second)
+
+
+def test_identity_lock_respects_legacy_active_and_stale_owner(tmp_path):
+    import fcntl
+    import hashlib
+    source = tmp_path / "source"; source.mkdir()
+    registry = tmp_path / "locks"; registry.mkdir(mode=0o700)
+    legacy = registry / (hashlib.sha256(os.fsencode(source.resolve())).hexdigest() + ".lock")
+    with legacy.open("w+") as old:
+        old.write('{"legacy_owner":true}'); old.flush()
+        fcntl.flock(old, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        with pytest.raises(LockError, match="Otro escritor"):
+            with SourceLock(source, registry=registry, recover_stale=True):
+                pass
+    with pytest.raises(LockError, match="obsoleto"):
+        with SourceLock(source, registry=registry):
+            pass
+    with SourceLock(source, registry=registry, recover_stale=True) as lock:
+        assert json.loads(lock.previous_owner)["legacy_owner"]
+    assert not legacy.read_text()
+
+
 def test_lock_rejects_same_source_via_symlink_in_another_process(stored, tmp_path):
     store, _ = stored
     alias = tmp_path / "alias"

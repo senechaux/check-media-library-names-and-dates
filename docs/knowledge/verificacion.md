@@ -28,6 +28,9 @@ sources:
 ---
 # Comprobaciones del 2026-11-15
 
+Las cifras de esta sección describen la implementación inicial. Las regresiones
+y comprobaciones posteriores están en [correcciones de la revisión](correcciones-revision.md).
+
 | Comprobación | Resultado y alcance |
 | --- | --- |
 | Instalación | Venv temporal con Python 3.12.15 y pytest 9.2.0; importación desde otra carpeta y `pip check` correctos. Wheel construido con dependencias de build aisladas; preset JSON importable desde el wheel fuera del repositorio. |

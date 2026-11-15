@@ -30,54 +30,91 @@ class SourceLock:
 
     def __init__(self, source, *, registry=None, recover_stale=False):
         self.source = Path(source).resolve(strict=True)
+        info = self.source.stat()
+        self.identity = (info.st_dev, info.st_ino)
+        self.directory = None
         root = Path(registry) if registry else Path(tempfile.gettempdir()) / f"media-library-locks-{os.getuid()}"
         root.mkdir(mode=0o700, parents=True, exist_ok=True)
         if root.is_symlink() or root.stat().st_uid != os.getuid() or root.stat().st_mode & 0o077:
             raise LockError("El registro de bloqueos debe ser privado y pertenecer al usuario")
-        key = hashlib.sha256(os.fsencode(self.source)).hexdigest()
+        key = hashlib.sha256(f"filesystem-v1:{info.st_dev}:{info.st_ino}".encode()).hexdigest()
         self.path = root / (key + ".lock")
+        # Mantener también el lock anterior para reconocer su propietario obsoleto
+        # y coordinar una versión anterior que use exactamente esta ruta.
+        self.legacy_path = root / (hashlib.sha256(os.fsencode(self.source)).hexdigest() + ".lock")
         self.recover_stale = recover_stale
         self.handle = None
+        self.handles = []
+
+    def _check_source(self, source):
+        try:
+            pinned = os.fstat(self.directory)
+            current = self.source.stat()
+            requested = Path(source).resolve(strict=True).stat()
+            if any((info.st_dev, info.st_ino) != self.identity for info in (pinned, current, requested)):
+                raise LockError("La identidad del origen cambió; adquirir un bloqueo nuevo")
+        except OSError as exc:
+            raise LockError("No se puede acreditar la identidad del origen") from exc
 
     def __enter__(self):
         if self.handle:
             raise LockError("Bloqueo ya adquirido")
-        descriptor = os.open(self.path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
-        handle = os.fdopen(descriptor, "r+", encoding="utf-8")
+        handles = []
         try:
-            try:
-                fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            except BlockingIOError as exc:
-                raise LockError("Otro escritor mantiene el bloqueo del origen") from exc
-            previous = handle.read()
-            if previous and not self.recover_stale:
-                raise LockError("Bloqueo obsoleto: revisar propietario y usar recover_stale=True explícitamente")
-            self.previous_owner = previous or None
-            handle.seek(0)
-            handle.truncate()
-            json.dump({"source": str(self.source), "pid": os.getpid(), "host": socket.gethostname(),
-                       "token": uuid.uuid4().hex}, handle)
-            handle.flush()
-            os.fsync(handle.fileno())
+            self.directory = os.open(self.source, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+            self._check_source(self.source)
+            self.previous_owner = None
+            for path in (self.path, self.legacy_path):
+                descriptor = os.open(path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+                handle = os.fdopen(descriptor, "r+", encoding="utf-8")
+                handles.append(handle)
+                try:
+                    fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                except BlockingIOError as exc:
+                    raise LockError("Otro escritor mantiene el bloqueo del origen") from exc
+                previous = handle.read()
+                if previous and not self.recover_stale:
+                    raise LockError("Bloqueo obsoleto: revisar propietario y usar recover_stale=True explícitamente")
+                self.previous_owner = self.previous_owner or previous or None
+            self._check_source(self.source)
+            owner = {"source": str(self.source), "device": self.identity[0], "inode": self.identity[1],
+                     "pid": os.getpid(), "host": socket.gethostname(), "token": uuid.uuid4().hex}
+            for handle in handles:
+                handle.seek(0)
+                handle.truncate()
+                json.dump(owner, handle)
+                handle.flush()
+                os.fsync(handle.fileno())
         except BaseException:
-            handle.close()
+            for handle in handles:
+                handle.close()
+            if self.directory is not None:
+                os.close(self.directory)
+                self.directory = None
             raise
-        self.handle = handle
+        self.handles = handles
+        self.handle = handles[0]
         return self
 
     def __exit__(self, *_):
         try:
-            self.handle.seek(0)
-            self.handle.truncate()
-            self.handle.flush()
-            os.fsync(self.handle.fileno())
+            for handle in self.handles:
+                handle.seek(0)
+                handle.truncate()
+                handle.flush()
+                os.fsync(handle.fileno())
         finally:
-            self.handle.close()
+            for handle in self.handles:
+                handle.close()
+            self.handles = []
+            os.close(self.directory)
+            self.directory = None
             self.handle = None
 
     def require(self, source):
-        if not self.handle or self.handle.closed or Path(source).resolve() != self.source:
+        if not self.handle or self.handle.closed:
             raise LockError("Se requiere el bloqueo activo de este origen")
+        self._check_source(source)
 
 
 def atomic_json(path, value):

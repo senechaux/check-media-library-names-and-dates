@@ -18,3 +18,4 @@
 - [x] 4.1 Verificar todos los escenarios de safe-execution con archivos temporales, incluidos nombres especiales y mismo basename.
 - [x] 4.2 Inyectar fallos de disco/proceso/guardado y comprobar backup, bloqueo y recuperación.
 - [x] 4.3 Actualizar OKF y guía de instalación con capacidades realmente implementadas y resultados de comprobación.
+- [x] 4.4 Corregir bloqueo por identidad efectiva del directorio, rechazar cambios de origen y verificar alias de mayúsculas/Unicode y directorios independientes.

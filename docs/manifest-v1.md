@@ -41,8 +41,11 @@ el servicio real obtiene sus opciones de `[video]`.
 ## Estado, bloqueo y publicación
 
 Adquirir `SourceLock(config.source)` antes de crear/cargar `RunStore`. El bloqueo
-usa `flock` y un registro privado por usuario/origen resuelto en el temporal del
-sistema, independiente del workspace. Un proceso activo nunca se desplaza. Tras
+usa `flock` y un registro privado por usuario/dispositivo/inode en el temporal del
+sistema, independiente del workspace. Un descriptor del origen y comprobaciones
+de identidad detectan sustituciones del directorio. Los alias admitidos comparten
+el bloqueo; también se adquiere el lock anterior por ruta para conservar su
+propietario activo/obsoleto. Un proceso activo nunca se desplaza. Tras
 una salida abrupta, revisar el propietario y usar `recover_stale=True`; no borrar
 el archivo de bloqueo. Al salir normalmente se vacía su propietario y se libera
 el descriptor. Se requiere un sistema Unix local que soporte `flock` y hardlinks;

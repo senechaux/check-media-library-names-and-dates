@@ -51,7 +51,13 @@ rutas personales. `preflight(config)` e `inventory(config)` permiten inspección
 sin modificar medios; las escrituras de estado empiezan al crear `RunStore`.
 La API y sus estados están descritos en [el contrato](../manifest-v1.md).
 
-Adquirir `SourceLock` antes de crear o cargar una ejecución. Tras una caída dura,
+Adquirir `SourceLock` antes de crear o cargar una ejecución. La exclusión usa
+dispositivo/inode del origen, también para alias de mayúsculas/Unicode admitidos
+por el volumen. Un descriptor mantiene esa identidad abierta; sustituir el
+directorio invalida el bloqueo antes de usar el almacén. Se conserva además el
+lock antiguo de la ruta para reconocer sus propietarios. Cerrar versiones
+anteriores al actualizar: no conocen el nuevo lock de los otros alias.
+Tras una caída dura,
 revisar el propietario y pedir `recover_stale=True`: un bloqueo activo nunca
 se fuerza. Cargar con `RunStore.load`, consultar `SafeExecutor.inspect` y elegir
 `execute` para continuar o `restore` para restaurar cuando la evidencia lo permita.
