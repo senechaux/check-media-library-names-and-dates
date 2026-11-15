@@ -1,7 +1,7 @@
 ---
 type: Reference
 title: Correcciones de la revisión integral
-description: Reproducciones, regresiones y límites de los seis fallos de seguridad revisados.
+description: Reproducciones, regresiones y límites de la revisión integral y sus dos P1 posteriores.
 tags: [actual, verificacion, seguridad, recuperacion]
 status: draft
 sources:
@@ -152,3 +152,31 @@ Los 30 casos rápidos y 11 integraciones nuevos se suman a los 206/61 anteriores
 Las pruebas de contrato simulan medios/clientes solo donde se declara; las de
 ExifTool/HandBrake/FFmpeg/Pillow usan herramientas reales. Ninguna prueba acredita
 autenticación, una carga remota real ni una revisión perceptual humana.
+
+# Revisión posterior — historial ilegible (P1)
+
+El recorrido Z/A/B usa JPEG y ExifTool reales: Z publica el derivado sin entrega,
+A lo reutiliza y termina UNCERTAIN tras un submit simulado, y B vuelve a reutilizar
+el derivado de Z. Antes de corregir, quitar permisos al manifiesto de A, romper
+su JSON o cambiar su versión hacía que B enviara otra vez (contador 1 → 2).
+Un checkpoint de entrega mal formado provocaba una excepción sin pausa recuperable.
+Las cuatro regresiones se ejecutaron antes de modificar producción y fallaron.
+
+La reconciliación de entrega usa lectura estricta del historial, independiente
+del descubrimiento tolerante de procedencia local. No se omiten runs ilegibles,
+enlazados ni sin snapshot. Se comprueban identidad, esquema, eventos, secuencia,
+correspondencia con el journal y estructura de jobs. Una incertidumbre de lectura
+se conserva como `delivery_pending`, sin crear un job ni invocar al cliente.
+Recuperar acceso al estado auténtico permite reconciliar el UNCERTAIN anterior;
+la recuperación y `delivery_confirmed` no autorizan repetirlo.
+
+Las regresiones observan contador de envíos, cobertura local, pausa/diagnóstico
+persistido y conservación de fuente/derivado. Tras restaurar el historial,
+reanudar mantiene un envío y una reconciliación explícita cierra sin repetirlo.
+Cinco contratos adicionales cubren snapshot ausente, directorio ilegible, UTF-8
+inválido y journal adelantado/corrupto, con recuperación y entrega acreditada.
+Los antecedentes completos READY, UNCERTAIN y DELIVERED conservan su recorrido.
+El diagnóstico no contiene bytes del estado; restaurar corrupción exige una
+copia fiable, no se reconstruye autorización ni se descarta historial por error.
+Pasaron las 14 integraciones de entrega (cuatro nuevas), los 31 contratos y la suite
+rápida de 241 casos. Los nueve casos nuevos usan temporales, sin cuentas ni red.

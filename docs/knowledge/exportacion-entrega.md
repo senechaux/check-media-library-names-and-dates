@@ -150,6 +150,22 @@ antiguo al reanudarlo. Intento y revisión duradera prevalecen sobre ese snapsho
 el orden de los UUID de ejecución no acredita progreso. Sin revisión histórica,
 se conserva el estado más avanzado del intento. Jobs distintos con entrega posible
 para el mismo alcance requieren reconciliación.
+Antes de habilitar un envío se exige historial legible y validable: se enumeran
+los directorios de ejecución sin omitir errores y se contrastan snapshot,
+secuencia, journal y checkpoints de entrega. Un manifiesto ausente, ilegible,
+corrupto o enlazado deja `WAITING_USER` con la ruta y clase de error en el informe
+y journal actual. No se puede presumir que un antecedente ilegible sea ajeno.
+La exportación local puede seguir reutilizando un derivado acreditado por otro
+run; esa reutilización no autoriza entregar sin conocer los demás antecedentes.
+
+Para recuperar: restaurar permisos/acceso o una copia íntegra verificada del
+estado, sin borrar el run ni inventar un estado READY. Si el snapshot quedó
+atrasado respecto al journal, reanudar primero ese run con su configuración
+original para recuperar sus eventos. Después reanudar la ejecución bloqueada.
+El intento UNCERTAIN recuperado sigue pendiente; solo recibos o una reconciliación
+explícita por job/intento permiten resolverlo. `delivery_confirmed=true` no
+permite ignorar historial desconocido. El recorrido de entrega no repara ni
+reescribe silenciosamente otros runs.
 Cambiar el comando tampoco elude una entrega incierta al mismo alias. Alcances
 solapados que no puedan reconciliarse quedan pendientes, sin duplicar cargas.[^delivery]
 

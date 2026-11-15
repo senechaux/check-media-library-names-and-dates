@@ -18,3 +18,4 @@
 - [x] 3.5 Reconciliar todos los antecedentes de cada job entre ejecuciones, incluida reanudación de un READY antiguo, y verificar no repetición de entregas inciertas/acreditadas.
 - [x] 3.6 Vincular cada autorización explícita de reconciliación a job/intento, consumirla una vez y verificar decisiones ajenas, reparación de exportados e interrupciones antes de reintentar.
 - [x] 3.7 Propagar errores al inventariar el estado del uploader y verificar backup pendiente tras entrega, recuperación sin submit y directorios legibles realmente vacíos.
+- [x] 3.8 Bloquear entrega ante historial potencialmente relevante ilegible o inválido, conservar diagnóstico y verificar recuperación explícita con derivado reutilizado sin repetir submit.

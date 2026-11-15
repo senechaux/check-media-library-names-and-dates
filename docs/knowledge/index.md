@@ -19,5 +19,5 @@ okf_version: "0.2"
 - [Plan de automatización con un comando](automatizacion.md) - Diseño propuesto del proceso reanudable, sus fases y las prioridades de implementación.
 - [Revisión e implementación con agentes](trabajo-con-agentes.md) - Orden de revisión, reparto de tareas, decisiones abiertas y skills útiles para implementar el plan.
 - [Verificación del núcleo y servicios de medios](verificacion.md) - Pruebas rápidas, integraciones reales y límites de lo que todavía no se ha probado.
-- [Correcciones de la revisión integral](correcciones-revision.md) - Reproducciones, regresiones y límites de los seis hallazgos de seguridad.
+- [Correcciones de la revisión integral](correcciones-revision.md) - Reproducciones, regresiones y límites de los seis hallazgos y los P1 posteriores.
 - [Historial](log.md) - Cambios en este paquete de conocimiento.

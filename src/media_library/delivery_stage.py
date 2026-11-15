@@ -11,7 +11,7 @@ from .delivery_settings import DEFAULTS
 from .export_stage import ExportAdapter
 from .filesystem import ConflictError, durable_copy, same_content
 from .models import Issue, StageResult, State
-from .provenance import digest, manifests
+from .provenance import HistoryUnavailable, digest, manifests
 from .stages import Adapter
 from .state import atomic_json
 
@@ -59,15 +59,41 @@ class DeliveryAdapter(Adapter):
     def payload(self,files):
         return digest(sorted(({"identity":f["identity"],"sha256":f["sha256"],"recipe_key":f["recipe_key"]} for f in files),key=lambda f:f["identity"]))
 
+    def historical_job(self,context,manifest):
+        try:
+            delivery=manifest.config.get("delivery",{})
+            if not isinstance(delivery,dict):raise ValueError("Configuración de entrega inválida")
+            job=None
+            for event in manifest.events:
+                pipeline=event["evidence"].get("pipeline",{})
+                if not isinstance(pipeline,dict):raise ValueError("Checkpoint inválido")
+                candidate=pipeline.get("delivery_job")
+                if candidate is None:continue
+                if (not isinstance(candidate,dict) or not isinstance(candidate["job_id"],str)
+                    or candidate["state"] not in ("PREPARING","READY","SUBMITTING","UNCERTAIN","COMMAND_SUCCEEDED","DELIVERED")
+                    or type(candidate["attempts"]) is not int or candidate["attempts"]<0
+                    or type(candidate.get("revision",0)) is not int
+                    or not isinstance(candidate["payload_hash"],str)
+                    or not isinstance(candidate["delivery_signature"],str)
+                    or not isinstance(candidate["scope"]["files"],list)):
+                    raise ValueError("Job histórico inválido")
+                for item in candidate["scope"]["files"]:
+                    if any(not isinstance(item[k],str) for k in ("identity","sha256","recipe_key")):
+                        raise ValueError("Alcance histórico inválido")
+                if (candidate["scope"]["job_id"]!=candidate["job_id"]
+                    or self.payload(candidate["scope"]["files"])!=candidate["payload_hash"]):
+                    raise ValueError("Identidad/huella del alcance histórico inválida")
+                job=candidate
+            return context.pipeline.data.get("delivery_job") if manifest.run_id==context.store.manifest.run_id else job
+        except (ValueError,KeyError,TypeError) as exc:
+            raise HistoryUnavailable(context.store.config.workspace/manifest.run_id/"manifest.json",exc) from exc
+
     def prior(self,context,files,settings):
         payload=self.payload(files);identities={(f["identity"],f["sha256"]) for f in files}
         compatible=[]
         active={"SUBMITTING","UNCERTAIN","COMMAND_SUCCEEDED","DELIVERED"}
-        for manifest in manifests(context.store):
-            if manifest.run_id==context.store.manifest.run_id:
-                job=context.pipeline.data.get("delivery_job")
-            else:
-                job=next((e["evidence"]["pipeline"].get("delivery_job") for e in reversed(manifest.events) if e.get("evidence",{}).get("pipeline",{}).get("delivery_job")),None)
+        for manifest in manifests(context.store,strict=True):
+            job=self.historical_job(context,manifest)
             previous_target=manifest.config.get("delivery",{}).get("target","manual")
             if not job or previous_target!=settings["target"]:continue
             old={(f["identity"],f["sha256"]) for f in job["scope"]["files"]}
@@ -137,7 +163,7 @@ class DeliveryAdapter(Adapter):
             if not files:return
             job=self.job(context,files)
             self.prepare(context,job)
-        except DeliveryPending:
+        except (DeliveryPending,HistoryUnavailable):
             return
 
     def pending(self,context,message):
@@ -205,7 +231,7 @@ class DeliveryAdapter(Adapter):
                 backup_state(context.pipeline,job,settings)
                 return self.completed(job)
             return self.pending(context,"Entrega pendiente")
-        except DeliveryPending as exc:return self.pending(context,str(exc))
+        except (DeliveryPending,HistoryUnavailable) as exc:return self.pending(context,str(exc))
         except DeliveryClientError as exc:
             return StageResult(State.FAILED,issues=[Issue("delivery_preflight",str(exc),file_id=context.file_id)])
 

@@ -2,6 +2,8 @@
 
 ## 2026-11-15
 
+- **P1 posterior — historial ilegible**: Reproducido el segundo submit de un derivado reutilizado cuando otro manifiesto UNCERTAIN no se podía leer/validar. Entrega exige historial completo y coherente con su journal, conserva diagnóstico y recupera sin enviar otra vez. Cinco contratos y cuatro recorridos locales nuevos; 14 integraciones de entrega, 31 contratos y 241 pruebas rápidas pasados. Entrega 15/16; su tarea remota 2.3 sigue pendiente.
+
 - **Correcciones de revisión integral**: Se reprodujeron y corrigieron los seis hallazgos: bloqueo por identidad del origen, reconciliación de todos los antecedentes del job, propiedad de publicación de rename, autorización por intento, errores de inventario del backup y tiempos relativos A/V con edit lists/padding y silencio medido. Cada corrección incluye regresiones y casos válidos próximos, con commit y push.
 - **Evidencia posterior a las correcciones**: 236 pruebas rápidas y 72 integraciones locales pasadas sin omisiones, con temporales/medios sintéticos y cliente remoto simulado. No se atribuye compatibilidad remota ni calidad visual a esos tests. Las ventanas con escritores externos y pérdida física de alimentación siguen sin reproducir.
 - **Tareas y límites**: Núcleo 15/15, pipeline 11/11, metadata 10/11 (3.3 humana), vídeo 11/12 (3.4 visual) y exportación/entrega 14/15 (2.3 real de gphotos). README, OKF y contratos reflejan las correcciones; ninguna propuesta archivada ni cuenta/biblioteca personal utilizada.

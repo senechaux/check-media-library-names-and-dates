@@ -40,6 +40,13 @@ sus offsets. Pasaron pip check, el frontmatter de 16 conceptos OKF, los enlaces
 Markdown locales y la validación estricta de las cinco propuestas. No se probaron escritores
 externos en las ventanas de publicación ni pérdida física de alimentación.
 
+La revisión posterior de historial ilegible añadió cinco contratos y cuatro
+integraciones Z/A/B con derivado reutilizado: fallaban antes de corregir y pasan
+después, con contador de envío conservado en uno y recuperación explícita.
+Pasaron las 14 integraciones de entrega, los 31 contratos y la suite rápida de 241 casos. El transporte
+sigue siendo un cliente local simulado. Véase la evidencia por hallazgo en
+[correcciones de revisión](correcciones-revision.md).
+
 | Comprobación | Resultado y alcance |
 | --- | --- |
 | Instalación | Venv temporal con Python 3.12.15 y pytest 9.2.0; importación desde otra carpeta y `pip check` correctos. Wheel construido con dependencias de build aisladas; preset JSON importable desde el wheel fuera del repositorio. |
@@ -184,7 +191,7 @@ Los documentos siguen en `draft`, sin atribuir una aprobación humana.[^scope]
 | resumable-pipeline | 11/11: comando, alcance, aprobación, pausas, señales, reanudación e informes. | Las acciones humanas se declaran; no equivalen a pruebas técnicas. |
 | metadata-and-naming | 10/11: fechas, zona/DST, decisiones, ExifTool selectivo y nombres recuperables. | 3.3 Attributes/Rename/Apple Photos; sin equivalencia Brute Force demostrada. |
 | validated-video-compression | 11/12: vídeo real y validación de presentación relativa A/V, con regresiones de automático/manual, edit lists y padding. | 3.4 muestra visual RF 22; HDR/pistas avanzadas sin política permanecen bloqueados. |
-| verified-export-and-delivery | 14/15: exportación/entrega por protocolo y regresiones de antecedentes, autorizaciones y backup; transporte remoto simulado. | 2.3 adaptador/auth real de gphotos y ensayo de cuenta/lote autorizado. Revisión visual de nuevos derivados de carga declarada antes de publicar. |
+| verified-export-and-delivery | 15/16: exportación/entrega por protocolo y regresiones de antecedentes, historial no acreditable, autorizaciones y backup; transporte remoto simulado. | 2.3 adaptador/auth real de gphotos y ensayo de cuenta/lote autorizado. Revisión visual de nuevos derivados de carga declarada antes de publicar. |
 
 Todas siguen en changes para revisión; ninguna se ha archivado. No se han usado
 cuentas ni credenciales reales, biblioteca personal ni cargas remotas.

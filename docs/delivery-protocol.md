@@ -74,6 +74,11 @@ El alias y la identidad/huella del alcance protegen también entre ejecuciones.
 Se reconcilian todos los snapshots del job por intento/revisión, también al
 reanudar su propietario antiguo; adoptar un READY no puede ignorar un envío
 incierto posterior. Si hay varios jobs solapados con entrega posible, se pausa.
+Un historial ilegible o inválido también pausa: ausencia de evidencia legible no
+equivale a ausencia de entrega. El diagnóstico conserva ruta/clase de error,
+sin contenido del estado. Recuperar acceso o una copia verificada del historial;
+un snapshot atrasado requiere recuperar su run desde el journal antes de seguir.
+Reanudar después vuelve a reconciliar; no habilita otro submit por sí mismo.
 
 DELIVERED se persiste antes de respaldar el estado. Un fallo posterior reintenta
 el backup y no submit. Las copias privadas verificadas y su recibo se conservan;

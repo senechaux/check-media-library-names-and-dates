@@ -112,6 +112,34 @@ def test_completed_job_and_unused_ready_can_be_adopted_without_duplicate_submit(
     assert adapter.run(newest).state=='COMPLETED' and counter.read_text()=='1'
 
 
+@pytest.mark.parametrize('fault',['manifest_missing','run_unreadable','invalid_utf8','journal_ahead','journal_corrupt'])
+def test_unverifiable_history_blocks_delivery_until_state_is_recovered(delivery_case,fault):
+    import json
+    import os
+    context,counter,_=delivery_case(backup=False)
+    adapter=DeliveryAdapter();assert adapter.run(context).state=='COMPLETED'
+    history=context.store.path;journal=context.store.journal;root=context.store.root
+    saved=history.read_bytes();saved_journal=journal.read_bytes()
+    fresh=fork_delivery(context)
+    try:
+        if fault=='manifest_missing':history.unlink()
+        elif fault=='run_unreadable':
+            root.chmod(0)
+            if os.access(root,os.R_OK|os.X_OK):pytest.skip('El usuario puede leer el directorio sin permisos')
+        elif fault=='invalid_utf8':history.write_bytes(b'\xff')
+        elif fault=='journal_ahead':
+            record=json.loads(saved_journal.splitlines()[-1]);record['sequence']+=1
+            record['event']['sequence']=record['sequence']
+            journal.write_bytes(saved_journal+(json.dumps(record)+'\n').encode())
+        else:journal.write_bytes(saved_journal+b'{invalid}\n')
+        result=adapter.run(fresh)
+        assert result.state=='WAITING_USER' and counter.read_text()=='1'
+        assert str(root) in result.issues[0].message
+    finally:
+        root.chmod(0o700);history.write_bytes(saved);journal.write_bytes(saved_journal)
+    assert adapter.run(fresh).state=='COMPLETED' and counter.read_text()=='1'
+
+
 def test_scoped_receipts_and_private_backup_without_secret_logging(delivery_case):
     context,counter,reload=delivery_case()
     result=DeliveryAdapter().run(context)

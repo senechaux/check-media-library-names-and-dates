@@ -201,6 +201,11 @@ con una cuenta real**: su versión 6.0.0 se inspeccionó sin autenticar ni subir
 Sin recibos completos, el éxito del comando pide confirmación humana; ante un
 resultado incierto no se repite automáticamente, tampoco desde otra ejecución
 equivalente o cambiando el comando. Reconciliar antes de autorizar un intento.
+Si no puede leerse o validarse un historial potencialmente relevante, la entrega
+pausa con diagnóstico. Recuperar acceso/estado íntegro y reanudar; no borrar el
+antecedente para eludirlo. Un journal adelantado requiere recuperar primero su
+run original. Un derivado reutilizable o una confirmación genérica no autorizan
+otro envío cuando el historial sigue desconocido.
 
 El estado del uploader puede respaldarse en directorios privados disjuntos.
 Si el backup falla tras acreditar entrega, reanudar continúa el backup sin volver
@@ -222,7 +227,7 @@ están implementados y verificados, pendientes de revisión sin archivar;
 `validated-video-compression` tiene 11/12 tareas verificadas, incluida la corrección
 de sincronización A/V; resta la revisión
 visual 3.4. Ningún cambio se ha archivado.
-`verified-export-and-delivery` tiene 14/15 tareas verificadas: lo verificable local y el
+`verified-export-and-delivery` tiene 15/16 tareas verificadas: lo verificable local y el
 protocolo de entrega; su tarea 2.3 de adaptador/autenticación real sigue pendiente.
 La [verificación de las cinco propuestas](docs/knowledge/verificacion.md) enumera
 pruebas locales, revisiones humanas y ensayos remotos pendientes.

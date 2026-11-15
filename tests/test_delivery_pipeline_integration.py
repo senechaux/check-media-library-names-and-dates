@@ -104,6 +104,59 @@ def test_uncertain_delivery_cannot_be_repeated_by_resume_or_new_run(config_file,
     assert resolved['delivery']['evidence_kind']=='human_reconciliation'
 
 
+@pytest.mark.parametrize('fault',['permission','json','schema','checkpoint'])
+def test_reused_export_cannot_hide_unreadable_uncertain_delivery(config_file,video_tools,fault):
+    import os
+    config=configure_export(config_file,video_tools)
+    source=config.source/'2026-01-02 04.04.05.JPG';make_jpeg(source)
+    original=source.read_bytes()
+    # Z conserva una publicación reutilizable aunque A resulte ilegible.
+    code,local=run_real(config_file,'--apply');assert code==0,local
+    exported=local['coverage']['exported'][0]
+    derivative=Path(exported['path']);derivative_bytes=derivative.read_bytes()
+    counter=delivery_toml(config_file,behavior='fail',backup=False)
+    code,uncertain=run_real(config_file,'--apply')
+    assert code==2 and uncertain['delivery']['state']=='UNCERTAIN' and counter.read_text()=='1'
+    history=config.workspace/uncertain['run_id']/'manifest.json'
+    saved=history.read_bytes()
+    try:
+        if fault=='permission':
+            history.chmod(0)
+            if os.access(history,os.R_OK):pytest.skip('El usuario puede leer el manifiesto sin permisos')
+        elif fault=='json':history.write_bytes(b'{incomplete')
+        else:
+            data=json.loads(saved)
+            if fault=='schema':data['schema_version']=999
+            else:
+                # JSON/esquema externo válidos, checkpoint de entrega inválido.
+                for event in data['events']:
+                    job=event.get('evidence',{}).get('pipeline',{}).get('delivery_job')
+                    if job:job['scope']['files']=None
+            history.write_text(json.dumps(data))
+        code,blocked=run_real(config_file,'--apply')
+        assert counter.read_text()=='1', 'No debe repetir el submit de A al omitir su historial'
+        assert code==2 and blocked['coverage']['local_complete'],blocked
+        assert blocked['coverage']['exported'][0]['sha256']==exported['sha256']
+        assert blocked['files'][0]['stages']['delivery']['state']=='WAITING_USER'
+        assert str(history) in str(blocked['pending'])
+        # EOF y una declaración genérica de entrega no autorizan ignorar el error.
+        code,blocked=run_real(config_file,'--resume',blocked['run_id'],
+            console=ScriptConsole(['decidir delivery_confirmed=true','comprobar']))
+        assert code==2 and counter.read_text()=='1'
+        assert str(history) in str(manifest(config_file,blocked)['events'])
+    finally:
+        history.chmod(0o600);history.write_bytes(saved)
+    # Recuperar acceso al snapshot auténtico no equivale a autorizar otro envío.
+    code,recovered=run_real(config_file,'--resume',blocked['run_id'])
+    assert code==2 and recovered['delivery']['state']=='UNCERTAIN' and counter.read_text()=='1'
+    assert recovered['delivery']['job_id']==uncertain['delivery']['job_id']
+    code,resolved=run_real(config_file,'--resume',blocked['run_id'],
+        console=ScriptConsole(['decidir delivery_resolution=delivered','comprobar']))
+    assert code==0 and counter.read_text()=='1'
+    assert resolved['delivery']['evidence_kind']=='human_reconciliation'
+    assert source.read_bytes()==original and derivative.read_bytes()==derivative_bytes
+
+
 def test_only_an_explicit_new_resolution_can_authorize_another_attempt(config_file,video_tools):
     config=configure_export(config_file,video_tools)
     counter=delivery_toml(config_file,behavior='fail',backup=False)

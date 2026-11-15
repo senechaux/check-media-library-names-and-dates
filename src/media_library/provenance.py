@@ -3,6 +3,7 @@
 from pathlib import Path
 import hashlib
 import json
+import stat
 
 from .filesystem import ConflictError, fingerprint, regular_reader, same_content
 from .models import Manifest
@@ -12,9 +13,75 @@ def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=True, separators=(",", ":")).encode()).hexdigest()
 
 
-def manifests(store):
+class HistoryUnavailable(ValueError):
+    def __init__(self, path, cause):
+        super().__init__(f"Historial no acreditable: {path} ({type(cause).__name__}). "
+            "Recuperar acceso o restaurar una copia verificada; si el journal está adelantado, "
+            "reanudar su ejecución antes de continuar. El error no autoriza otro envío")
+
+
+def checked_snapshot(path):
+    """Lectura estricta para entrega. No reparar ni omitir antecedentes inciertos."""
+    try:
+        if path.resolve() != path:
+            raise ValueError("Historial enlazado")
+        with regular_reader(path) as handle:
+            manifest = Manifest.from_dict(json.load(handle))
+        if (manifest.run_id != path.parent.name or not isinstance(manifest.config, dict)
+            or any(not isinstance(manifest.config.get(k), str) for k in ("source", "archive"))
+            or type(manifest.sequence) is not int or manifest.sequence < 0
+            or not isinstance(manifest.events, list) or len(manifest.events) != manifest.sequence):
+            raise ValueError("Identidad/configuración/secuencia de historial inválidas")
+        for sequence, event in enumerate(manifest.events, 1):
+            if (not isinstance(event, dict) or event.get("sequence") != sequence
+                or not isinstance(event.get("evidence"), dict)):
+                raise ValueError("Evento de historial inválido")
+        # Un snapshot atrasado puede ocultar SUBMITTING del journal. Exigir su
+        # recuperación mediante RunStore.load, sin escribir aquí otro run.
+        journal = path.with_name("journal.jsonl")
+        if journal.resolve() != journal:
+            raise ValueError("Journal enlazado")
+        with regular_reader(journal) as handle:
+            last = 0
+            for line in handle:
+                if not line.endswith(b"\n"):
+                    break  # Cola incompleta: ninguna mutación depende de ella.
+                record = json.loads(line)
+                if type(record["sequence"]) is not int or record["sequence"] != last + 1:
+                    raise ValueError("Journal discontinuo")
+                if last < len(manifest.events) and record["event"] != manifest.events[last]:
+                    raise ValueError("Snapshot no corresponde a su journal")
+                last = record["sequence"]
+        if last != manifest.sequence:
+            raise ValueError("Snapshot y journal requieren recuperación")
+        return manifest
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, ConflictError) as exc:
+        raise HistoryUnavailable(path, exc) from exc
+
+
+def manifests(store, *, strict=False):
     """Snapshots del mismo origen/archivo, también al elegir otra raíz de exportación."""
     yield store.manifest
+    if strict:
+        # glob omite directorios ilegibles. Enumerar primero todos los posibles
+        # runs: tampoco ausencia de snapshot dentro de un run significa ausencia
+        # de intentos. Un antecedente ilegible no permite saber si es relevante.
+        try:
+            roots = sorted(store.config.workspace.iterdir())
+            for root in roots:
+                if root == store.root:
+                    continue
+                mode = root.lstat().st_mode  # No convertir EACCES de stat en False.
+                if stat.S_ISLNK(mode):
+                    raise HistoryUnavailable(root, ValueError("Run enlazado"))
+                if not stat.S_ISDIR(mode):
+                    continue
+                manifest = checked_snapshot(root / "manifest.json")
+                if all(manifest.config[name] == str(getattr(store.config, name)) for name in ("source", "archive")):
+                    yield manifest
+        except OSError as exc:
+            raise HistoryUnavailable(store.config.workspace, exc) from exc
+        return
     for path in sorted(store.config.workspace.glob("*/manifest.json")):
         if path == store.path or path.resolve() != path:
             continue
