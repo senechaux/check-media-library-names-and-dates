@@ -16,6 +16,12 @@ sources:
 ---
 # Alcance
 
+Desde el 2026-11-15, el [núcleo seguro](nucleo-seguro.md) y sus pruebas añaden
+comportamiento implementado a la instantánea histórica. Las fichas de scripts
+conservan su procedencia del commit original e indican los adaptadores modificados.
+El núcleo está implementado y verificado, pendiente de revisión sin archivar;
+las otras cuatro propuestas siguen sin implementar.
+
 Este paquete documenta los seis archivos Python que siguen en uso, tomando como
 referencia el commit indicado. El código tiene prioridad sobre el README cuando difieren.
 El objetivo del proyecto es ordenar una biblioteca local de fotos y vídeos,

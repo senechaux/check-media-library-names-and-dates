@@ -14,14 +14,17 @@ sources:
 ---
 # Resultado propuesto
 
+El [núcleo seguro](nucleo-seguro.md) ya está implementado como paquete importable.
+La interfaz y las fases completas descritas a continuación siguen siendo propuestas.
+
 Tras instalar el proyecto y sus herramientas, ejecutar desde cualquier carpeta:
 
 ```sh
 python3 -m media_library run --config /ruta/media-library.toml
 ```
 
-**Es una interfaz propuesta, aún no existe.** Un `pyproject.toml` permitirá
-instalar el paquete en el entorno virtual. Usar `argparse`, `pathlib`,
+**Es una interfaz propuesta, aún no existe.** El `pyproject.toml` actual permite
+instalar el núcleo en el entorno virtual. Usar `argparse`, `pathlib`,
 `tomllib`, `dataclasses`, `zoneinfo` y JSON de la biblioteca estándar es
 suficiente; no se necesita una plataforma de tareas ni una interfaz web.
 
@@ -125,7 +128,7 @@ Códigos propuestos: 0 completado, 2 intervención pendiente, 3 fallo operativo,
 
 | Orden | Cambio OpenSpec | Entrega verificable | Depende de |
 | --- | --- | --- | --- |
-| 1 | `safe-execution-core` | Configuración, inventario fiable, manifiesto, operaciones seguras y corrección de resultados básicos | — |
+| 1 | `safe-execution-core` | Implementado y verificado; pendiente de revisión sin archivar: configuración, inventario, manifiesto y operaciones seguras | — |
 | 2 | `resumable-pipeline` | Comando único, plan/aplicación, pausas y reanudación usando contratos de etapa | 1 |
 | 3 | `metadata-and-naming` | Fechas EXIF/QuickTime, zona, renombrado en ambas direcciones y alternativa manual | 1 y 2 para integración |
 | 4 | `validated-video-compression` | Perfil 720p30, orientación, conversión MP4 y sustitución validada | 1, 3 y 2 para integración |

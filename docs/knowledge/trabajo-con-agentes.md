@@ -27,8 +27,10 @@ sources:
    completar su verificación. Archivar tras comprobar código, escenarios y
    documentación; solo entonces sus requisitos pasan a `openspec/specs/`.
 
-Todas las tareas de implementación están pendientes. La documentación OKF es
-una instantánea del código; las propuestas OpenSpec describen el futuro.
+Las tareas de `safe-execution-core` están implementadas y verificadas, pendientes
+de revisión sin archivar. Las de los otros cuatro cambios siguen pendientes.
+La [ficha del núcleo](nucleo-seguro.md) y su contrato describen el código actual;
+el resto de las propuestas OpenSpec describe el futuro.
 
 # Reparto posterior
 

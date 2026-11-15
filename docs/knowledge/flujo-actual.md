@@ -15,6 +15,13 @@ sources:
 ---
 # Preparación actual
 
+Esta ficha conserva el flujo de los scripts de la instantánea original. Desde
+el 2026-11-15 existe además el [núcleo seguro](nucleo-seguro.md), con instalación
+en `pyproject.toml` y estado propio. No ejecuta automáticamente este flujo.
+Los adaptadores históricos ya cuentan archivos sin `find`/`wc` y usan procesos
+comprobados para ffprobe/MediaInfo. Los scripts completos aún no comparten el
+manifiesto ni las exclusiones del núcleo.
+
 Los comandos del README presuponen estar en `src/`, aunque no lo indican de
 forma consistente: los scripts se invocan por nombre, los logs usan `./logs/`
 y las carpetas de compresión usan `../`. Desde la raíz se necesita `cd src`

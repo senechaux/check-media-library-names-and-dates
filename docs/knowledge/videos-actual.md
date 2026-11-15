@@ -15,6 +15,14 @@ sources:
 ---
 # find-biggest-videos.py
 
+Actualización del 2026-11-15: la consulta de MediaInfo usa argumentos literales,
+timeout y `ToolError` ante fallos; un error impide continuar con logs de éxito.
+Los helpers compartidos de movimiento rechazan colisiones y propagan errores.
+El resto de esta ficha documenta la instantánea original. Sus movimientos directos
+y correspondencias por basename siguen siendo históricos: el
+[núcleo seguro](nucleo-seguro.md) no ejecuta ese `main()` y usa sus propias
+operaciones con backup, journal y recuperación.
+
 `main()` acepta `--dir` obligatorio y no ofrece modo de simulación. Crea
 `logs/<fecha>_biggest_videos/`, obtiene la lista, crea las dos carpetas de trabajo,
 copia los vídeos seleccionados y escribe archivos de correspondencia.[^find]

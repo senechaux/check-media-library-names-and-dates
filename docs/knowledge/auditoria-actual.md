@@ -83,6 +83,17 @@ está declarado pero no se usa.[^dates]
 
 # common_functions.py
 
+Desde `safe-execution-core` (2026-11-15), los adaptadores de
+[`common_functions.py`](../../src/common_functions.py) usan el
+[núcleo seguro](nucleo-seguro.md): el contador recorre con Python y conserva texto
+en éxito; un fallo se propaga, sin devolver cero. ffprobe se ejecuta con timeout,
+resultado comprobado y `{}` si faltan tags; fallos de proceso/JSON se propagan.
+Los helpers de movimiento devuelven la ruta, rechazan destinos existentes o
+equivalentes y propagan errores. Mantienen sus entradas históricas, pero no son
+operaciones con journal/backup; el núcleo no los usa para publicar medios.
+
+El párrafo siguiente describe la instantánea original, anterior a esos cambios:
+
 `count_files_with_the_extension()` ejecuta `find | wc -l` mediante shell,
 devuelve texto en éxito y entero `0` en error. Los nombres con apóstrofos
 pueden romper el comando. `get_video_metadata()` usa una lista de argumentos

@@ -1,5 +1,11 @@
 # Historial del conocimiento
 
+## 2026-11-15
+
+- **Implementación**: Completado `safe-execution-core`, sin archivar: paquete, TOML, inventario, contratos, procesos, manifiesto, journal, bloqueo, backups y recuperación por evidencia.
+- **Verificación**: 60 pruebas rápidas y 2 integraciones reales con FFmpeg/ffprobe 9.0.2 y HandBrake 1.11.2 sobre fixtures sintéticos; fallos de disco/proceso/persistencia, colisiones e interrupciones cubiertos.
+- **Documentación**: Añadida ficha del núcleo y contrato del esquema 1; actualizadas instalación, política y notas de los adaptadores históricos. Commits descriptivos y push a `changes-by-codex` tras cada commit.
+
 ## 2026-11-14
 
 - **Planificación**: Añadida la política de tests automatizados solicitada por el usuario e incorporada a las reglas de OpenSpec.

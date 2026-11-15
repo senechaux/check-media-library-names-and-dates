@@ -3,6 +3,7 @@ okf_version: "0.2"
 ---
 # Conocimiento del proyecto
 
+- [Núcleo seguro implementado](nucleo-seguro.md) - Configuración, inventario, manifiesto, bloqueo, backups y recuperación del cambio safe-execution-core.
 - [Política de tests del desarrollo](politica-tests.md) - Pruebas automatizadas proporcionadas al riesgo y mantenibles para los cambios previstos.
 
 - [Alcance y procedencia](alcance.md) - Cómo interpretar esta documentación y distinguir observaciones de propuestas.

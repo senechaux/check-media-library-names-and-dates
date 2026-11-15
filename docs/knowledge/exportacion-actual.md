@@ -11,6 +11,12 @@ sources:
 ---
 # copy-files-to-upload-to-gphotos.py
 
+El núcleo nuevo no automatiza este exportador. Desde el 2026-11-15 sus helpers
+compartidos cuentan sin shell y propagan errores de movimiento/colisiones; el
+codificador y el protocolo de temporales aquí descritos siguen siendo históricos.
+La primitiva `export` del [núcleo seguro](nucleo-seguro.md) publica candidatos
+validados, sin implementar aún la etapa completa de exportación.
+
 Recibe `--source`, `--destiny`, `--copy_images`, `--copy_videos` y
 `--video_preset`. Las rutas son obligatorias; las dos selecciones son opcionales.
 Sin ninguna selección crea carpetas pero no exporta medios. El preset se

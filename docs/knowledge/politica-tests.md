@@ -2,7 +2,7 @@
 type: Policy
 title: Política de tests del desarrollo
 description: Pruebas automatizadas proporcionadas al riesgo y mantenibles para los cambios previstos.
-tags: [propuesto, tests, calidad]
+tags: [actual, tests, calidad]
 status: draft
 sources:
   - id: user
@@ -30,7 +30,7 @@ Estos casos desarrollan los escenarios de las cinco propuestas existentes;
 no requieren una prueba diferente por cada fila o escenario si una prueba
 parametrizada comprueba varios comportamientos relacionados.[^plan]
 
-# Organización propuesta
+# Organización y evolución
 
 - Usar pytest como dependencia de desarrollo y ofrecer una suite rápida con
   `python -m pytest`. Instalar y documentar esta dependencia al implementar el núcleo.
@@ -57,8 +57,12 @@ ni cargas reales. No guardar medios personales en Git. Las pruebas de integraci�
 deben validar contenido y resultados, sin depender de tiempos exactos de ejecución
 o del tamaño exacto producido por una versión concreta del codificador.
 
-Esta política es planificación: todavía no se ha añadido una suite ni se ha
-implementado el nuevo programa.
+El núcleo ya configura pytest en `pyproject.toml` como dependencia `dev`.
+`python -m pytest` ejecuta la suite rápida y `python -m pytest -m integration`
+las integraciones reales con FFmpeg/ffprobe y HandBrake, siempre sobre temporales.
+Se omiten con motivo si falta una herramienta. Los resultados están en
+[verificación](verificacion.md). Los casos de EXIF, perfiles de vídeo, orquestador
+y entrega siguen siendo prioridades para sus cambios, aún pendientes.
 
 [^user]: Preferencia explícita del usuario recibida el 2026-11-14.
 [^plan]: [Plan de automatización](automatizacion.md).
