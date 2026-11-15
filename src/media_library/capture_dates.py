@@ -113,6 +113,17 @@ def parse_name(filename):
 
 
 def resolve_zone(date, zone=None, *, fold=None, offset=None):
+    if date.value and not date.issue and not date.complete and not date.offset:
+        try:
+            if zone:
+                ZoneInfo(zone)
+                return replace(date, zone=zone, confidence="assumed", assumptions=(f"configured_zone={zone}",))
+            if offset:
+                fixed_offset(offset)
+                return replace(date, offset=offset, confidence="assumed", assumptions=(f"explicit_offset={offset}",))
+        except (ValueError, ZoneInfoNotFoundError):
+            return replace(date, issue="invalid_zone_or_offset")
+        return date
     if not date.complete or date.offset:
         return date
     if fold not in (None, 0, 1):
@@ -156,7 +167,12 @@ def compare_dates(left, right):
     precision = PRECISIONS[min(PRECISIONS.index(left.precision), PRECISIONS.index(right.precision))]
     if precision in ("year", "month", "day"):
         length = {"year": 4, "month": 7, "day": 10}[precision]
-        return "matches" if left.value[:length] == right.value[:length] else "different"
+        def calendar_value(date, partial):
+            if date.complete and date.offset and (partial.zone or partial.offset):
+                target = ZoneInfo(partial.zone) if partial.zone else fixed_offset(partial.offset)
+                return date.datetime().astimezone(target).isoformat()[:length]
+            return date.value[:length]
+        return "matches" if calendar_value(left, right) == calendar_value(right, left) else "different"
     if not left.offset or not right.offset:
         return "unresolved"
     def whole(date):

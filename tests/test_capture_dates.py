@@ -81,6 +81,8 @@ def test_sources_conflict_even_with_priority_and_filesystem_is_never_fallback():
     report = audit_date("1987 vacaciones.JPG", {"System:FileModifyDate": tags["System:FileModifyDate"]}, settings)
     assert report["state"] == "WAITING_USER" and report["filename"]["precision"] == "year"
     assert not report["selected"]
+    report = audit_date("2026-11-10 18.59.08.JPG", {"System:FileModifyDate": "2026:11:10 18:59:08"}, settings)
+    assert report["state"] == "WAITING_USER" and not report["selected"]
 
 
 def test_explicit_direction_selects_source_and_preserves_historical_label_until_requested():
@@ -115,3 +117,16 @@ def test_grouped_exif_offsets_and_fractions_keep_the_raw_value():
     sources = metadata_dates({"ExifIFD:DateTimeOriginal": raw, "ExifIFD:SubSecTimeOriginal": "001234567"}, decision)
     assert sources[0].original == raw and sources[0].fraction == "001234567"
     assert sources[0].offset == "+01:00"
+    conflicting = metadata_dates({"ExifIFD:DateTimeOriginal": raw, "ExifIFD:OffsetTimeOriginal": "+02:00"}, decision)
+    assert conflicting[0].issue == "conflicting_offsets"
+
+
+def test_partial_calendar_precision_uses_the_declared_zone_without_inventing_time():
+    year = resolve_zone(parse_date("2027", "filename"), "Europe/Madrid")
+    instant = parse_date("2026-12-31T23:30:00Z", "tag")
+    assert compare_dates(year, instant) == "matches"
+    assert year.value == "2027" and not year.complete
+    from dataclasses import replace
+    known_offset = replace(parse_date("2027-01-01", "tag"), offset="+02:00")
+    known_offset = resolve_zone(known_offset, "Etc/UTC")
+    assert compare_dates(known_offset, instant) == "matches"

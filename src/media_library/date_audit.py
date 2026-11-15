@@ -2,6 +2,8 @@
 
 from dataclasses import asdict, replace
 from pathlib import Path
+import re
+from .capture_dates import fixed_offset
 from .capture_dates import canonical_name, compare_dates, parse_date, parse_name, resolve_zone
 
 
@@ -11,16 +13,24 @@ def metadata_dates(tags, decision):
         group, _, tag = key.rpartition(":")
         base_group = group.split(":")[0]
         if base_group == "ExifIFD" and tag in ("DateTimeOriginal", "CreateDate"):
-            text = str(value)
             suffix = "Original" if tag == "DateTimeOriginal" else "Digitized"
             subsecond = tags.get(group + ":SubSecTime" + suffix)
             offset = tags.get(group + ":OffsetTime" + suffix)
-            if subsecond is not None and str(subsecond) and not parse_date(text, key).fraction:
-                base = parse_date(text, key)
-                text = base.value + "." + str(subsecond) + (base.offset or "") if base.complete else text
-            if offset and not parse_date(text, key).offset:
-                text += str(offset)
-            date = replace(parse_date(text, key), original=str(value))
+            date = parse_date(value, key)
+            if date.complete and subsecond is not None and str(subsecond) and not date.fraction:
+                date = replace(date, value=date.value + "." + str(subsecond), precision="fraction") if str(subsecond).isdigit() else replace(date, issue="invalid_fraction")
+            if offset:
+                normalized = str(offset)
+                if re.fullmatch(r"[+-]\d{4}", normalized):
+                    normalized = normalized[:3] + ":" + normalized[3:]
+                try:
+                    fixed_offset(normalized)
+                    if date.offset and fixed_offset(date.offset).utcoffset(None) != fixed_offset(normalized).utcoffset(None):
+                        date = replace(date, issue="conflicting_offsets")
+                    else:
+                        date = replace(date, offset=date.offset or normalized)
+                except ValueError:
+                    date = replace(date, issue="invalid_offset")
         elif (base_group == "Keys" and tag == "CreationDate") or (base_group == "QuickTime" and tag == "CreateDate") or (base_group.startswith("Track") and tag in ("TrackCreateDate", "MediaCreateDate")):
             date = parse_date(value, key)
             if base_group != "Keys" and date.complete and not date.offset:
@@ -33,8 +43,7 @@ def metadata_dates(tags, decision):
             date = replace(parse_date(value, key), confidence="filesystem")
         else:
             continue
-        if date.complete:
-            date = resolve_zone(date, decision["timezone"], fold=decision["fold"], offset=decision["offset"])
+        date = resolve_zone(date, decision["timezone"], fold=decision["fold"], offset=decision["offset"])
         dates.append(date)
     return dates
 
@@ -44,7 +53,7 @@ def audit_date(filename, tags, decision):
     name_date = resolve_zone(parsed.date, decision["timezone"], fold=decision["fold"], offset=decision["offset"])
     sources = metadata_dates(tags, decision)
     by_tag = {date.source: date for date in sources}
-    metadata = [date for date in sources if date.confidence != "filesystem"]
+    metadata = [date for date in sources if date.source.split(":")[0] not in ("System", "MacOS")]
     eligible = [date for date in metadata if date.complete and date.offset]
     problems = []
     preferred = next((date for tag in ("ExifIFD:DateTimeOriginal", "Keys:CreationDate") for date in eligible if date.source == tag), None)
