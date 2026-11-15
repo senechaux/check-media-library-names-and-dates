@@ -160,6 +160,12 @@ numera revisiones del job cuando cambia su checkpoint. Intento/revisión y estad
 permiten reconciliar todos sus antecedentes; un READY antiguo no puede ignorar
 una entrega incierta posterior. Los snapshots previos sin revisión se comparan
 conservadoramente por intento/progreso.
+La selección de entrega recorre todos los runs del workspace. scope.files y
+payload_hash vinculan identidades, hashes y recetas; las cabeceras source/archive
+no prueban independencia. Ante solapamiento, se contrasta la configuración
+efectiva completa con delivery_signature antes de usar su target. Si no concuerda,
+se pausa sin ejecutar el cliente. Los defaults antiguos sin delivery explícito
+solo se aceptan si reproducen la huella persistida. No cambia el formato del job.
 La entrega
 persiste SUBMITTING antes del cliente y DELIVERED antes de copiar su estado.
 Alcance/identidad/hash/alias ligan la evidencia; una entrega incierta no se repite

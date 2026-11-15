@@ -80,6 +80,16 @@ sin contenido del estado. Recuperar acceso o una copia verificada del historial;
 un snapshot atrasado requiere recuperar su run desde el journal antes de seguir.
 Reanudar después vuelve a reconciliar; no habilita otro submit por sí mismo.
 
+La selección recorre todos los runs del workspace, sin excluirlos por cabeceras
+source/archive. `scope.files` y `payload_hash` acreditan el alcance por identidad,
+hash y receta. Un alcance disjunto puede excluirse. Si hay solapamiento, se exige
+que la configuración efectiva completa coincida con `delivery_signature` del
+job antes de usar target para excluir otro destino. Una discrepancia deja pausa
+con diagnóstico antes del cliente. El hash abarca todas las opciones, no solo
+el alias. Los defaults antiguos sin tabla delivery explícita solo se aceptan si
+reproducen esa huella. Esta es evidencia local de configuración, no prueba remota
+ni firma contra la edición coordinada del estado.
+
 DELIVERED se persiste antes de respaldar el estado. Un fallo posterior reintenta
 el backup y no submit. Las copias privadas verificadas y su recibo se conservan;
 si cambian, la ejecución requiere revisión. Los tests de este contrato usan

@@ -63,6 +63,22 @@ la validación estricta de las cinco propuestas, `pip check`, frontmatter de los
 16 conceptos OKF y sus enlaces/recursos locales. No se reproducen por ello las
 ventanas con escritores externos ni pérdida física de alimentación.
 
+La selección de antecedentes ya no excluye jobs por cabeceras source/archive ni
+por un target sin acreditar. Se añadió la regla de alcance/payload y configuración
+completa vinculados a las huellas del job, con doce contratos rápidos y cinco
+integraciones del comando completo. Las tres variantes Z/A/B fallaban antes con
+contador 1 → 2 y pasan después con contador 1, sin preflight bajo bloqueo; recuperar
+la cabecera no renueva reintentos consumidos. Dos historiales independientes
+(alcance y alias acreditado) continúan admitidos. Véase [autoridad de antecedentes](exportacion-entrega.md#autoridad-al-seleccionar-antecedentes).
+
+El cierre de esta corrección pasó **260 pruebas rápidas y 89 integraciones
+locales sin omisiones**, incluidos 43 contratos y 19 integraciones de entrega,
+geometría/PFR/CFR/A/V y recuperación entre volúmenes sintéticos. Código de vídeo
+sin cambios. Pasaron OpenSpec estricto, pip check, los 16 conceptos OKF y sus
+enlaces/recursos locales. No se ha ejecutado el piloto ni completado revisiones
+humanas o remotas. Las huellas no autentican una edición coordinada del estado;
+escritores externos y pérdida física de alimentación siguen sin reproducir.
+
 | Comprobación | Resultado y alcance |
 | --- | --- |
 | Instalación | Venv temporal con Python 3.12.15 y pytest 9.2.0; importación desde otra carpeta y `pip check` correctos. Wheel construido con dependencias de build aisladas; preset JSON importable desde el wheel fuera del repositorio. |
@@ -207,7 +223,7 @@ Los documentos siguen en `draft`, sin atribuir una aprobación humana.[^scope]
 | resumable-pipeline | 11/11: comando, alcance, aprobación, pausas, señales, reanudación e informes. | Las acciones humanas se declaran; no equivalen a pruebas técnicas. |
 | metadata-and-naming | 10/11: fechas, zona/DST, decisiones, ExifTool selectivo y nombres recuperables. | 3.3 Attributes/Rename/Apple Photos; sin equivalencia Brute Force demostrada. |
 | validated-video-compression | 12/13: vídeo real, presentación relativa A/V y duración/cobertura de imagen independiente, con regresiones de automático/manual, edit lists, padding y reanudación v1. | 3.4 muestra visual RF 22; HDR/pistas avanzadas sin política permanecen bloqueados. |
-| verified-export-and-delivery | 15/16: exportación/entrega por protocolo y regresiones de antecedentes, historial no acreditable, autorizaciones y backup; transporte remoto simulado. | 2.3 adaptador/auth real de gphotos y ensayo de cuenta/lote autorizado. Revisión visual de nuevos derivados de carga declarada antes de publicar. |
+| verified-export-and-delivery | 16/17: exportación/entrega por protocolo y antecedentes seleccionados por alcance/configuración acreditados, historial ilegible, autorizaciones y backup; transporte remoto simulado. | 2.3 adaptador/auth real de gphotos y ensayo de cuenta/lote autorizado. Revisión visual de nuevos derivados de carga declarada antes de publicar. |
 
 Todas siguen en changes para revisión; ninguna se ha archivado. No se han usado
 cuentas ni credenciales reales, biblioteca personal ni cargas remotas.

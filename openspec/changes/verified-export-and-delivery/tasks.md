@@ -19,3 +19,4 @@
 - [x] 3.6 Vincular cada autorización explícita de reconciliación a job/intento, consumirla una vez y verificar decisiones ajenas, reparación de exportados e interrupciones antes de reintentar.
 - [x] 3.7 Propagar errores al inventariar el estado del uploader y verificar backup pendiente tras entrega, recuperación sin submit y directorios legibles realmente vacíos.
 - [x] 3.8 Bloquear entrega ante historial potencialmente relevante ilegible o inválido, conservar diagnóstico y verificar recuperación explícita con derivado reutilizado sin repetir submit.
+- [x] 3.9 Reconciliar antecedentes por alcance y autoridad de configuración persistidos, sin exclusiones por cabeceras no acreditadas; verificar las tres reproducciones, recuperación, historiales independientes y reintentos de consumo único.

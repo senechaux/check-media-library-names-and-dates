@@ -112,6 +112,31 @@ def test_completed_job_and_unused_ready_can_be_adopted_without_duplicate_submit(
     assert adapter.run(newest).state=='COMPLETED' and counter.read_text()=='1'
 
 
+@pytest.mark.parametrize('field',['source','archive','delivery.target'])
+def test_stale_ready_owner_cannot_exclude_an_incoherent_later_attempt(delivery_case,monkeypatch,field):
+    import json
+    from media_library.delivery_client import DeliveryClient
+    original,counter,_=delivery_case(behavior='fail',backup=False);adapter=DeliveryAdapter()
+    with monkeypatch.context() as patch:
+        patch.setattr(DeliveryClient,'preflight',lambda *a:(_ for _ in ()).throw(KeyboardInterrupt()))
+        with pytest.raises(KeyboardInterrupt):adapter.run(original)
+    assert original.pipeline.data['delivery_job']['state']=='READY' and not counter.exists()
+    later=fork_delivery(original)
+    assert adapter.run(later).state=='WAITING_USER' and counter.read_text()=='1'
+    path=later.store.path;saved=path.read_bytes();data=json.loads(saved)
+    if field=='delivery.target':data['config']['delivery']['target']='incoherent-target'
+    else:data['config'][field]+='-incoherent'
+    try:
+        path.write_text(json.dumps(data))
+        assert adapter.run(original).state=='WAITING_USER' and counter.read_text()=='1'
+    finally:path.write_bytes(saved)
+    assert adapter.run(original).state=='WAITING_USER' and counter.read_text()=='1'
+    assert original.pipeline.data['delivery_job']['state']=='UNCERTAIN'
+    authorize_resolution(original,'delivered')
+    assert adapter.run(original).state=='COMPLETED' and adapter.run(later).state=='COMPLETED'
+    assert counter.read_text()=='1'
+
+
 @pytest.mark.parametrize('fault',['manifest_missing','run_unreadable','invalid_utf8','journal_ahead','journal_corrupt'])
 def test_unverifiable_history_blocks_delivery_until_state_is_recovered(delivery_case,fault):
     import json
@@ -138,6 +163,74 @@ def test_unverifiable_history_blocks_delivery_until_state_is_recovered(delivery_
     finally:
         root.chmod(0o700);history.write_bytes(saved);journal.write_bytes(saved_journal)
     assert adapter.run(fresh).state=='COMPLETED' and counter.read_text()=='1'
+
+
+@pytest.mark.parametrize('field',['target','mode','allow_cli','args','require_capture_date','backup_dir'])
+def test_entire_delivery_configuration_must_match_the_persisted_job(delivery_case,field):
+    import json
+    context,counter,_=delivery_case(behavior='fail',backup=False)
+    adapter=DeliveryAdapter();assert adapter.run(context).state=='WAITING_USER'
+    fresh=fork_delivery(context);path=context.store.path;saved=path.read_bytes();data=json.loads(saved)
+    changes={'target':'other-target','mode':'manual','allow_cli':False,'args':['changed'],
+             'require_capture_date':False,'backup_dir':'changed-backup'}
+    data['config']['delivery'][field]=changes[field]
+    try:
+        path.write_text(json.dumps(data))
+        result=adapter.run(fresh)
+        assert result.state=='WAITING_USER' and counter.read_text()=='1'
+        assert str(path) in result.issues[0].message  # Diagnóstico de historial, no permiso de envío.
+    finally:path.write_bytes(saved)
+    assert adapter.run(fresh).state=='WAITING_USER' and counter.read_text()=='1'
+    authorize_resolution(fresh,'delivered')
+    assert adapter.run(fresh).state=='COMPLETED' and adapter.run(context).state=='COMPLETED'
+    assert counter.read_text()=='1'
+
+
+def test_repairing_configuration_does_not_renew_a_consumed_retry(delivery_case):
+    import json
+    context,counter,_=delivery_case(behavior='fail',backup=False)
+    adapter=DeliveryAdapter();assert adapter.run(context).state=='WAITING_USER'
+    authorize_resolution(context,'not-delivered')
+    assert adapter.run(context).state=='WAITING_USER' and counter.read_text()=='2'
+    fresh=fork_delivery(context);path=context.store.path;saved=path.read_bytes();data=json.loads(saved)
+    data['config']['delivery']['target']='incoherent-target'
+    try:
+        path.write_text(json.dumps(data))
+        assert adapter.run(fresh).state=='WAITING_USER' and counter.read_text()=='2'
+    finally:path.write_bytes(saved)
+    assert adapter.run(fresh).state=='WAITING_USER' and counter.read_text()=='2'
+    authorize_resolution(fresh,'not-delivered')
+    assert adapter.run(fresh).state=='WAITING_USER' and counter.read_text()=='3'
+    assert adapter.run(fresh).state=='WAITING_USER' and adapter.run(context).state=='WAITING_USER'
+    assert counter.read_text()=='3'
+
+
+def test_disjoint_payload_does_not_use_an_unneeded_header_as_authority(delivery_case):
+    import json
+    context,counter,_=delivery_case(behavior='fail',backup=False)
+    adapter=DeliveryAdapter();assert adapter.run(context).state=='WAITING_USER'
+    fresh=fork_delivery(context)
+    fresh.pipeline.data['coverage']['exported'][0]['identity']='independent-logical-photo'
+    path=context.store.path;saved=path.read_bytes();data=json.loads(saved)
+    data['config']['delivery']['target']='incoherent-target'
+    try:
+        path.write_text(json.dumps(data))
+        assert adapter.run(fresh).state=='WAITING_USER' and counter.read_text()=='2'
+        assert fresh.pipeline.data['delivery_job']['job_id']!=context.pipeline.data['delivery_job']['job_id']
+        assert adapter.run(fresh).state=='WAITING_USER' and counter.read_text()=='2'
+    finally:path.write_bytes(saved)
+
+
+def test_legacy_implicit_manual_settings_can_be_accredited(delivery_case):
+    from dataclasses import replace
+    context,counter,_=delivery_case(mode='manual',backup=False)
+    context.store.config=replace(context.store.config,delivery={})
+    context.store.manifest.config=context.store.config.effective()
+    adapter=DeliveryAdapter();assert adapter.run(context).state=='WAITING_USER'
+    old=context.pipeline.data['delivery_job']['job_id']
+    fresh=fork_delivery(context);fresh.decisions['delivery_confirmed']='true'
+    assert adapter.run(fresh).state=='COMPLETED' and not counter.exists()
+    assert fresh.pipeline.data['delivery_job']['job_id']==old
 
 
 def test_scoped_receipts_and_private_backup_without_secret_logging(delivery_case):

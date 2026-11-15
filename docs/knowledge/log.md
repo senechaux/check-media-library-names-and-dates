@@ -2,6 +2,8 @@
 
 ## 2026-11-15
 
+- **P1 — autoridad de antecedentes**: Reproducidas las tres exclusiones por cabeceras source/archive/target (Z/A/B, derivado reutilizado, contador 1 → 2). La entrega recorre todos los runs y decide por alcance/payload y configuración completa vinculados a las huellas persistidas; una incoherencia solapada pausa antes del cliente. Recuperar cabeceras conserva incertidumbre y autorizaciones consumidas. Doce contratos y cinco integraciones nuevos; 260 pruebas rápidas y 89 integraciones locales pasadas sin omisiones. Entrega 16/17, integración real 2.3 pendiente. Código de vídeo sin cambios; ninguna revisión humana/remota completada ni piloto ejecutado ni propuesta archivada.
+
 - **P1 posterior — truncado de vídeo**: Cuatro regresiones publicaban 1 s de imagen con 2 s de audio en lugar de la fuente de 2 s; una recuperación ready v1 también omitía revalidarse. Se separan duración y cobertura de imagen del audio, con tolerancia de FPS/timestamps y revalidación de pruebas antiguas. Los cuatro candidatos próximos válidos siguen aceptados. Pasados 248 tests rápidos y 15 integraciones A/V reales; vídeo 12/13, sin completar revisión visual 3.4.
 - **Cierre de los dos P1 posteriores**: 248 pruebas rápidas y 84 integraciones locales pasadas sin omisiones, con volumen HFS+ sintético y transporte simulado; 12 casos nuevos por grupo. OpenSpec estricto de las cinco propuestas, pip check, OKF y enlaces locales correctos. Ninguna propuesta archivada ni revisión humana/remota completada por inferencia; escritores externos y pérdida física de alimentación siguen sin reproducir.
 

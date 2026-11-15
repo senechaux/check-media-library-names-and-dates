@@ -44,6 +44,24 @@ No interpretar el inventario local como evidencia de carga remota.
    y registrar recibo local sin exponer tokens en logs/Git. Si la carga termina y
    el backup falla, reanudar solo el backup, sin repetir la carga. Un CLI que no
    permita limitar el alcance se mantiene como tarea manual hasta configurarlo.
+8. La autoridad de entrega pertenece al job persistido en checkpoints/journal,
+   no a las cabeceras de rutas del run. Enumerar todos los antecedentes del
+   workspace y acreditar su lectura/coherencia antes de decidir relevancia.
+   `scope.files` y `payload_hash` vinculan identidades lógicas, hashes y recetas;
+   el solapamiento se determina por identidad y hash del derivado. Un alcance
+   acreditado disjunto puede excluirse. Source/archive son datos de procedencia
+   local: no prueban independencia de una entrega.
+   Para un alcance solapado, acreditar la configuración efectiva completa de
+   entrega contra `delivery_signature` antes de usar su alias target para
+   excluirlo. La huella persistida también protege argumentos, modo y opciones,
+   sin enumerar campos especiales del fixture. En jobs antiguos sin tabla de
+   entrega explícita, reconstruir los defaults de modo manual/deshabilitado y
+   exigir igualmente la huella coincidente; no inventar autoridad ni migrar el
+   historial silenciosamente. Una incoherencia o evidencia insuficiente produce
+   pausa con diagnóstico antes de preflight/submit y requiere recuperar estado
+   fiable. Solo después se comparan intento/revisión/progreso y las autorizaciones
+   consumibles existentes. Estas huellas no son autenticación criptográfica ni
+   prueba remota; la edición coordinada de manifiesto y journal no está cubierta.
 
 ## Risks / Trade-offs
 

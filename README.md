@@ -209,6 +209,9 @@ pausa con diagnóstico. Recuperar acceso/estado íntegro y reanudar; no borrar e
 antecedente para eludirlo. Un journal adelantado requiere recuperar primero su
 run original. Un derivado reutilizable o una confirmación genérica no autorizan
 otro envío cuando el historial sigue desconocido.
+La independencia se acredita por alcance del job y configuración de entrega
+vinculada a su huella. Las cabeceras de rutas no excluyen antecedentes; un target
+distinto solo se acepta tras contrastar la configuración efectiva completa.
 
 El estado del uploader puede respaldarse en directorios privados disjuntos.
 Si el backup falla tras acreditar entrega, reanudar continúa el backup sin volver
@@ -230,7 +233,7 @@ están implementados y verificados, pendientes de revisión sin archivar;
 `validated-video-compression` tiene 12/13 tareas verificadas, incluidas sincronización
 A/V y duración/cobertura de imagen independiente del audio; resta la revisión
 visual 3.4. Ningún cambio se ha archivado.
-`verified-export-and-delivery` tiene 15/16 tareas verificadas: lo verificable local y el
+`verified-export-and-delivery` tiene 16/17 tareas verificadas: lo verificable local y el
 protocolo de entrega; su tarea 2.3 de adaptador/autenticación real sigue pendiente.
 La [verificación de las cinco propuestas](docs/knowledge/verificacion.md) enumera
 pruebas locales, revisiones humanas y ensayos remotos pendientes.

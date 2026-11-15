@@ -14,8 +14,9 @@ def digest(value):
 
 
 class HistoryUnavailable(ValueError):
-    def __init__(self, path, cause):
-        super().__init__(f"Historial no acreditable: {path} ({type(cause).__name__}). "
+    def __init__(self, path, cause, *, reason=None):
+        detail=f": {reason}" if reason else ""
+        super().__init__(f"Historial no acreditable: {path} ({type(cause).__name__}){detail}. "
             "Recuperar acceso o restaurar una copia verificada; si el journal está adelantado, "
             "reanudar su ejecución antes de continuar. El error no autoriza otro envío")
 
@@ -60,7 +61,7 @@ def checked_snapshot(path):
 
 
 def manifests(store, *, strict=False):
-    """Snapshots del mismo origen/archivo, también al elegir otra raíz de exportación."""
+    """Estricto: todos los runs. Tolerante: procedencia del mismo origen/archivo."""
     yield store.manifest
     if strict:
         # glob omite directorios ilegibles. Enumerar primero todos los posibles
@@ -76,9 +77,9 @@ def manifests(store, *, strict=False):
                     raise HistoryUnavailable(root, ValueError("Run enlazado"))
                 if not stat.S_ISDIR(mode):
                     continue
-                manifest = checked_snapshot(root / "manifest.json")
-                if all(manifest.config[name] == str(getattr(store.config, name)) for name in ("source", "archive")):
-                    yield manifest
+                # Las cabeceras de rutas no acreditan independencia de entrega.
+                # El consumidor decide por el alcance y autoridad del job.
+                yield checked_snapshot(root / "manifest.json")
         except OSError as exc:
             raise HistoryUnavailable(store.config.workspace, exc) from exc
         return

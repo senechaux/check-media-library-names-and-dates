@@ -169,6 +169,46 @@ reescribe silenciosamente otros runs.
 Cambiar el comando tampoco elude una entrega incierta al mismo alias. Alcances
 solapados que no puedan reconciliarse quedan pendientes, sin duplicar cargas.[^delivery]
 
+# Autoridad al seleccionar antecedentes
+
+La lectura estricta de entrega recorre todos los runs del workspace. Las rutas
+source/archive de una cabecera no prueban que un envío sea ajeno. La procedencia
+local conserva su descubrimiento tolerante; la selección de jobs usa esta regla:
+
+| Evidencia persistida | Qué acredita |
+| --- | --- |
+| `scope.files` y `payload_hash` del job | Identidades lógicas, hashes de los derivados y claves de receta del alcance. Los checkpoints se contrastan con su journal. |
+| `delivery_signature` del job | Huella SHA-256 de toda la configuración efectiva de entrega: modo, alias, argumentos y opciones, incluidos defaults. No es una firma digital. |
+| Intento, revisión y estado | Progreso duradero del mismo job; un READY antiguo no prevalece sobre un intento posterior incierto. |
+| Autorización por job/intento y `resolution_consumed` | Permiso explícito para un único reintento. Recuperar una cabecera no lo renueva. |
+
+Primero se acredita el alcance. Un conjunto sin ninguna pareja coincidente de
+identidad lógica y hash del derivado es disjunto y puede excluirse sin consultar
+un target auxiliar. Para un alcance solapado, la configuración efectiva completa
+registrada debe coincidir con la huella persistida del job **antes** de usar su
+target. Solo entonces un alias diferente acredita independencia dentro del
+protocolo. Si falta evidencia o la configuración no concuerda, queda WAITING_USER
+con ruta y motivo, antes de preflight/submit; una confirmación genérica no lo elude.
+
+Si coinciden destino, payload y configuración, se reconcilian los snapshots por
+intento/revisión/progreso como antes. Otro payload o configuración al mismo alias
+con entrega posible exige reconciliación. En los contratos antiguos sin tabla
+delivery explícita se reconstruyen los defaults manual/disabled que aplicaba el
+servicio y también se exige la huella coincidente; no se migra el estado en silencio.
+El contrato serializado del job sigue siendo el mismo.
+
+Identidad/hash distinguen versiones concretas de derivados; no implementan
+deduplicación perceptual ni descubrimiento de otros workspaces. Target es un
+alias lógico configurado: ni esta comparación ni el cliente simulado acreditan
+que dos alias representen cuentas remotas distintas. Las huellas y el journal
+no protegen contra una edición coordinada de todas las evidencias. Siguen
+pendientes las pruebas remotas y los riesgos de escritores externos/alimentación.
+
+Para recuperar incoherencias, restaurar estado auténtico desde copia fiable y
+reanudar. No recalcular delivery_signature para hacer encajar una cabecera ni
+borrar antecedentes. El job incierto recuperado sigue exigiendo recibos o
+reconciliación explícita, y los permisos consumidos siguen consumidos.
+
 # Backup del estado y recuperación
 
 `state_dir` y `backup_dir` se configuran juntos, disjuntos de las cuatro raíces

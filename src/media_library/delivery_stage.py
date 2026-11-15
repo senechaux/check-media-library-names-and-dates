@@ -61,8 +61,6 @@ class DeliveryAdapter(Adapter):
 
     def historical_job(self,context,manifest):
         try:
-            delivery=manifest.config.get("delivery",{})
-            if not isinstance(delivery,dict):raise ValueError("Configuración de entrega inválida")
             job=None
             for event in manifest.events:
                 pipeline=event["evidence"].get("pipeline",{})
@@ -88,16 +86,38 @@ class DeliveryAdapter(Adapter):
         except (ValueError,KeyError,TypeError) as exc:
             raise HistoryUnavailable(context.store.config.workspace/manifest.run_id/"manifest.json",exc) from exc
 
+    def historical_settings(self,context,manifest,job):
+        """La huella del checkpoint acredita toda la configuración, antes del target."""
+        try:
+            if "delivery" in manifest.config:
+                settings=manifest.config["delivery"]
+            else:
+                # Contrato antiguo: sin tabla explícita, settings() usaba estos
+                # defaults. También deben satisfacer el compromiso persistido.
+                mode=manifest.config.get("pipeline",{}).get("modes",{}).get("delivery","disabled")
+                settings={**DEFAULTS,"mode":"manual" if mode=="manual" else "disabled"}
+            if (not isinstance(settings,dict) or set(settings)!=set(DEFAULTS)
+                or not isinstance(settings["target"],str) or digest(settings)!=job["delivery_signature"]):
+                raise ValueError("Configuración histórica no acreditada")
+            return settings
+        except (ValueError,KeyError,TypeError,AttributeError) as exc:
+            raise HistoryUnavailable(context.store.config.workspace/manifest.run_id/"manifest.json",exc,
+                reason="la configuración de entrega no concuerda con la huella persistida del job") from exc
+
     def prior(self,context,files,settings):
         payload=self.payload(files);identities={(f["identity"],f["sha256"]) for f in files}
         compatible=[]
         active={"SUBMITTING","UNCERTAIN","COMMAND_SUCCEEDED","DELIVERED"}
         for manifest in manifests(context.store,strict=True):
             job=self.historical_job(context,manifest)
-            previous_target=manifest.config.get("delivery",{}).get("target","manual")
-            if not job or previous_target!=settings["target"]:continue
+            if not job:continue
             old={(f["identity"],f["sha256"]) for f in job["scope"]["files"]}
             if not old.intersection(identities):continue
+            # Primero acreditar el alcance; solo una configuración vinculada al
+            # job puede probar que su destino es distinto. Nunca usar rutas de
+            # cabecera ni un target aislado para descartar un posible envío.
+            previous=self.historical_settings(context,manifest,job)
+            if previous["target"]!=settings["target"]:continue
             if job["payload_hash"]==payload and job.get("delivery_signature")==digest(settings):
                 compatible.append((manifest.run_id,job))
             elif job["state"] in active:

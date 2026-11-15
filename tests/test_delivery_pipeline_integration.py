@@ -157,6 +157,76 @@ def test_reused_export_cannot_hide_unreadable_uncertain_delivery(config_file,vid
     assert source.read_bytes()==original and derivative.read_bytes()==derivative_bytes
 
 
+@pytest.mark.parametrize('field',['source','archive','delivery.target'])
+def test_incoherent_header_cannot_hide_reused_export_delivery(config_file,video_tools,monkeypatch,field):
+    from media_library.delivery_client import DeliveryClient
+    config=configure_export(config_file,video_tools)
+    source=config.source/'2026-01-02 04.04.05.JPG';make_jpeg(source)
+    original=source.read_bytes()
+    code,local=run_real(config_file,'--apply');assert code==0,local
+    exported=local['coverage']['exported'][0];derivative=Path(exported['path']).read_bytes()
+    counter=delivery_toml(config_file,behavior='fail',backup=False)
+    code,uncertain=run_real(config_file,'--apply')
+    assert code==2 and uncertain['delivery']['state']=='UNCERTAIN' and counter.read_text()=='1'
+    history=config.workspace/uncertain['run_id']/'manifest.json';saved=history.read_bytes()
+    data=json.loads(saved)
+    if field=='delivery.target':data['config']['delivery']['target']='incoherent-target'
+    else:
+        other=config_file.parent/'incoherent-root';other.mkdir()
+        data['config'][field]=str(other)
+    preflight=DeliveryClient.preflight;calls=[]
+    def observed(client,values):
+        calls.append(values['job']);return preflight(client,values)
+    try:
+        history.write_text(json.dumps(data))  # Job, eventos y journal permanecen intactos.
+        with monkeypatch.context() as patch:
+            patch.setattr(DeliveryClient,'preflight',observed)
+            code,blocked=run_real(config_file,'--apply')
+            assert counter.read_text()=='1','No repetir un envío incierto al excluir su cabecera'
+            assert code==2 and blocked['coverage']['local_complete'],blocked
+            assert blocked['files'][0]['stages']['export']['evidence']['export']['reused']
+            assert all(blocked['coverage']['exported'][0][k]==exported[k] for k in ('identity','sha256','recipe_key'))
+            assert blocked['files'][0]['stages']['delivery']['issues']
+            code,blocked=run_real(config_file,'--resume',blocked['run_id'],
+                console=ScriptConsole(['decidir delivery_confirmed=true','comprobar']))
+            assert code==2 and counter.read_text()=='1' and not calls
+    finally:history.write_bytes(saved)
+    code,recovered=run_real(config_file,'--resume',blocked['run_id'])
+    assert code==2 and recovered['delivery']['state']=='UNCERTAIN' and counter.read_text()=='1'
+    assert recovered['delivery']['job_id']==uncertain['delivery']['job_id']
+    code,resolved=run_real(config_file,'--resume',blocked['run_id'],
+        console=ScriptConsole(['decidir delivery_resolution=delivered','comprobar']))
+    assert code==0 and counter.read_text()=='1' and resolved['delivery']['evidence_kind']=='human_reconciliation'
+    assert source.read_bytes()==original and Path(exported['path']).read_bytes()==derivative
+
+
+@pytest.mark.parametrize('independent',['scope','target'])
+def test_coherent_independent_history_allows_its_own_delivery(config_file,video_tools,independent):
+    configure_export(config_file,video_tools)
+    from media_library.config import load_config
+    config=load_config(config_file)
+    for name in ('2026-01-02 04.04.05.JPG','2026-01-02 04.04.06.JPG'):make_jpeg(config.source/name)
+    assert run_real(config_file,'--apply')[0]==0
+    counter=delivery_toml(config_file,behavior='fail',backup=False)
+    raw=config_file.read_text()
+    if independent=='scope':
+        raw=raw.replace('include=["*"]','include=["*04.04.05.JPG"]')
+    config_file.write_text(raw)
+    code,first=run_real(config_file,'--apply')
+    assert code==2 and first['delivery']['state']=='UNCERTAIN' and counter.read_text()=='1'
+    if independent=='scope':raw=raw.replace('*04.04.05.JPG','*04.04.06.JPG')
+    else:
+        raw=raw.replace('synthetic-target','another-target')
+        client=config_file.parent/'client-stub.py'
+        client.write_text(client.read_text().replace('synthetic-target','another-target'))
+    config_file.write_text(raw)
+    code,second=run_real(config_file,'--apply')
+    assert code==2 and second['delivery']['state']=='UNCERTAIN' and counter.read_text()=='2',second
+    assert first['delivery']['job_id']!=second['delivery']['job_id']
+    assert all(f['stages']['export']['evidence']['export']['reused'] for f in second['files'] if f['selected'])
+    assert run_real(config_file,'--resume',second['run_id'])[0]==2 and counter.read_text()=='2'
+
+
 def test_only_an_explicit_new_resolution_can_authorize_another_attempt(config_file,video_tools):
     config=configure_export(config_file,video_tools)
     counter=delivery_toml(config_file,behavior='fail',backup=False)

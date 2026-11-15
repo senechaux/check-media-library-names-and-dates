@@ -68,3 +68,14 @@ El sistema SHALL respaldar y verificar el estado del uploader tras una entrega e
 #### Scenario: Falla el backup después de subir
 - **WHEN** la entrega queda acreditada pero falla su backup de estado
 - **THEN** la ejecución no se declara completa y al reanudar se reintenta el backup sin repetir la carga acreditada.
+
+### Requirement: Autoridad acreditada al seleccionar antecedentes
+El sistema SHALL reconciliar antecedentes potencialmente solapados usando el alcance, huellas y configuración de entrega vinculados al job persistido. SHALL NOT usar una cabecera de origen, archivo o destino no acreditada como prueba de que el antecedente es ajeno. Si no puede determinar con seguridad su relevancia o resultado, SHALL pausar con diagnóstico antes de ejecutar el cliente.
+
+#### Scenario: Cabecera incoherente con entrega incierta
+- **WHEN** un job UNCERTAIN conserva alcance, eventos y journal, pero una cabecera del manifiesto cambia sin acreditarse frente a la evidencia del job
+- **THEN** reutilizar el derivado en otra ejecución no habilita otro envío y recuperar el estado coherente permite reconciliar sin duplicar.
+
+#### Scenario: Antecedentes independientes acreditados
+- **WHEN** el alcance registrado es disjunto o el destino de entrega distinto está acreditado por la configuración cuya huella conserva el job
+- **THEN** el antecedente puede excluirse sin bloquear una entrega independiente.

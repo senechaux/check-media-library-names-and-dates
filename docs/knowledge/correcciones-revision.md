@@ -1,7 +1,7 @@
 ---
 type: Reference
 title: Correcciones de la revisión integral
-description: Reproducciones, regresiones y límites de la revisión integral y sus dos P1 posteriores.
+description: Reproducciones, reglas de autoridad, regresiones y límites de las revisiones de seguridad.
 tags: [actual, verificacion, seguridad, recuperacion]
 status: draft
 sources:
@@ -16,8 +16,8 @@ sources:
 ---
 # Alcance
 
-Correcciones de los seis hallazgos reproducidos de la revisión integral y dos P1
-de su revisión posterior. Las
+Correcciones de los seis hallazgos reproducidos de la revisión integral y de las
+revisiones posteriores. Las
 pruebas usan temporales, medios sintéticos y transporte remoto simulado. No
 acreditan recuperación ante pérdida física de alimentación ni eliminan las
 carreras con editores externos entre la última comprobación y replace/unlink.
@@ -219,3 +219,48 @@ locales sin omisiones, incluida recuperación entre volúmenes sintéticos. Son
 12 contratos y 12 integraciones nuevos respecto a los seis commits anteriores.
 Los riesgos sobre escritores externos y pérdida física de alimentación siguen
 sin reproducir; estas pruebas no los declaran resueltos.
+
+# Revisión posterior — autoridad de antecedentes de entrega (P1)
+
+La lectura estricta aún permitía excluir un job por una cabecera legible pero
+incoherente. Tres regresiones nuevas del comando completo reproducen Z/A/B:
+Z publica JPEG sin entrega, A reutiliza y queda UNCERTAIN, se cambia únicamente
+source, archive o delivery.target de su cabecera y B reutiliza el mismo derivado.
+Antes de corregir, las tres fallaban porque el contador simulado pasaba de 1 a 2.
+Dos controles independientes (otro alcance y otro alias acreditado) ya pasaban.
+
+La regla de autoridad reutiliza evidencia existente, sin cambiar el contrato del
+job: scope.files/payload_hash vinculan identidades, hashes y recetas; la huella
+delivery_signature vincula la configuración efectiva de entrega completa.
+Se enumeran todos los runs del workspace. Las raíces de la cabecera no excluyen
+jobs. Un alcance acreditado disjunto puede excluirse; para uno solapado, target
+solo permite excluir otro destino tras comprobar la huella de toda la configuración.
+Si no concuerda, se conserva diagnóstico y pausa antes del cliente. La regla y
+sus límites se detallan en [autoridad de antecedentes](exportacion-entrega.md#autoridad-al-seleccionar-antecedentes).
+
+Las tres regresiones pasan después: observan reutilización real, identidad/hash/
+receta coincidentes, un solo envío, ausencia de preflight ante el bloqueo y
+conservación de fuente/derivado. Una confirmación genérica no lo elude. Restaurar
+la cabecera auténtica mantiene UNCERTAIN y permite reconciliar sin otro envío.
+
+Doce contratos rápidos nuevos cubren configuración completa, antiguo propietario
+READY tras intento posterior, recuperación sin renovar autorizaciones consumidas,
+alcance disjunto y configuración manual implícita antigua. Diez fallaban antes:
+cinco repetían envío y cinco omitían el diagnóstico de configuración incoherente.
+Los tres casos READY se ejecutaron contra los módulos del commit anterior en un
+proceso aislado; todos repetían envío y pasan con la corrección. Los dos contratos
+de independencia/compatibilidad ya pasaban antes. Las pruebas de contrato usan
+validadores de medios simulados; los cinco recorridos del comando usan JPEG y
+ExifTool reales, siempre con transporte remoto simulado.
+
+No se obtiene evidencia remota ni autenticación criptográfica del estado. La
+relevancia se limita al workspace y a versiones concretas por identidad/hash;
+no es deduplicación perceptual. No se ha ejecutado el piloto ni completado las
+revisiones de Apple Photos, calidad RF o Google Photos. Escritores externos y
+pérdida física de alimentación siguen sin reproducir.
+
+Pasaron los 260 casos rápidos y 89 integraciones locales sin omisiones: 12 y 5
+nuevos respectivamente. Incluyen los 43 contratos/19 integraciones de entrega y
+todas las regresiones de vídeo, A/V y publicación entre volúmenes sintéticos.
+El cambio de ejecución se limita a provenance.py y delivery_stage.py. La tarea
+3.9 está verificada; entrega queda 16/17 con la integración real 2.3 pendiente.
