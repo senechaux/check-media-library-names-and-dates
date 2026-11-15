@@ -31,6 +31,15 @@ sources:
 Las cifras de esta sección describen la implementación inicial. Las regresiones
 y comprobaciones posteriores están en [correcciones de la revisión](correcciones-revision.md).
 
+La revisión posterior corrigió los seis fallos reproducidos. El cierre pasó
+236 pruebas rápidas y 72 integraciones locales sin omisiones (30 y 11 casos nuevos,
+respectivamente). Las herramientas y el volumen sintético son los indicados abajo;
+el transporte remoto sigue simulado. Se repitieron también los siete casos A/V
+tras reforzar la comprobación de que los fixtures contienen edit lists y conservan
+sus offsets. Pasaron pip check, el frontmatter de 16 conceptos OKF, los enlaces
+Markdown locales y la validación estricta de las cinco propuestas. No se probaron escritores
+externos en las ventanas de publicación ni pérdida física de alimentación.
+
 | Comprobación | Resultado y alcance |
 | --- | --- |
 | Instalación | Venv temporal con Python 3.12.15 y pytest 9.2.0; importación desde otra carpeta y `pip check` correctos. Wheel construido con dependencias de build aisladas; preset JSON importable desde el wheel fuera del repositorio. |
@@ -171,11 +180,11 @@ Los documentos siguen en `draft`, sin atribuir una aprobación humana.[^scope]
 
 | Propuesta | Implementación/verificación | Pendiente humano o remoto |
 | --- | --- | --- |
-| safe-execution-core | 13/13: configuración, inventario, journal/bloqueo, backups y operaciones recuperables. | Sin tarea de implementación pendiente; límites de filesystem/bloqueo documentados. |
+| safe-execution-core | 15/15: núcleo y regresiones de bloqueo por identidad y propiedad de publicación. | Sin tarea de implementación pendiente; límites de filesystem/bloqueo documentados. |
 | resumable-pipeline | 11/11: comando, alcance, aprobación, pausas, señales, reanudación e informes. | Las acciones humanas se declaran; no equivalen a pruebas técnicas. |
 | metadata-and-naming | 10/11: fechas, zona/DST, decisiones, ExifTool selectivo y nombres recuperables. | 3.3 Attributes/Rename/Apple Photos; sin equivalencia Brute Force demostrada. |
-| validated-video-compression | 10/11: selección, normalización, perfil, validación técnica y publicación segura. | 3.4 muestra visual RF 22; HDR/pistas avanzadas sin política permanecen bloqueados. |
-| verified-export-and-delivery | 11/12: recetas, derivados/vigencia, cobertura, manual/CLI por protocolo y backup; transporte remoto simulado. | 2.3 adaptador/auth real de gphotos y ensayo de cuenta/lote autorizado. Revisión visual de nuevos derivados de carga declarada antes de publicar. |
+| validated-video-compression | 11/12: vídeo real y validación de presentación relativa A/V, con regresiones de automático/manual, edit lists y padding. | 3.4 muestra visual RF 22; HDR/pistas avanzadas sin política permanecen bloqueados. |
+| verified-export-and-delivery | 14/15: exportación/entrega por protocolo y regresiones de antecedentes, autorizaciones y backup; transporte remoto simulado. | 2.3 adaptador/auth real de gphotos y ensayo de cuenta/lote autorizado. Revisión visual de nuevos derivados de carga declarada antes de publicar. |
 
 Todas siguen en changes para revisión; ninguna se ha archivado. No se han usado
 cuentas ni credenciales reales, biblioteca personal ni cargas remotas.

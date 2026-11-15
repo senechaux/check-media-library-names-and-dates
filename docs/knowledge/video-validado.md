@@ -121,7 +121,17 @@ El preset JSON y su huella, las versiones y comandos exactos quedan conservados
 por ejecución/ID. Se requiere salida MP4/H.264 real, decodificación completa con
 FFmpeg y código de proceso correcto. La duración puede diferir como máximo
 `max(0,1 s, dos frames de salida)`. Se comprueban tamaño/geometría, SAR, orientación,
-FPS/timestamps, pistas/audio y fechas restauradas y releídas con ExifTool. Las
+FPS/timestamps, pistas/audio y fechas restauradas y releídas con ExifTool. La
+duración se mide sobre los frames presentados; se contrasta la cobertura de audio
+relativa al primer frame de vídeo, tras edit lists y skip/discard del decoder.
+Un origen temporal común puede cambiar sin desincronizar. Se toleran 50 ms o dos
+bloques AAC según sample rate. Intervalos añadidos/retirados solo se permiten si
+astats acredita silencio <= -90 dBFS en todas sus muestras. Esto admite el silencio
+inicial de la ruta AAC existente sin aceptar un desplazamiento de audio real.
+Se guarda evidencia av_timing; candidatos/operaciones pendientes con evidencia
+anterior se revalidan antes de publicar. No es correlación del contenido sonoro
+ni revisión de calidad; una línea temporal no acreditable impide publicar.
+Las
 fechas del filesystem solicitadas se reaplican y verifican en el destino final.
 No se copian indiscriminadamente tags estructurales del original recodificado.[^driver]
 

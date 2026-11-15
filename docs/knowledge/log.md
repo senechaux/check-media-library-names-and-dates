@@ -2,6 +2,10 @@
 
 ## 2026-11-15
 
+- **Correcciones de revisión integral**: Se reprodujeron y corrigieron los seis hallazgos: bloqueo por identidad del origen, reconciliación de todos los antecedentes del job, propiedad de publicación de rename, autorización por intento, errores de inventario del backup y tiempos relativos A/V con edit lists/padding y silencio medido. Cada corrección incluye regresiones y casos válidos próximos, con commit y push.
+- **Evidencia posterior a las correcciones**: 236 pruebas rápidas y 72 integraciones locales pasadas sin omisiones, con temporales/medios sintéticos y cliente remoto simulado. No se atribuye compatibilidad remota ni calidad visual a esos tests. Las ventanas con escritores externos y pérdida física de alimentación siguen sin reproducir.
+- **Tareas y límites**: Núcleo 15/15, pipeline 11/11, metadata 10/11 (3.3 humana), vídeo 11/12 (3.4 visual) y exportación/entrega 14/15 (2.3 real de gphotos). README, OKF y contratos reflejan las correcciones; ninguna propuesta archivada ni cuenta/biblioteca personal utilizada.
+
 - **Exportación verificable**: Recetas por identidad/procedencia, fuente original registrada entre ejecuciones, JPEG orientados/ICC, vídeo de carga con codificación y validadores comunes, vigencia, renovación conservando versiones anteriores y auditoría global del alcance.
 - **Entrega y recuperación**: Modos local/manual y protocolo CLI con opt-in, snapshot de exportados, recibos diferenciados de comando/declaración, incertidumbre sin reintentos automáticos y backup privado verificado. Transporte remoto probado solo con cliente Python simulado; sin cuentas, credenciales ni cargas reales.
 - **Evidencia conjunta**: 206 pruebas rápidas y 61 integraciones locales pasadas sin omisiones, incluidas 16 nuevas con herramientas reales y transporte simulado. Corregidas regresiones CopyN/procedencia y conservación de resoluciones consumidas tras reparar exportados; revisiones humanas siguen bloqueando instalación/exportación. Actualizados README, TOML, contratos y OKF; commits con push tras cada uno.

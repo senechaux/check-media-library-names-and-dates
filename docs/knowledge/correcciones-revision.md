@@ -54,10 +54,6 @@ JPEG y validadores reales; solo el cliente remoto es simulado.
 Pasaron 214 pruebas rápidas y las ocho integraciones de entrega, incluidas las dos
 nuevas de reanudación del propietario antiguo y apertura de otra ejecución.
 
-# Correcciones todavía en curso
-
-Sincronización A/V se verifica por separado.
-
 # 3. Propiedad de publicación (P1)
 
 Fallaban tres regresiones: rename rechazado con bytes idénticos y colisión tras
@@ -106,4 +102,53 @@ cliente simulado, pierde acceso al estado, sale con fallo y reanuda solo el back
 Pasaron las 227 pruebas rápidas y las dos integraciones afectadas de fallo de copia
 y directorio ilegible, sin omisiones ni repetición del envío simulado.
 
-[^tests]: [Regresiones ejecutables](../../tests/).
+# 6. Línea temporal A/V (P2)
+
+Antes de corregir, dos regresiones publicaban el candidato desplazado unos 577 ms,
+tanto automático como manual. Pasaban dimensiones, duración, fechas y decode;
+se retiraba el original. El caso válido de audio retardado con silencio inicial
+de la ruta FFmpeg también fallaba por comparar solo las duraciones de las pistas.
+
+La validación usa ahora los PTS y duraciones de frames decodificados después de
+aplicar edit lists y skip/discard del decoder. Compara el intervalo de presentación
+total y los intervalos de audio relativos al primer frame de vídeo, incluidos
+huecos internos. Un desplazamiento común de todas las pistas es válido. La
+tolerancia A/V es el máximo de 50 ms y dos bloques AAC según sample rate; es
+independiente de la duración de un frame de vídeo lento.
+
+La cobertura temporal distinta solo se permite tras medir todas sus muestras con
+astats y acreditar silencio <= -90 dBFS. Así, el silencio inicial que añade la
+ruta AAC ya verificada no se confunde con desincronización. No se presume silencio
+por el contenedor ni por un promedio. La evidencia av_timing conserva intervalos,
+tolerancia y medidas, sin alterar la ruta de audio ni recodificar otra vez el vídeo.
+
+Se prueban rechazo automático/manual, AAC con padding real, edit lists presentes,
+orígenes temporales distintos, vídeo que empieza después del audio y silencio
+añadido legítimo. Los candidatos/operaciones pendientes con evidencia antigua
+se revalidan antes de publicar, también al recuperar un resultado ready. Los
+contratos rápidos prueban huecos, datos incompletos y ese caso de recuperación;
+los siete casos adicionales de medios usan herramientas reales.
+
+Es validación de estructura y tiempos de presentación, no correlación del contenido
+sonoro ni aprobación perceptual. No acredita una edición interna que cambie el
+contenido manteniendo los mismos intervalos. Una línea temporal ilegible o que
+el productor no consiga conservar se rechaza; no se publica por confirmación humana.
+Las revisiones de calidad RF y Apple Photos siguen pendientes.
+Pasaron las 236 pruebas rápidas y las 72 integraciones locales conjuntas sin
+omisiones; después de reforzar los fixtures se repitieron los siete casos A/V.
+Los 30 casos rápidos y 11 integraciones nuevos se suman a los 206/61 anteriores.
+
+# Reproducción y regresiones
+
+| Hallazgo | Evidencia antes de corregir | Regresión y casos válidos próximos |
+| --- | --- | --- |
+| 1 — Bloqueo | Cuatro fallos: alias admitidos y origen reemplazado. | test_state: seis casos nuevos; directorios independientes, propietario antiguo y stale recovery. |
+| 2 — Antecedentes | La tercera ejecución hacía el segundo submit del mismo job incierto. | Dos contratos nuevos y dos recorridos reales locales; READY sin enviar, acreditación y reconciliación. |
+| 3 — Publicación | Tres fallos: colisión idéntica y retirada del origen tras intención. | Siete casos nuevos; rechazo actual/antiguo, hardlink propio, retirada del enlace y colisión revisada. |
+| 4 — Reintento | delivery_confirmed=false provocaba el tercer submit. | Tres contratos nuevos y un recorrido interactivo; nonce por job/intento, interrupción y autorización nueva válida. |
+| 5 — Backup | Dos recorridos omitían la subcarpeta sin fallar. | Tres contratos nuevos y un recorrido local; recuperación sin submit y estado vacío realmente legible. |
+| 6 — A/V | Dos candidatos desplazados se publicaban; la ruta válida con silencio inicial se rechazaba. | Nueve contratos rápidos y siete integraciones reales; edit lists, padding, offsets comunes y revalidación antigua. |
+
+Las pruebas de contrato simulan medios/clientes solo donde se declara; las de
+ExifTool/HandBrake/FFmpeg/Pillow usan herramientas reales. Ninguna prueba acredita
+autenticación, una carga remota real ni una revisión perceptual humana.

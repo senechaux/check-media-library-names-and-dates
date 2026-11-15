@@ -205,6 +205,15 @@ class ExportAdapter(Adapter):
     def validate(self,context):
         return self.execute(context,manual=context.pipeline.mode("export")=="manual")
 
+    def validate_operation(self,context,operation):
+        validation=operation.evidence.get("validation",{})
+        recipe=validation.get("export_recipe",{})
+        timing=validation.get("technical",{}).get("video",{}).get("av_timing",{})
+        if operation.state!="COMPLETED" and recipe.get("kind")=="video" and timing.get("method")!="decoded-presentation:v1":
+            path=operation.candidate if same_content(operation.candidate,operation.output_sha256) else operation.destination
+            if not same_content(path,operation.output_sha256):raise ConflictError("Falta candidato íntegro para revalidar A/V de exportación antigua")
+            self.validate_derivative(context,path,validation)
+
     def revalidate_completed(self,pipeline):
         for file_id,value in pipeline.data["files"].items():
             record=value["stages"]["export"]

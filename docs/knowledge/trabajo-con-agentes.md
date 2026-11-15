@@ -31,7 +31,7 @@ Las tareas de `safe-execution-core` y `resumable-pipeline` están implementadas 
 verificadas, pendientes de revisión sin archivar. `metadata-and-naming` implementa
 lo verificable con herramientas reales; conserva pendiente su tarea 3.3 de ensayo
 humano con Attributes/Rename y Apple Photos. `validated-video-compression` tiene
-10/11 tareas verificadas, con muestra visual 3.4 pendiente. Exportación/entrega
+11/12 tareas verificadas, incluida la corrección A/V, con muestra visual 3.4 pendiente. Exportación/entrega
 implementa recorrido local y protocolo con transporte simulado; su tarea 2.3 de
 adaptador/autenticación real sigue pendiente. Las fichas del [núcleo](nucleo-seguro.md), del
 [proceso reanudable](pipeline-reanudable.md) y de [fechas y nombres](fechas-nombres.md),

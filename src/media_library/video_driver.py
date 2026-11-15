@@ -5,6 +5,7 @@ from pathlib import Path
 import hashlib
 import json
 import math
+import re
 
 from .capture_dates import CaptureDate, compare_dates, parse_date
 from .exiftool import ExifTool
@@ -12,6 +13,7 @@ from .inventory import probe_media
 from .process import run_tool
 from .state import atomic_json
 from .video_plan import VideoPolicyError, preset, ratio, video_info
+from .av_timing import presentation, validate_alignment
 
 
 class VideoValidationError(ValueError):
@@ -59,6 +61,30 @@ class VideoDriver:
         if not times or any(not math.isfinite(t) for t in times) or any(b <= a for a, b in zip(times, times[1:])):
             raise VideoValidationError("Timestamps de frames ausentes o no crecientes")
         return [time - times[0] for time in times]
+
+    def timeline(self, path):
+        data = json.loads(self.call([self.ffprobe, "-v", "error", "-show_streams", "-show_frames",
+            "-show_entries", "stream=index,codec_type,sample_rate:frame=media_type,stream_index,best_effort_timestamp_time,duration_time,pkt_duration_time,nb_samples",
+            "-of", "json", str(path)]).stdout)
+        try:
+            return presentation(data)
+        except (ValueError, KeyError, TypeError) as exc:
+            raise VideoValidationError("A/V: presentación efectiva no acreditada: " + str(exc)) from exc
+
+    def silent_interval(self, path, start, end):
+        # copyts conserva los PTS que ffprobe acaba de acreditar. astats mide
+        # todas las muestras del intervalo; no basta asumir que es padding.
+        filters = (f"atrim=start={start:.9f}:end={end:.9f},"
+                   "astats=metadata=1:reset=0:measure_perchannel=none:measure_overall=Peak_level,"
+                   "ametadata=print:key=lavfi.astats.Overall.Peak_level:file=-")
+        result = self.call([self.ffmpeg, "-v", "error", "-nostdin", "-copyts", "-i", str(path),
+                            "-map", "0:a:0", "-af", filters, "-f", "null", "-"])
+        peaks = [float(value) for value in re.findall(r"lavfi\.astats\.Overall\.Peak_level=([^\s]+)", result.stdout)]
+        if any(math.isnan(peak) or peak == math.inf for peak in peaks):
+            return {"silent": False, "peak_dbfs": None}
+        peak = max(peaks) if peaks else None
+        return {"silent": peak is not None and peak <= -90,
+                "peak_dbfs": "-inf" if peak == -math.inf else peak}
 
     def packets(self, path):
         data = json.loads(self.call([self.ffprobe, "-v", "error", "-show_packets", "-show_data_hash", "sha256",
@@ -129,17 +155,20 @@ class VideoDriver:
             raise VideoValidationError("Deformación, recorte o ampliación detectados")
         fps = float(ratio(actual["fps"]))
         tolerance = max(.1, 2 / fps)
-        if abs(actual["duration"] - original["duration"]) > tolerance:
-            raise VideoValidationError("Duración fuera de tolerancia")
         if len(actual["audio"]) != len(original["audio"]) or any(a["codec"] != "aac" for a in actual["audio"]):
             raise VideoValidationError("Política de pistas/audio incumplida")
         if plan["action"] == "encode" and any(a["channels"] != 2 for a in actual["audio"]):
             raise VideoValidationError("Audio distinto del estéreo solicitado")
-        for before, after in zip(original["audio"], actual["audio"]):
-            if before["duration"] and after["duration"] and abs(float(before["duration"]) - float(after["duration"])) > tolerance:
-                raise VideoValidationError("Duración de audio alterada")
         self.call([self.ffmpeg, "-v", "error", "-xerror", "-i", str(path), "-map", "0:v", "-map", "0:a?", "-f", "null", "-"])
-        times = self.frame_times(path)
+        before_timeline, after_timeline = self.timeline(source), self.timeline(path)
+        if abs(after_timeline["span"] - before_timeline["span"]) > tolerance:
+            raise VideoValidationError("Duración de presentación fuera de tolerancia")
+        try:
+            av_timing = validate_alignment(before_timeline, after_timeline,
+                lambda side, start, end: self.silent_interval(source if side == "source" else path, start, end))
+        except ValueError as exc:
+            raise VideoValidationError(str(exc)) from exc
+        times = after_timeline["video"]["times"]
         deltas = [b - a for a, b in zip(times, times[1:])]
         mode = plan["settings"]["frame_rate_mode"]
         if fps > 30.01 or any(delta < 1 / 30 - .00005 for delta in deltas):
@@ -147,7 +176,7 @@ class VideoDriver:
         if mode == "cfr" and (abs(fps - 30) > .01 or any(abs(delta - 1 / 30) > .00005 for delta in deltas)):
             raise VideoValidationError("No es CFR 30 verificado")
         if mode == "pfr" and ratio(original["peak_fps"]) <= 30:
-            before_times = self.frame_times(source)
+            before_times = before_timeline["video"]["times"]
             if len(before_times) != len(times) or any(abs(a - b) > .0005 for a, b in zip(before_times, times)):
                 raise VideoValidationError("PFR no ha conservado el timing original bajo 30 FPS")
         if mode == "pfr" and ratio(original["peak_fps"]) == ratio(original["fps"]) and abs(fps - min(30, float(ratio(original["fps"])))) > .01:
@@ -163,5 +192,6 @@ class VideoDriver:
                       and saved / plan["source_bytes"] >= plan["settings"]["min_savings_ratio"])
         return {"video": {"plan": plan, "profile_hash": plan["profile_hash"], "output": actual, "output_bytes": size,
                           "saved_bytes": saved, "beneficial": beneficial, "decode": "complete", "frames": len(times),
+                          "av_timing": av_timing,
                           "timing_sha256": hashlib.sha256(json.dumps(times).encode()).hexdigest(), "dates": date_evidence},
                 "file_attributes": date_evidence.get("file_attributes", {})}

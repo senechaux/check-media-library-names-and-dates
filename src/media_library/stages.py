@@ -138,6 +138,18 @@ class InstallationAdapter(Adapter):
 
     validate = run
 
+    def validate_operation(self, context, operation):
+        video = operation.evidence.get("validation", {}).get("video")
+        if operation.state == "COMPLETED" or not video or video.get("av_timing", {}).get("method") == "decoded-presentation:v1":
+            return
+        from .video_driver import VideoDriver
+        from .filesystem import same_content
+        source = operation.source if same_content(operation.source, operation.expected["sha256"]) else operation.backup
+        candidate = operation.candidate if same_content(operation.candidate, operation.output_sha256) else operation.destination
+        if not source or not same_content(source, operation.expected["sha256"]) or not same_content(candidate, operation.output_sha256):
+            raise ConflictError("Faltan origen/candidato íntegros para revalidar A/V de la operación antigua")
+        VideoDriver(context.store.config).validate(source, candidate, video["plan"], video["dates"])
+
     def validate_decisions(self, context, decisions):
         from .video_stage import options
         if set(decisions) - {"output", "quality_reviewed"}:

@@ -245,6 +245,9 @@ class Pipeline:
                 operation = self.store.manifest.operations[operation_id]
                 if operation.file_id != context.file_id:
                     raise ConflictError("Operación de otro archivo en el resultado de etapa")
+                adapter = self.adapters[context.stage]
+                if hasattr(adapter, "validate_operation"):
+                    adapter.validate_operation(context, operation)
                 outcome = self.executor.execute(operation_id)
                 if outcome.state != State.COMPLETED:
                     record["state"] = "FAILED"

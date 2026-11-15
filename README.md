@@ -165,6 +165,12 @@ requiere autorización independiente. HDR, varias pistas, subtítulos o entrelaz
 sin política quedan pendientes. Los marcadores históricos sin manifiesto exigen
 una política explícita. Solo se limpian temporales propios de publicaciones completas.
 
+La validación A/V contrasta tiempos efectivos de presentación, edit lists y padding
+del decoder, incluidos huecos relativos al vídeo. Un intervalo distinto exige
+silencio medido; no se acepta un audio desplazado solo porque dure lo mismo.
+Es comprobación técnica, con [evidencia y límites](docs/knowledge/correcciones-revision.md),
+y conserva las revisiones humanas pendientes.
+
 Véase [vídeo validado](docs/knowledge/video-validado.md) para configuración,
 modo manual, recuperación, límites comprobados y protocolo de revisión visual.
 
@@ -213,9 +219,10 @@ El [plan de automatización](docs/knowledge/automatizacion.md) propone un comand
 [`openspec/changes/`](openspec/changes/). `safe-execution-core` y `resumable-pipeline`
 están implementados y verificados, pendientes de revisión sin archivar;
 `metadata-and-naming` tiene implementado lo verificable, con su ensayo humano pendiente.
-`validated-video-compression` tiene 10/11 tareas verificadas; resta la revisión
+`validated-video-compression` tiene 11/12 tareas verificadas, incluida la corrección
+de sincronización A/V; resta la revisión
 visual 3.4. Ningún cambio se ha archivado.
-`verified-export-and-delivery` tiene implementado lo verificable local y el
+`verified-export-and-delivery` tiene 14/15 tareas verificadas: lo verificable local y el
 protocolo de entrega; su tarea 2.3 de adaptador/autenticación real sigue pendiente.
 La [verificación de las cinco propuestas](docs/knowledge/verificacion.md) enumera
 pruebas locales, revisiones humanas y ensayos remotos pendientes.

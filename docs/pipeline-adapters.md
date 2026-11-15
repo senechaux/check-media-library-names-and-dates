@@ -45,6 +45,11 @@ ofrece:
   pausa técnica. Debe ser idempotente y recuperar candidatos/operaciones ya
   preparados; nunca volver a producir o publicar trabajos acreditados.
 
+El hook opcional `validate_operation(context, operation)` se llama antes del
+ejecutor, también al recuperar un resultado ready. Instalación/exportación lo
+usan para revalidar tiempos A/V de operaciones pendientes con evidencia antigua;
+no se atribuye esa comprobación nueva a un candidato por tener un hash válido.
+
 Los hooks opcionales `preview(pipeline)` y `finalize(pipeline, recover_only=False)`
 permiten reservas globales. Metadata presenta auditorías y destinos del lote antes
 de aprobar; su finalización usa `RenameBatch` para evacuar nombres por ID y publicar

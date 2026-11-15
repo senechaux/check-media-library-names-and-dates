@@ -14,3 +14,4 @@
 - [x] 3.2 Cubrir silenciosos, HDR/múltiples pistas, salidas corruptas/mayores, MOV → MP4 y colisiones entre álbumes.
 - [x] 3.3 Inyectar interrupciones en cada paso de publicación y comprobar conservación/recuperación en otro volumen.
 - [ ] 3.4 Revisar muestra visual con RF propuesto antes de fijar perfil; actualizar OKF y documentar equivalencia y diferencias con la captura.
+- [x] 3.5 Validar tiempos relativos A/V efectivos en automático/manual, con edit lists, padding AAC, offsets comunes y silencio añadido legítimo; rechazar desincronización antes de publicar.
