@@ -20,6 +20,9 @@ py-modules = ["common_functions"]
 where = ["src"]
 include = ["media_library*"]
 
+[tool.setuptools.package-data]
+media_library = ["presets/*.json"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra -m 'not integration'"

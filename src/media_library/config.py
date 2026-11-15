@@ -13,6 +13,7 @@ import unicodedata
 from .process import run_tool
 from .pipeline_settings import parse_settings
 from .date_settings import parse_date_settings
+from .video_settings import parse_video_settings
 
 
 class ConfigError(ValueError):
@@ -39,6 +40,7 @@ class Config:
     tools: dict[str, Tool]
     pipeline: dict = field(default_factory=dict)
     dates: dict = field(default_factory=dict)
+    video: dict = field(default_factory=dict)
 
     def effective(self):
         data = asdict(self)
@@ -48,6 +50,8 @@ class Config:
             data.pop("pipeline")  # Compatible con manifiestos del núcleo anteriores.
         if not self.dates:
             data.pop("dates")
+        if not self.video:
+            data.pop("video")
         return json.loads(json.dumps(data))
 
     def excluded(self, relative):
@@ -71,7 +75,7 @@ def load_config(filename):
     filename = Path(filename).resolve(strict=True)
     with filename.open("rb") as handle:
         data = tomllib.load(handle)
-    _keys(data, ("paths", "inventory", "execution", "tools", "pipeline", "dates"), "raíz")
+    _keys(data, ("paths", "inventory", "execution", "tools", "pipeline", "dates", "video"), "raíz")
     paths = data.get("paths", {})
     _keys(paths, ("source", "workspace", "archive", "export"), "paths")
     if set(paths) != {"source", "workspace", "archive", "export"}:
@@ -111,9 +115,10 @@ def load_config(filename):
     try:
         pipeline = parse_settings(data["pipeline"]).effective() if "pipeline" in data else {}
         dates = parse_date_settings(data["dates"]) if "dates" in data else {}
+        video = parse_video_settings(data["video"]) if "video" in data else {}
     except ValueError as exc:
         raise ConfigError(str(exc)) from exc
-    config = Config(**resolved, exclude=exclude, timeout_seconds=timeout, reserve_bytes=reserve, tools=tools, pipeline=pipeline, dates=dates)
+    config = Config(**resolved, exclude=exclude, timeout_seconds=timeout, reserve_bytes=reserve, tools=tools, pipeline=pipeline, dates=dates, video=video)
     validate_paths(config)
     return config
 

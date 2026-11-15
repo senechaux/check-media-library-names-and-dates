@@ -1,7 +1,7 @@
 ## 1. Perfil y planificación
 - [ ] 1.1 Implementar selección configurable, detección real de contenedor y política de migración de marcadores históricos.
-- [ ] 1.2 Crear preset JSON reproducible y calcular geometría visual con rotación/SAR, perfiles verticales y PFR/CFR.
-- [ ] 1.3 Planificar normalización MP4 y compresión evitando recodificar dos veces; definir pausas para HDR/pistas no cubiertas.
+- [x] 1.2 Crear preset JSON reproducible y calcular geometría visual con rotación/SAR, perfiles verticales y PFR/CFR.
+- [x] 1.3 Planificar normalización MP4 y compresión evitando recodificar dos veces; definir pausas para HDR/pistas no cubiertas.
 
 ## 2. Ejecución y publicación
 - [ ] 2.1 Codificar por ID con código de salida comprobado y restaurar fechas usando el servicio temporal común.
