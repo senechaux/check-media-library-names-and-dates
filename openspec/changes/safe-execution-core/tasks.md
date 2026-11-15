@@ -9,12 +9,12 @@
 - [x] 2.3 Sustituir shell interpolado y errores ocultos por resultados estructurados comprobados.
 
 ## 3. Estado y operaciones
-- [ ] 3.1 Implementar manifiesto atómico, journal y bloqueo por origen con recuperación explícita de bloqueos obsoletos.
-- [ ] 3.2 Implementar huellas, backups verificados y precondiciones sin sobrescrituras.
+- [x] 3.1 Implementar manifiesto atómico, journal y bloqueo por origen con recuperación explícita de bloqueos obsoletos.
+- [x] 3.2 Implementar huellas, backups verificados y precondiciones sin sobrescrituras.
 - [x] 3.3 Adaptar funciones reutilizables y conservar entradas antiguas sin invocar movimientos inseguros desde el nuevo flujo.
 
 ## 4. Verificación
 - [x] 4.0 Configurar pytest como dependencia de desarrollo, suite rápida e integraciones separadas según docs/knowledge/politica-tests.md; documentar sus comandos.
-- [ ] 4.1 Verificar todos los escenarios de safe-execution con archivos temporales, incluidos nombres especiales y mismo basename.
-- [ ] 4.2 Inyectar fallos de disco/proceso/guardado y comprobar backup, bloqueo y recuperación.
+- [x] 4.1 Verificar todos los escenarios de safe-execution con archivos temporales, incluidos nombres especiales y mismo basename.
+- [x] 4.2 Inyectar fallos de disco/proceso/guardado y comprobar backup, bloqueo y recuperación.
 - [ ] 4.3 Actualizar OKF y guía de instalación con capacidades realmente implementadas y resultados de comprobación.

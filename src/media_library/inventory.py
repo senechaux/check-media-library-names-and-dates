@@ -5,7 +5,7 @@ import json
 import os
 import uuid
 
-from .filesystem import portable_key, regular_reader, stat_record
+from .filesystem import ConflictError, portable_key, regular_reader, stat_record
 from .models import Entry, Issue, StageResult, State
 from .process import run_tool
 
@@ -102,7 +102,7 @@ def inventory(config, *, previous=(), runner=run_tool):
                     except Exception as exc:
                         code = "probe_failed" if path.suffix.lower() in VIDEO_EXTENSIONS else "unsupported"
                         issue(code, str(exc), path, entry)
-            except OSError as exc:
+            except (OSError, ConflictError) as exc:
                 entry.classification = "unreadable"
                 issue("unreadable_file", str(exc), path, entry)
     for entry in archive_collisions(entries):

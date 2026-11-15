@@ -21,7 +21,7 @@ def stat_record(value):
 
 @contextmanager
 def regular_reader(path):
-    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     with os.fdopen(descriptor, "rb") as handle:
         if not stat.S_ISREG(os.fstat(handle.fileno()).st_mode):
             raise ConflictError(f"No es archivo regular: {path}")
@@ -97,9 +97,12 @@ def durable_copy(source, destination, expected_sha256, *, reserve=0):
     part = destination.parent / f".{destination.name}.{uuid.uuid4().hex}.part"
     try:
         with regular_reader(source) as original, part.open("xb") as output:
+            original_stat = os.fstat(original.fileno())
             for block in iter(lambda: original.read(1024 * 1024), b""):
                 output.write(block)
             output.flush()
+            os.fchmod(output.fileno(), stat.S_IMODE(original_stat.st_mode))
+            os.utime(output.fileno(), ns=(original_stat.st_atime_ns, original_stat.st_mtime_ns))
             os.fsync(output.fileno())
         if not same_content(part, expected_sha256):
             raise ConflictError(f"Copia no verificada: {source}")

@@ -95,3 +95,11 @@ def test_archive_detects_case_and_unicode_in_ancestor_components():
     entries = [Entry(str(index), path, path, path) for index, path in enumerate(
         ["A/one.jpg", "a/two.jpg", "é/one.jpg", "e\u0301/two.jpg", "b/one.jpg"])]
     assert {e.file_id for e in archive_collisions(entries)} == {"0", "1", "2", "3"}
+
+
+def test_fifo_is_reported_without_blocking(config):
+    import os
+    os.mkfifo(config.source / "pipe.JPG")
+    entries, result = inventory(config)
+    assert len(entries) == 1 and entries[0].classification == "unreadable"
+    assert result.issues[0].code == "unreadable_file"
