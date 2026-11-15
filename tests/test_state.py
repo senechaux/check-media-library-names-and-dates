@@ -125,3 +125,13 @@ def test_linked_journal_cannot_modify_an_unrelated_file(stored, tmp_path):
     with pytest.raises(ValueError, match="enlazado"):
         RunStore.load(store.config, store.lock, store.manifest.run_id)
     assert outside.read_bytes() == b"untouched"
+
+
+def test_checkpoint_evidence_remains_immutable_until_next_commit(stored):
+    store, _ = stored
+    evidence = {"decision": {"authority": "review"}}
+    store.commit("decision", evidence=evidence)
+    evidence["decision"]["authority"] = "filename-to-metadata"
+    assert store.manifest.events[-1]["evidence"]["decision"]["authority"] == "review"
+    loaded = RunStore.load(store.config, store.lock, store.manifest.run_id)
+    assert loaded.manifest.events[-1]["evidence"]["decision"]["authority"] == "review"

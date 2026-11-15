@@ -3,6 +3,7 @@
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 from typing import Any
+from .capture_dates import CaptureDate
 
 SCHEMA_VERSION = 1
 

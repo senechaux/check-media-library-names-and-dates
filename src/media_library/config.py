@@ -12,6 +12,7 @@ import unicodedata
 
 from .process import run_tool
 from .pipeline_settings import parse_settings
+from .date_settings import parse_date_settings
 
 
 class ConfigError(ValueError):
@@ -37,6 +38,7 @@ class Config:
     reserve_bytes: int
     tools: dict[str, Tool]
     pipeline: dict = field(default_factory=dict)
+    dates: dict = field(default_factory=dict)
 
     def effective(self):
         data = asdict(self)
@@ -44,6 +46,8 @@ class Config:
             data[key] = str(data[key])
         if not self.pipeline:
             data.pop("pipeline")  # Compatible con manifiestos del núcleo anteriores.
+        if not self.dates:
+            data.pop("dates")
         return json.loads(json.dumps(data))
 
     def excluded(self, relative):
@@ -67,7 +71,7 @@ def load_config(filename):
     filename = Path(filename).resolve(strict=True)
     with filename.open("rb") as handle:
         data = tomllib.load(handle)
-    _keys(data, ("paths", "inventory", "execution", "tools", "pipeline"), "raíz")
+    _keys(data, ("paths", "inventory", "execution", "tools", "pipeline", "dates"), "raíz")
     paths = data.get("paths", {})
     _keys(paths, ("source", "workspace", "archive", "export"), "paths")
     if set(paths) != {"source", "workspace", "archive", "export"}:
@@ -106,9 +110,10 @@ def load_config(filename):
                            _strings(raw.get("required_capabilities", []), "required_capabilities"))
     try:
         pipeline = parse_settings(data["pipeline"]).effective() if "pipeline" in data else {}
+        dates = parse_date_settings(data["dates"]) if "dates" in data else {}
     except ValueError as exc:
         raise ConfigError(str(exc)) from exc
-    config = Config(**resolved, exclude=exclude, timeout_seconds=timeout, reserve_bytes=reserve, tools=tools, pipeline=pipeline)
+    config = Config(**resolved, exclude=exclude, timeout_seconds=timeout, reserve_bytes=reserve, tools=tools, pipeline=pipeline, dates=dates)
     validate_paths(config)
     return config
 

@@ -188,7 +188,7 @@ class RunStore:
                 entry.current_path = op.source
                 entry.stat = op.evidence["restored_stat"]
                 entry.sha256 = op.expected["sha256"]
-        manifest.events.append(record["event"])
+        manifest.events.append(copy.deepcopy(record["event"]))
         manifest.state = record["state"]
         manifest.sequence = record["sequence"]
 
