@@ -122,6 +122,21 @@ def test_substitute_requires_intact_backup_at_retirement(execution, monkeypatch)
     assert Path(op.destination).read_bytes() == OUTPUT
 
 
+def test_substitute_does_not_adopt_a_colliding_file_with_identical_bytes(execution):
+    executor, file_id = execution
+    source = Path(executor.store.entry(file_id).current_path)
+    original = source.read_bytes()
+    op = executor.plan(file_id, "substitute", artifact=prepared(executor, file_id), destination=source.with_name("derived.mp4"))
+    destination = Path(op.destination)
+    destination.write_bytes(OUTPUT)
+    assert executor.execute(op.operation_id).state == "FAILED"
+    loaded = reload_executor(executor)
+    assert loaded.execute(op.operation_id).state == "FAILED"
+    assert source.read_bytes() == original and destination.read_bytes() == OUTPUT
+    destination.unlink()  # Solo el fixture retira la colisión para autorizar un nuevo intento.
+    assert loaded.execute(op.operation_id).state == "COMPLETED"
+
+
 def test_external_change_after_plan_never_touches_new_content(execution):
     executor, file_id = execution
     op = executor.plan(file_id, "replace", artifact=prepared(executor, file_id))

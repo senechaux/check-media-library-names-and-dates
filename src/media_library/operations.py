@@ -168,7 +168,7 @@ class SafeExecutor:
             intact = output and (not op.backup or backup)
             explanation = "Operación completada" if intact else "La salida o el backup completados cambiaron; replantear"
         else:
-            published = op.state in ("PUBLISHING", "PUBLISHED", "FAILED") and output
+            published = op.state in ("PUBLISHING", "PUBLISHED", "FAILED") and output and not op.evidence.get("publication_rejected")
             if published and (op.kind not in ("rename", "substitute") or not source_exists or source_matches):
                 actions.append("continue")
             elif source_matches and candidate:
@@ -215,9 +215,10 @@ class SafeExecutor:
         recovery = self.inspect(operation_id)
         if "continue" not in recovery.actions:
             raise ConflictError(recovery.explanation)
+        published_here = recovery.output_matches and op.state in ("PUBLISHING", "PUBLISHED", "FAILED") and not op.evidence.get("publication_rejected")
         try:
             # Publicación ya acreditada: confirmar, sin repetir la transformación.
-            if op.state in ("PUBLISHING", "PUBLISHED", "FAILED") and recovery.output_matches:
+            if published_here:
                 if op.kind in ("rename", "substitute") and Path(op.source).exists():
                     check_fingerprint(op.source, op.expected)
                     if not recovery.backup_verified:
@@ -261,6 +262,8 @@ class SafeExecutor:
                 os.replace(op.local_part, op.destination)
             else:
                 os.link(op.local_part, op.destination, follow_symlinks=False)
+            published_here = True
+            op.evidence.pop("publication_rejected", None)
             fsync_directory(Path(op.destination).parent)
             op.state = "PUBLISHED"
             self.store.commit("published", op)
@@ -274,6 +277,8 @@ class SafeExecutor:
                     self.store.commit("source_retired", op)
             return self._complete(op)
         except (OSError, ConfigError, ConflictError, ToolError, AttributeCapabilityError) as exc:
+            if op.kind == "substitute" and not published_here:
+                op.evidence["publication_rejected"] = True
             op.error, op.state = str(exc), "FAILED"
             self.store.commit("operation_failed", op, state=State.FAILED)
             return StageResult(State.FAILED, [op], [Issue("operation_failed", str(exc), op.source, op.file_id)])
