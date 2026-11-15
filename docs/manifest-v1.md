@@ -148,6 +148,11 @@ anterior antes de publicar, preserva la copia verificada y usa sustitución ató
 local. Un destino sin propiedad acreditada por el servicio no admite esa vía.
 
 `coverage` y `delivery_job` viven en checkpoints del mismo journal. La entrega
+numera revisiones del job cuando cambia su checkpoint. Intento/revisión y estado
+permiten reconciliar todos sus antecedentes; un READY antiguo no puede ignorar
+una entrega incierta posterior. Los snapshots previos sin revisión se comparan
+conservadoramente por intento/progreso.
+La entrega
 persiste SUBMITTING antes del cliente y DELIVERED antes de copiar su estado.
 Alcance/identidad/hash/alias ligan la evidencia; una entrega incierta no se repite
 automáticamente, tampoco cambiando el comando desde otra ejecución. El estado

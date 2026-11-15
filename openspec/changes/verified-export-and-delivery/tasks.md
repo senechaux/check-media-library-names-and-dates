@@ -15,3 +15,4 @@
 - [x] 3.2 Simular carga fallida, resultado remoto incierto, ausencia de recibos y fallo de backup sin cuentas ni tráfico remoto real.
 - [x] 3.3 Verificar el recorrido completo del comando único en copias de muestra, incluidos todos los adaptadores reales, pausa y reanudación.
 - [x] 3.4 Documentar capacidades comprobadas y limitaciones API; mantener pendientes las pruebas de cuenta real hasta tener un lote de prueba autorizado.
+- [x] 3.5 Reconciliar todos los antecedentes de cada job entre ejecuciones, incluida reanudación de un READY antiguo, y verificar no repetición de entregas inciertas/acreditadas.

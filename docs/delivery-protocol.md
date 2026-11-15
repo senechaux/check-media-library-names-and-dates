@@ -68,6 +68,9 @@ interrupción o resultado incierto conserva la pausa y nunca reinicia submit
 automáticamente. Revisar el cliente/recibos y declarar delivered o not-delivered;
 esta última resolución permite un intento, no reintentos ilimitados. El alias
 y la identidad/huella del alcance protegen también entre ejecuciones.
+Se reconcilian todos los snapshots del job por intento/revisión, también al
+reanudar su propietario antiguo; adoptar un READY no puede ignorar un envío
+incierto posterior. Si hay varios jobs solapados con entrega posible, se pausa.
 
 DELIVERED se persiste antes de respaldar el estado. Un fallo posterior reintenta
 el backup y no submit. Las copias privadas verificadas y su recibo se conservan;

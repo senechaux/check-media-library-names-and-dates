@@ -16,6 +16,7 @@ from media_library.operations import SafeExecutor
 from media_library.stages import StageContext
 from media_library.state import RunStore,SourceLock
 from pipeline_support import configure
+from media_library.pipeline import Pipeline
 from delivery_support import delivery_toml,FAKE_SECRET
 
 
@@ -35,7 +36,7 @@ def delivery_case(config_file,monkeypatch,tmp_path):
         store=RunStore.create(config,lock,entries)
         def pipeline(store,data):
             p=SimpleNamespace(store=store,data=data,executor=SafeExecutor(store))
-            p.save=lambda **kwargs:store.commit('pipeline_checkpoint',evidence={"pipeline":p.data})
+            p.save=lambda **kwargs:Pipeline.save(p,**kwargs)
             p.context=lambda stage,key,record:StageContext(p,stage,key,record)
             p.mode=lambda stage:'auto' if mode=='configured-cli' else 'manual'
             return p
@@ -54,6 +55,54 @@ def delivery_case(config_file,monkeypatch,tmp_path):
         return context(),counter,reload
     yield create
     stack.close()
+
+
+def fork_delivery(context, *, run_id=None):
+    """Otra ejecución del mismo alcance; conserva solo su inventario/validación sintética."""
+    from unittest.mock import patch
+    from uuid import UUID
+    from contextlib import nullcontext
+    ids=patch('media_library.state.uuid.uuid4',return_value=UUID(hex=run_id)) if run_id else nullcontext()
+    with ids:
+        store=RunStore.create(context.store.config,context.store.lock,copy.deepcopy(context.store.manifest.entries))
+    p=copy.copy(context.pipeline);p.store=store;p.executor=SafeExecutor(store)
+    p.data=copy.deepcopy(context.pipeline.data);p.data.pop('delivery_job',None)
+    p.save=lambda **kwargs:Pipeline.save(p,**kwargs)
+    p.context=lambda stage,key,record:StageContext(p,stage,key,record)
+    p.save()
+    return StageContext(p,'delivery',context.file_id,p.data['files'][context.file_id]['stages']['delivery'])
+
+
+def test_all_job_antecedents_override_stale_ready_even_when_resuming_its_owner(delivery_case,monkeypatch):
+    from media_library.delivery_client import DeliveryClient
+    original,counter,_=delivery_case(behavior='fail',backup=False)
+    adapter=DeliveryAdapter()
+    with monkeypatch.context() as patch:
+        patch.setattr(DeliveryClient,'preflight',lambda *a:(_ for _ in ()).throw(KeyboardInterrupt()))
+        with pytest.raises(KeyboardInterrupt):adapter.run(original)
+    assert original.pipeline.data['delivery_job']['state']=='READY' and not counter.exists()
+    later=fork_delivery(original,run_id='f'*32)
+    assert adapter.run(later).state=='WAITING_USER' and counter.read_text()=='1'
+    assert later.pipeline.data['delivery_job']['state']=='UNCERTAIN'
+    newest=fork_delivery(original)
+    assert adapter.run(newest).state=='WAITING_USER' and counter.read_text()=='1'
+    assert adapter.run(original).state=='WAITING_USER' and counter.read_text()=='1'
+    newest.decisions['delivery_resolution']='delivered';newest.record['decision_revision']=1
+    assert adapter.run(newest).state=='COMPLETED' and counter.read_text()=='1'
+    assert adapter.run(original).state=='COMPLETED' and counter.read_text()=='1'
+
+
+def test_completed_job_and_unused_ready_can_be_adopted_without_duplicate_submit(delivery_case,monkeypatch):
+    from media_library.delivery_client import DeliveryClient
+    original,counter,_=delivery_case(backup=False)
+    adapter=DeliveryAdapter()
+    with monkeypatch.context() as patch:
+        patch.setattr(DeliveryClient,'preflight',lambda *a:(_ for _ in ()).throw(KeyboardInterrupt()))
+        with pytest.raises(KeyboardInterrupt):adapter.run(original)
+    later=fork_delivery(original)
+    assert adapter.run(later).state=='COMPLETED' and counter.read_text()=='1'
+    newest=fork_delivery(original)
+    assert adapter.run(newest).state=='COMPLETED' and counter.read_text()=='1'
 
 
 def test_scoped_receipts_and_private_backup_without_secret_logging(delivery_case):

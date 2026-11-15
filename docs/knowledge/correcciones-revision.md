@@ -38,9 +38,25 @@ Se verifican la recuperación explícita del propietario obsoleto y el rechazo d
 un origen reemplazado antes de adquirir el bloqueo o mientras está adquirido.
 Pasaron las 212 pruebas rápidas, incluidos los seis casos nuevos de bloqueo.
 
+# 2. Antecedentes de entrega (P1)
+
+La regresión de tres ejecuciones fallaba: A conservaba READY, B enviaba y quedaba
+UNCERTAIN y C volvía a enviar al adoptar A. Se recorren ahora todos los antecedentes
+solapados, también al reanudar A. Los checkpoints numeran revisiones del job y
+se comparan intento/revisión/progreso, sin ordenar progreso por UUID del run.
+Estados antiguos sin revisión se tratan conservadoramente. Jobs distintos con
+posible entrega solapada requieren reconciliación.
+
+La regresión exige un solo submit simulado después de abrir C y reanudar A.
+También se comprueban adopción de READY aún no enviado, entrega acreditada y
+reconciliación humana posterior sin duplicar. El recorrido completo se repite con
+JPEG y validadores reales; solo el cliente remoto es simulado.
+Pasaron 214 pruebas rápidas y las ocho integraciones de entrega, incluidas las dos
+nuevas de reanudación del propietario antiguo y apertura de otra ejecución.
+
 # Correcciones todavía en curso
 
-Entrega desde READY antiguo, propiedad de publicación de rename, autorización
+Propiedad de publicación de rename, autorización
 de reintento, inventario de backup y sincronización A/V se verifican por separado.
 
 [^tests]: [Regresiones ejecutables](../../tests/).

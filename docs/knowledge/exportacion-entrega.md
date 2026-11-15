@@ -141,6 +141,11 @@ timeout, interrupción o error incierto no se repite automáticamente: se recupe
 recibos válidos o se declara `delivery_resolution=delivered|not-delivered` después
 de revisar el cliente. `not-delivered` autoriza un intento concreto; no crea un
 bucle de reintentos. Otra ejecución equivalente reutiliza la evidencia registrada;
+se reconcilian todos los antecedentes por job, incluido el propietario de un READY
+antiguo al reanudarlo. Intento y revisión duradera prevalecen sobre ese snapshot;
+el orden de los UUID de ejecución no acredita progreso. Sin revisión histórica,
+se conserva el estado más avanzado del intento. Jobs distintos con entrega posible
+para el mismo alcance requieren reconciliación.
 cambiar el comando tampoco elude una entrega incierta al mismo alias. Alcances
 solapados que no puedan reconciliarse quedan pendientes, sin duplicar cargas.[^delivery]
 

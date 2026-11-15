@@ -53,25 +53,40 @@ class DeliveryAdapter(Adapter):
 
     def prior(self,context,files,settings):
         payload=self.payload(files);identities={(f["identity"],f["sha256"]) for f in files}
+        compatible=[]
+        active={"SUBMITTING","UNCERTAIN","COMMAND_SUCCEEDED","DELIVERED"}
         for manifest in manifests(context.store):
-            if manifest.run_id==context.store.manifest.run_id:continue
-            job=next((e["evidence"]["pipeline"].get("delivery_job") for e in reversed(manifest.events) if e.get("evidence",{}).get("pipeline",{}).get("delivery_job")),None)
+            if manifest.run_id==context.store.manifest.run_id:
+                job=context.pipeline.data.get("delivery_job")
+            else:
+                job=next((e["evidence"]["pipeline"].get("delivery_job") for e in reversed(manifest.events) if e.get("evidence",{}).get("pipeline",{}).get("delivery_job")),None)
             previous_target=manifest.config.get("delivery",{}).get("target","manual")
             if not job or previous_target!=settings["target"]:continue
             old={(f["identity"],f["sha256"]) for f in job["scope"]["files"]}
             if not old.intersection(identities):continue
             if job["payload_hash"]==payload and job.get("delivery_signature")==digest(settings):
-                result=copy.deepcopy(job);result["adopted_from_run"]=manifest.run_id;return result
-            if job["state"] in ("SUBMITTING","UNCERTAIN","COMMAND_SUCCEEDED","DELIVERED"):
+                compatible.append((manifest.run_id,job))
+            elif job["state"] in active:
                 raise DeliveryPending("Solapamiento con entrega anterior: reconciliarla y elegir un alcance sin duplicados")
-        return None
+        if not compatible:return None
+        active_jobs={job["job_id"] for _,job in compatible if job["state"] in active}
+        if len(active_jobs)>1:
+            raise DeliveryPending("Varios jobs con entrega posible para el mismo alcance: reconciliar antes de continuar")
+        job_id=next(iter(active_jobs)) if active_jobs else min(job["job_id"] for _,job in compatible)
+        states={"PREPARING":0,"READY":1,"SUBMITTING":2,"UNCERTAIN":3,"COMMAND_SUCCEEDED":4,"DELIVERED":5}
+        # Los intentos nunca retroceden. La revisión duradera ordena decisiones
+        # dentro del mismo intento; snapshots antiguos sin revisión se comparan
+        # conservadoramente por progreso. Nunca ordenar progreso por UUID de run.
+        run_id,job=max(((run,job) for run,job in compatible if job["job_id"]==job_id),
+            key=lambda item:(item[1]["attempts"],item[1].get("revision",0),states[item[1]["state"]],
+                             bool(item[1].get("backup",{}).get("verified"))))
+        if run_id==context.store.manifest.run_id:return job
+        result=copy.deepcopy(job);result["adopted_from_run"]=run_id;return result
 
     def job(self,context,files):
         pipeline=context.pipeline;settings=self.settings(context)
-        job=pipeline.data.get("delivery_job")
-        if job:
-            if job["payload_hash"]!=self.payload(files):raise DeliveryPending("Alcance cambió con entrega registrada; reconciliar antes de crear otra")
-            return job
+        current=pipeline.data.get("delivery_job")
+        if current and current["payload_hash"]!=self.payload(files):raise DeliveryPending("Alcance cambió con entrega registrada; reconciliar antes de crear otra")
         job=self.prior(context,files,settings)
         if job is None:
             job_id=uuid.uuid4().hex
@@ -79,7 +94,8 @@ class DeliveryAdapter(Adapter):
             scope={"protocol":PROTOCOL,"job_id":job_id,"files":[{**item,"path":str(root/"files"/item["relative"]),"source_export":item["path"]} for item in files]}
             job={"job_id":job_id,"scope":scope,"scope_path":str(root/"scope.json"),"receipts_path":str(root/"receipts.json"),
                  "payload_hash":self.payload(files),"delivery_signature":digest(settings),"state":"PREPARING","attempts":0}
-        pipeline.data["delivery_job"]=job;pipeline.save()
+        if job!=current:
+            pipeline.data["delivery_job"]=job;pipeline.save()
         return job
 
     def prepare(self,context,job):

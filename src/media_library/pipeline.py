@@ -67,6 +67,14 @@ class Pipeline:
         self.current = None
 
     def save(self, *, state=State.RUNNING, entries=None):
+        job = self.data.get("delivery_job")
+        if job:
+            previous = next((event["evidence"]["pipeline"].get("delivery_job")
+                             for event in reversed(self.store.manifest.events)
+                             if "pipeline" in event.get("evidence", {})), None)
+            if job != previous:
+                revision = previous.get("revision", 0) if previous and previous["job_id"] == job["job_id"] else 0
+                job["revision"] = max(job.get("revision", 0), revision) + 1
         self.store.commit("pipeline_checkpoint", state=state, evidence={"pipeline": self.data}, entries=entries)
 
     def mode(self, stage):

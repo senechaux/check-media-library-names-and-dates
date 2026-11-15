@@ -13,6 +13,34 @@ from export_support import configure_export,make_jpeg,make_video,run_real,manife
 pytestmark=pytest.mark.integration
 
 
+@pytest.mark.parametrize('resume_old',[False,True])
+def test_real_pipeline_reconciles_a_ready_owner_with_later_uncertainty(config_file,video_tools,monkeypatch,resume_old):
+    import itertools
+    import uuid
+    from media_library.state import RunStore
+    from media_library.delivery_client import DeliveryClient
+    config=configure_export(config_file,video_tools)
+    counter=delivery_toml(config_file,behavior='fail',backup=False)
+    make_jpeg(config.source/'2026-01-02 04.04.05.JPG')
+    create=RunStore.create.__func__;numbers=itertools.count(1)
+    def ordered_create(cls,*args,**kwargs):
+        # Forzar que el READY antiguo se recorra antes que el run posterior.
+        with monkeypatch.context() as patch:
+            patch.setattr('media_library.state.uuid.uuid4',lambda:uuid.UUID(int=next(numbers)))
+            return create(cls,*args,**kwargs)
+    monkeypatch.setattr(RunStore,'create',classmethod(ordered_create))
+    with monkeypatch.context() as patch:
+        patch.setattr(DeliveryClient,'preflight',lambda *a:(_ for _ in ()).throw(KeyboardInterrupt()))
+        code,old=run_real(config_file,'--apply')
+    assert code==130 and old['delivery']['state']=='READY' and not counter.exists()
+    code,later=run_real(config_file,'--apply')
+    assert code==2 and later['delivery']['state']=='UNCERTAIN' and counter.read_text()=='1'
+    flags=['--resume',old['run_id']] if resume_old else ['--apply']
+    code,current=run_real(config_file,*flags)
+    assert code==2 and current['delivery']['state']=='UNCERTAIN' and counter.read_text()=='1'
+    assert current['delivery']['job_id']==later['delivery']['job_id']
+
+
 def test_complete_real_local_pipeline_preserves_human_review_gates(config_file,video_tools):
     config=configure_export(config_file,video_tools,video=True,metadata=True,reviewed=False)
     config_file.write_text(config_file.read_text().replace('import_review="disabled"','import_review="manual"').replace('\nquality_reviewed=true\n','\nquality_reviewed=false\n'))
