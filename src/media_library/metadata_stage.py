@@ -4,6 +4,7 @@ from dataclasses import asdict
 from pathlib import Path
 import copy
 import shutil
+import re
 
 from .capture_dates import CaptureDate, parse_name
 from .date_audit import audit_date
@@ -111,7 +112,8 @@ class MetadataAdapter(Adapter):
 
     def fields_match(self, tags, targets):
         for key, value in targets.items():
-            if str(tags.get(key, "")) != value:
+            actual=[str(item) for tag,item in tags.items() if re.sub(r":Copy\d+","",tag)==key]
+            if actual != [value]:
                 return False
         return True
 

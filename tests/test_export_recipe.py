@@ -47,3 +47,26 @@ def test_export_config_optional_and_limits_explicit(config_file):
     config_file.write_text(config_file.read_text().replace('image_max_side=1000','image_max_side=1201'))
     with pytest.raises(ConfigError):load_config(config_file)
     with pytest.raises(ValueError):parse_export_settings({"color_policy":"discard"})
+
+
+def test_source_lineage_survives_new_metadata_and_new_export_root(execution):
+    from dataclasses import replace
+    from media_library.models import Entry
+    from media_library.operations import SafeExecutor
+    from media_library.state import RunStore
+    from media_library.filesystem import stat_record
+    executor,file_id=execution;store=executor.store
+    def produce(path):path.write_bytes(b'720 derivative')
+    artifact=executor.prepare(file_id,produce,lambda p:{"synthetic":True})
+    first=executor.plan(file_id,'substitute',artifact=artifact,destination=store.config.source/'album'/'reduced.mp4')
+    assert executor.execute(first.operation_id).state=='COMPLETED'
+    config=replace(store.config,export=store.config.export.with_name('another-export'))
+    path=Path(first.destination)
+    entry=Entry('next-id',str(path),str(path),path.relative_to(config.source).as_posix(),stat=stat_record(path.stat()))
+    next_store=RunStore.create(config,store.lock,[entry]);next_executor=SafeExecutor(next_store)
+    def change_date(path):path.write_bytes(b'date corrected 720 derivative')
+    artifact=next_executor.prepare(entry.file_id,change_date,lambda p:{"synthetic":True})
+    op=next_executor.plan(entry.file_id,'replace',artifact=artifact)
+    assert next_executor.execute(op.operation_id).state=='COMPLETED'
+    source=best_source(next_store,next_store.entry(entry.file_id))
+    assert source['path']==first.backup and source['sha256']==first.expected['sha256']

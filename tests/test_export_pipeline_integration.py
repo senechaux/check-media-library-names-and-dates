@@ -1,6 +1,7 @@
 """Derivados reales y recorrido local; sin cuentas ni tráfico de subida."""
 
 from pathlib import Path
+import json
 
 import pytest
 
@@ -79,3 +80,25 @@ def test_video_upload_profile_uses_archived_original_and_verified_audio(config_f
     assert actual['width']<=480 and actual['height']<=854 and actual['sar']=='1' and actual['rotation']==0
     assert actual['audio'][0]['codec']=='aac'
     assert video_tools.read(output['path'])['QuickTime:CreateDate']=='2026:01:02 03:04:05'
+    code,fresh=run_real(config_file,'--apply');assert code==0,fresh
+    assert fresh['files'][0]['stages']['export']['evidence']['export']['reused']
+    assert not any(e['kind']=='export_encode_intent' for e in manifest(config_file,fresh)['events'])
+
+
+def test_manual_export_uses_original_copy_and_explicit_association(config_file,video_tools):
+    from media_library.image_export import render_image
+    from media_library.export_settings import parse_export_settings
+    from pipeline_support import ScriptConsole
+    config=configure_export(config_file,video_tools,metadata=True,manual=True)
+    source=config.source/'2026-01-02 04.04.05.JPG';make_jpeg(source,orientation=6,exif=True)
+    original=fingerprint(source)['sha256']
+    code,report=run_real(config_file,'--apply');assert code==2,report
+    pause=report['files'][0]['stages']['export']['pause']
+    assert fingerprint(next(iter(pause['inputs'].values())))['sha256']==original
+    output=Path(next(iter(pause['outputs'].values()))).with_name('corrected manually.jpg')
+    render_image(next(iter(pause['inputs'].values())),output,parse_export_settings({}))
+    code,resumed=run_real(config_file,'--resume',report['run_id'],console=ScriptConsole(['decidir output='+json.dumps(str(output)),'comprobar']))
+    assert code==0,resumed
+    exported=resumed['files'][0]['stages']['export']['evidence']['export']
+    assert exported['recipe']['source']['quality_source']=='verified_archive'
+    assert exported['recipe']['date'] and Path(exported['path']).is_file()

@@ -78,3 +78,12 @@ def test_family4_copy_numbers_across_tracks_are_not_duplicate_dates(tmp_path):
     tags["Track1:Copy2:TrackCreateDate"] = "2025:01:01 00:00:00"
     with pytest.raises(MetadataCapabilityError, match="duplicadas"):
         tool.targets(tags, date, parse_date_settings({}), tmp_path)
+
+
+def test_metadata_noop_recognizes_copy_instances_across_tracks():
+    from media_library.metadata_stage import MetadataAdapter
+    tags={'Track1:TrackCreateDate':'2026:01:02 03:04:05','Track2:Copy1:TrackCreateDate':'2026:01:02 03:04:05'}
+    targets={'Track1:TrackCreateDate':'2026:01:02 03:04:05','Track2:TrackCreateDate':'2026:01:02 03:04:05'}
+    assert MetadataAdapter().fields_match(tags,targets)
+    tags['Track2:Copy2:TrackCreateDate']='2026:01:02 03:04:05'
+    assert not MetadataAdapter().fields_match(tags,targets)

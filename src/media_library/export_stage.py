@@ -44,7 +44,7 @@ class ExportAdapter(Adapter):
         settings = self.settings(context)
         source = best_source(context.store, context.entry, use_archive=settings["use_archived_original"])
         driver = VideoDriver(context.store.config)
-        supplied = {k:v for k,v in context.decisions.items() if k != "export_quality_reviewed"}
+        supplied = {k:v for k,v in context.decisions.items() if k not in ("export_quality_reviewed","output")}
         decision = effective_decision(context.store.config.dates, context.entry.relative_path, supplied)
         temporal = context.entry.temporal_decision
         selected = temporal.get("selected") if temporal and not supplied else None
