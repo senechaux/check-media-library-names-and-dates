@@ -12,6 +12,7 @@ from .filesystem import (ConflictError, assert_destination, check_fingerprint, d
 from .inventory import entry_paths
 from .models import Issue, Operation, StageResult, State
 from .process import ProcessResult, ToolError
+from .file_attributes import AttributeCapabilityError
 
 
 @dataclass(frozen=True)
@@ -82,7 +83,7 @@ class SafeExecutor:
         expected = fingerprint(source)
         if {k: expected[k] for k in entry.stat} != entry.stat:
             raise ConflictError("Entrada cambiada después del inventario; replantear")
-        previous = [op for op in self.store.manifest.operations.values() if op.file_id == file_id]
+        previous = [self.store.manifest.operations[key] for key in entry.operations]
         if any(op.state not in ("COMPLETED", "RESTORED") for op in previous):
             raise ConflictError("Resolver la operación pendiente de esta entrada")
         temporary, backup, export = entry_paths(self.config, self.store.manifest.run_id, entry)
@@ -114,7 +115,7 @@ class SafeExecutor:
             raise ConflictError("Destino fuera de su raíz")
         assert_destination(destination, allow_exact=kind == "replace")
         for other in self.store.manifest.operations.values():
-            if other.file_id != file_id and portable_key(other.destination) == portable_key(destination):
+            if other.file_id != file_id and other.state not in ("COMPLETED", "RESTORED") and portable_key(other.destination) == portable_key(destination):
                 raise ConflictError("Destino reservado por otra operación")
         if any(op.kind in ("replace", "rename") for op in previous):
             backup = self.config.archive / self.store.manifest.run_id / ".operations" / operation_id / entry.relative_path
@@ -122,6 +123,10 @@ class SafeExecutor:
                        str(candidate), output_sha, str(backup) if kind != "export" else None,
                        str(destination.parent / (".media-" + operation_id + ".part")),
                        evidence={"validation": artifact.evidence if artifact else {"rename": True}})
+        if kind == "rename" and previous:
+            attributes = previous[-1].evidence.get("validation", {}).get("file_attributes", {})
+            if attributes:
+                op.evidence["validation"]["file_attributes"] = attributes
         self.store.commit("operation_planned", op)
         return op
 
@@ -178,12 +183,24 @@ class SafeExecutor:
             raise ConflictError("La publicación no coincide con la salida validada")
         if op.backup and not same_content(op.backup, op.expected["sha256"]):
             raise ConflictError("No se puede confirmar sin backup verificado")
+        from .file_attributes import verify_attributes
+        verify_attributes(op.destination, op.evidence.get("validation", {}).get("file_attributes", {}))
+        self._cleanup_part(op)
         op.state = "COMPLETED"
         op.error = None
         op.evidence["published_stat"] = stat_record(Path(op.destination).stat())
         op.evidence["published_sha256"] = op.output_sha256
         self.store.commit("operation_completed", op, state=State.RUNNING)
         return StageResult(State.COMPLETED, [op], evidence=op.evidence)
+
+    def _cleanup_part(self, op):
+        part = Path(op.local_part)
+        if not part.exists() and not part.is_symlink():
+            return
+        if part.is_symlink() or not part.samefile(op.destination):
+            raise ConflictError("Temporal de publicación ajeno: revisar antes de limpiar")
+        part.unlink()
+        fsync_directory(part.parent)
 
     def execute(self, operation_id):
         op = self._operation(operation_id)
@@ -192,6 +209,8 @@ class SafeExecutor:
                 raise ConflictError("La salida completada cambió; no repetir")
             if op.backup and not same_content(op.backup, op.expected["sha256"]):
                 raise ConflictError("Backup completado ausente o cambiado; no repetir")
+            from .file_attributes import verify_attributes
+            verify_attributes(op.destination, op.evidence.get("validation", {}).get("file_attributes", {}))
             return StageResult(State.COMPLETED, [op], evidence=op.evidence)
         recovery = self.inspect(operation_id)
         if "continue" not in recovery.actions:
@@ -227,6 +246,10 @@ class SafeExecutor:
                     raise ConflictError("Temporal local incompleto: revisar sin sobrescribir")
             else:
                 durable_copy(op.candidate, op.local_part, op.output_sha256, reserve=self.config.reserve_bytes)
+            attributes = op.evidence.get("validation", {}).get("file_attributes", {})
+            if attributes:
+                from .file_attributes import apply_attributes
+                apply_attributes(op.local_part, attributes, timeout=self.config.timeout_seconds)
             check_fingerprint(op.source, op.expected)
             if op.backup and not same_content(op.backup, op.expected["sha256"]):
                 raise ConflictError("Backup cambiado antes de publicar")
@@ -246,7 +269,7 @@ class SafeExecutor:
                 Path(op.source).unlink()
                 fsync_directory(Path(op.source).parent)
             return self._complete(op)
-        except (OSError, ConfigError, ConflictError, ToolError) as exc:
+        except (OSError, ConfigError, ConflictError, ToolError, AttributeCapabilityError) as exc:
             op.error, op.state = str(exc), "FAILED"
             self.store.commit("operation_failed", op, state=State.FAILED)
             return StageResult(State.FAILED, [op], [Issue("operation_failed", str(exc), op.source, op.file_id)])
