@@ -1,0 +1,96 @@
+# Protocolo de entrega configurada v1
+
+El transporte se habilita explícitamente. Un cliente local de confianza debe
+limitarse al manifiesto; este protocolo no es una adaptación automática de
+gphotos-uploader-cli. No se ha probado ninguna cuenta ni carga real.
+
+Ejemplo alternativo de configuración, con un adaptador que implemente el contrato:
+
+```toml
+[pipeline.modes]
+delivery = "auto"
+
+[delivery]
+mode = "configured-cli"
+allow_cli = true
+target = "alias-no-secreto"
+executable = "/ruta/adaptador-con-alcance"
+args = ["submit", "{scope}", "{receipts}", "{state}"]
+capability_args = ["--capabilities"]
+auth_args = ["--auth-check"]
+state_dir = "/ruta/estado-uploader"
+backup_dir = "/ruta/backup-estado"
+require_capture_date = true
+```
+
+Las rutas son relativas al TOML o absolutas. State/backup deben ser disjuntos de
+source/workspace/archive/export y entre sí. No incluir secretos en argumentos o
+TOML. Solo se admiten placeholders scope, receipts, state y job. La lista se pasa
+sin shell; no se usa expansión del shell ni se publican stdout/stderr del cliente.
+
+`capability_args` debe devolver por stdout JSON:
+
+```json
+{"protocol":"media-library-delivery-v1","scope":"manifest-only","version":"1.0.0","simulated":false}
+```
+
+Solo tras acreditar capacidad se ejecuta `auth_args`, que devuelve:
+
+```json
+{"authenticated":true,"scope_limited":true,"target":"alias-no-secreto"}
+```
+
+Son declaraciones del cliente, no comprobaciones independientes de una cuenta.
+El alias debe coincidir con la configuración. Un binario incompatible se rechaza
+antes de ejecutar el preflight de autenticación o submit.
+
+`scope.json` contiene protocol, job_id y files. Cada archivo conserva file_id,
+identidad lógica, receta, ruta relativa, hash y `path` a la copia aprobada. El
+cliente solo puede enviar esos paths tras comprobar sus hashes; no debe recorrer
+otras carpetas ni borrar archivos. `source_export` conserva la correspondencia
+con el exportado auditado; ninguna ruta del archivo de originales forma parte
+del alcance. Para gphotos haría falta un wrapper revisado que genere una
+configuración aislada con exactamente ese árbol y sin otros jobs.
+
+Si el adaptador proporciona recibos, los escribe en `{receipts}`:
+
+```json
+{"protocol":"media-library-delivery-v1","job_id":"id-del-job","receipts":[{"file_id":"id-del-archivo","sha256":"hash-local-completo","remote_id":"identificador-del-cliente"}]}
+```
+
+Se exige el conjunto completo, sin duplicados, con job/ID/hash exactos. No incluir
+tokens ni campos extra por archivo. El programa registra esos comprobantes como
+`client_receipts` y mantiene `remote_presence_verified=false`; no consulta la API.
+Sin recibos completos, cero solo acredita el comando y abre pausa de declaración.
+
+La intención SUBMITTING se sincroniza antes de llamar al cliente. Timeout,
+interrupción o resultado incierto conserva la pausa y nunca reinicia submit
+automáticamente. Revisar el cliente/recibos y declarar delivered o not-delivered;
+esta última resolución permite un intento, no reintentos ilimitados.
+La declaración explícita genera una autorización ligada al job/intento y se
+consume antes de reintentar. Cambiar solo delivery_confirmed no la renueva.
+Una resolución antigua sin autorización requiere una nueva declaración explícita.
+El alias y la identidad/huella del alcance protegen también entre ejecuciones.
+Se reconcilian todos los snapshots del job por intento/revisión, también al
+reanudar su propietario antiguo; adoptar un READY no puede ignorar un envío
+incierto posterior. Si hay varios jobs solapados con entrega posible, se pausa.
+Un historial ilegible o inválido también pausa: ausencia de evidencia legible no
+equivale a ausencia de entrega. El diagnóstico conserva ruta/clase de error,
+sin contenido del estado. Recuperar acceso o una copia verificada del historial;
+un snapshot atrasado requiere recuperar su run desde el journal antes de seguir.
+Reanudar después vuelve a reconciliar; no habilita otro submit por sí mismo.
+
+La selección recorre todos los runs del workspace, sin excluirlos por cabeceras
+source/archive. `scope.files` y `payload_hash` acreditan el alcance por identidad,
+hash y receta. Un alcance disjunto puede excluirse. Si hay solapamiento, se exige
+que la configuración efectiva completa coincida con `delivery_signature` del
+job antes de usar target para excluir otro destino. Una discrepancia deja pausa
+con diagnóstico antes del cliente. El hash abarca todas las opciones, no solo
+el alias. Los defaults antiguos sin tabla delivery explícita solo se aceptan si
+reproducen esa huella. Esta es evidencia local de configuración, no prueba remota
+ni firma contra la edición coordinada del estado.
+
+DELIVERED se persiste antes de respaldar el estado. Un fallo posterior reintenta
+el backup y no submit. Las copias privadas verificadas y su recibo se conservan;
+si cambian, la ejecución requiere revisión. Los tests de este contrato usan
+exclusivamente un script Python local simulado, sin red ni cuentas.

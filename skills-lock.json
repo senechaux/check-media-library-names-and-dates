@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "skills": {
+    "openspec-archive-change": {
+      "source": "Fission-AI/OpenSpec",
+      "sourceType": "github",
+      "skillPath": "skills/openspec-archive-change/SKILL.md",
+      "computedHash": "06aaae44ffed643e930098d4cb141edfcafd2f32badd8535254b23f419e4319d"
+    },
+    "openspec-propose": {
+      "source": "Fission-AI/OpenSpec",
+      "sourceType": "github",
+      "skillPath": "skills/openspec-propose/SKILL.md",
+      "computedHash": "c76f30a1e83b7426187b96833d529da3171c294fbb00fb184555c2dde4ab2d43"
+    }
+  }
+}

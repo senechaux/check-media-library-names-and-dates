@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "media-library"
+version = "0.1.0"
+description = "Núcleo local verificable para una biblioteca de medios"
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10"]
+images = ["Pillow>=12,<13"]
+legacy = ["Pillow==12.0.0", "progress==1.6.1"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+py-modules = ["common_functions"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["media_library*"]
+
+[tool.setuptools.package-data]
+media_library = ["presets/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -m 'not integration'"
+markers = ["integration: herramientas reales sobre medios sintéticos"]
